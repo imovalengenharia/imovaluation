@@ -1,14 +1,36 @@
-# Postgres para desenvolvimento:  docker compose up -d
+# A Imovaluation inteira no seu computador:  docker compose up --build
+# Depois é só abrir http://localhost:3000. Para parar: docker compose down
+# (os estudos ficam guardados no volume "dados" e voltam na próxima vez).
 services:
+  plataforma:
+    build: .
+    ports: ["3000:3000"]
+    environment:
+      DATABASE_URL: postgres://imovaluation:imovaluation@banco:5432/imovaluation
+      URL_PUBLICA: http://localhost:3000
+      PORTA: "3000"
+      # roda no próprio computador, por http: sem o modo de produção, que
+      # exigiria HTTPS para o cookie de sessão fora do localhost
+      NODE_ENV: development
+    depends_on:
+      banco: { condition: service_healthy }
+    restart: unless-stopped
+
   banco:
     image: postgres:16
     environment:
       POSTGRES_USER: imovaluation
       POSTGRES_PASSWORD: imovaluation
       POSTGRES_DB: imovaluation
-    ports: ["5432:5432"]
     volumes:
       - dados:/var/lib/postgresql/data
       - ./casca/banco-teste.sql:/docker-entrypoint-initdb.d/banco-teste.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U imovaluation"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
 volumes:
   dados:

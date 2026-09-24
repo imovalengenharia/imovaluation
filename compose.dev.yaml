@@ -1,0 +1,5 @@
+# Para desenvolver com "npm run dev": só o banco, exposto na porta 5432.
+#   docker compose -f compose.yaml -f compose.dev.yaml up -d banco
+services:
+  banco:
+    ports: ["5432:5432"]

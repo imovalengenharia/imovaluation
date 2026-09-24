@@ -3,18 +3,38 @@
 Plataforma de modelagens imobiliárias: a casca autentica, cobra e guarda; cada modelagem é um
 aplicativo dentro dela. O **Involutivo de Glebas** é o primeiro.
 
-## Rodar
+## Usar no seu computador
 
-Requer Node 22 e Postgres 16.
+Só precisa do **Docker Desktop** (gratuito): https://www.docker.com/products/docker-desktop/
+
+1. Instale e abra o Docker Desktop. Espere ele dizer que está rodando.
+2. Baixe o código: no GitHub, botão verde **Code → Download ZIP**, e descompacte.
+3. Na pasta descompactada, dê dois cliques em:
+   - **Windows:** `iniciar.bat`
+   - **Mac:** `iniciar.command` (se o Mac bloquear, clique com o botão direito → Abrir)
+4. O navegador abre em http://localhost:3000. Crie a sua conta e use.
+
+Na primeira vez demora alguns minutos; depois, segundos. Para parar: `parar.bat` ou
+`parar.command`. Os estudos ficam guardados no seu computador e voltam na próxima vez.
+
+Sem os atalhos, no terminal, dentro da pasta: `docker compose up --build -d`.
+
+**Para atualizar** quando houver versão nova: baixe o ZIP de novo, descompacte por cima
+e rode o `iniciar` outra vez. Os estudos continuam.
+
+Sem serviço de e-mail, o link de "esqueci a senha" aparece no Docker Desktop:
+**Containers → imovaluation → plataforma → Logs**.
+
+## Desenvolver
+
+Requer Node 22.
 
 ```bash
-docker compose up -d      # Postgres de desenvolvimento, com o banco de testes
+docker compose -f compose.yaml -f compose.dev.yaml up -d banco   # só o Postgres, na porta 5432
 cp .env.exemplo .env
 npm install
-npm run dev               # http://localhost:3000
+npm run dev               # http://localhost:3000, recarregando ao salvar
 ```
-
-Sem SMTP configurado, o e-mail de recuperação de senha sai no log do servidor.
 
 ## Testar
 

@@ -21,12 +21,13 @@ que são só dele. **Antes de mexer num módulo, leia o dele.**
 ## Comandos
 
 ```bash
-docker compose up -d        # Postgres de desenvolvimento (ou um Postgres 16 local)
+docker compose -f compose.yaml -f compose.dev.yaml up -d banco   # só o Postgres (ou um Postgres 16 local)
 cp .env.exemplo .env
 npm install
 npm run dev                 # migra o banco e sobe a casca, recarregando ao salvar
 npm test                    # casca (node:test, banco real) + auditoria do involutivo
 npm run test:navegador      # a ponte casca ↔ módulo no Chromium (Playwright)
+docker compose up --build -d # a plataforma inteira, como o usuário roda (Dockerfile + compose.yaml)
 node --env-file=.env --test --test-concurrency=1 --test-name-pattern='recuperação' 'testes/*.test.js'
 cd modulos/involutivo && node testes/auditoria.js                  # só o motor
 ```
