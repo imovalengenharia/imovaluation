@@ -5,7 +5,7 @@ import { criarBanco } from '../casca/banco.js';
 import { migrar } from '../casca/migrar.js';
 import { criarServidor } from '../casca/servidor.js';
 
-export async function subir() {
+export async function subir(sobrepor = {}) {
   const url = process.env.DATABASE_URL_TESTE;
   if (!url) throw new Error('defina DATABASE_URL_TESTE (veja .env.exemplo) — a suíte apaga esse banco');
   const banco = criarBanco(url);
@@ -13,7 +13,7 @@ export async function subir() {
   await migrar(banco, () => {});
   const enviados = [];
   const correio = { enviados, async enviar(m) { enviados.push(m); } };
-  const app = await criarServidor({ config: lerConfig({ urlBanco: url }), banco, correio, logger: false });
+  const app = await criarServidor({ config: lerConfig({ urlBanco: url, ...sobrepor }), banco, correio, logger: false });
   return { app, banco, enviados, async descer() { await app.close(); await banco.fechar(); } };
 }
 

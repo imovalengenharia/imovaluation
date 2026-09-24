@@ -4,6 +4,7 @@ import cookie from '@fastify/cookie';
 import formbody from '@fastify/formbody';
 import estatico from '@fastify/static';
 import { fileURLToPath } from 'node:url';
+import { timingSafeEqual } from 'node:crypto';
 import { hashToken } from './senha.js';
 import { COOKIE_SESSAO } from './config.js';
 import { criarCorreio } from './email.js';
@@ -44,6 +45,21 @@ export async function criarServidor({ config, banco, correio, logger = true }) {
     reply.header('Referrer-Policy', 'same-origin');
     if (config.producao) reply.header('Strict-Transport-Security', 'max-age=31536000');
   });
+
+  /* Site de teste: tudo atrás de uma senha do navegador (HTTP Basic), antes
+     mesmo do login. Só /saude fica aberta, para a hospedagem conferir o serviço. */
+  if (config.acessoRestrito) {
+    const esperado = Buffer.from('Basic ' + Buffer.from(config.acessoRestrito).toString('base64'));
+    app.addHook('onRequest', async (req, reply) => {
+      if (req.url === '/saude') return;
+      const veio = Buffer.from(String(req.headers.authorization || ''));
+      if (veio.length === esperado.length && timingSafeEqual(veio, esperado)) return;
+      return reply.code(401)
+        .header('WWW-Authenticate', `Basic realm="${config.nome} (teste)", charset="UTF-8"`)
+        .header('X-Robots-Tag', 'noindex')
+        .send('acesso restrito');
+    });
+  }
 
   /* CSRF: o cookie é SameSite=Lax, e todo POST/PUT/DELETE com Origin de fora é recusado. */
   app.addHook('onRequest', async (req, reply) => {

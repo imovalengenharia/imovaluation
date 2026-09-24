@@ -1,0 +1,35 @@
+# Site de teste da Imovaluation no Render (Blueprint).
+# No painel do Render: New → Blueprint → escolher este repositório.
+# Cada push no main publica de novo, sozinho.
+services:
+  - type: web
+    name: imovaluation-teste
+    runtime: node
+    plan: free
+    region: virginia
+    branch: main
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start          # aplica as migrações do banco e sobe a casca
+    healthCheckPath: /saude
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: imovaluation-teste-banco
+          property: connectionString
+      # a senha do navegador que fecha o site: "usuario:senha" — o Render pede na criação
+      - key: ACESSO_RESTRITO
+        sync: false
+      - key: PLATAFORMA_NOME
+        value: Imovaluation
+
+databases:
+  - name: imovaluation-teste-banco
+    databaseName: imovaluation
+    user: imovaluation
+    plan: free
+    region: virginia
+    postgresMajorVersion: "16"

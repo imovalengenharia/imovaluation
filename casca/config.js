@@ -13,10 +13,14 @@ export function lerConfig(sobrepor = {}) {
     producao,
     nome: process.env.PLATAFORMA_NOME || 'Imovaluation',
     urlBanco: exigir('DATABASE_URL', 'postgres://imovaluation:imovaluation@localhost:5432/imovaluation'),
-    urlPublica: (process.env.URL_PUBLICA || 'http://localhost:3000').replace(/\/$/, ''),
+    /* no Render, RENDER_EXTERNAL_URL vem pronto com o endereço do serviço */
+    urlPublica: (process.env.URL_PUBLICA || process.env.RENDER_EXTERNAL_URL || 'http://localhost:3000').replace(/\/$/, ''),
     porta: Number(process.env.PORTA || process.env.PORT || 3000),
     smtp: process.env.SMTP_URL || null,
     remetente: process.env.EMAIL_REMETENTE || 'Imovaluation <nao-responda@localhost>',
+    /* "usuario:senha" fecha o site inteiro atrás de uma senha do navegador —
+       para o site de teste, antes de a plataforma abrir ao público */
+    acessoRestrito: process.env.ACESSO_RESTRITO || null,
     sessaoDias: 30,
     recuperacaoMinutos: 60,
     ...sobrepor,

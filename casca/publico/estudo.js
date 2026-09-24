@@ -64,6 +64,11 @@
     }
   });
 
+  /* O módulo só carrega depois que a casca já escuta: se ele carregasse
+     primeiro, o aviso de "pronto" podia chegar antes do ouvinte e se perder,
+     deixando o estudo em branco. */
+  quadro.src = quadro.getAttribute('data-src');
+
   /* Saindo com mudança na fila: grava já, e o navegador pergunta antes de fechar. */
   window.addEventListener('pagehide', function () { if (pendente) gravar(true); });
   window.addEventListener('beforeunload', function (ev) {

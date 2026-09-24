@@ -103,7 +103,7 @@ test('estudo: nasce sem premissas, guarda o JSON que o módulo devolve e o entre
   const e = await novoEstudo(ana, 'Gleba Itu');
   const pagina = await ana.get('/estudos/' + e);
   assert.equal(pagina.statusCode, 200);
-  assert.match(pagina.body, /src="\/m\/involutivo\/index.html\?casca"/);
+  assert.match(pagina.body, /data-src="\/m\/involutivo\/index.html\?casca"/);
   assert.match(pagina.body, new RegExp(`data-estudo="${e}"`));
 
   const aberto = (await ana.get('/api/estudos/' + e)).json();

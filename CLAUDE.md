@@ -53,6 +53,10 @@ casca  → módulo  { canal, tipo: 'abrir', usuario: { nome },
 módulo → casca   { canal, tipo: 'mudou', premissas }          a cada recálculo, o P inteiro
 ```
 
+O `src` do iframe só é posto por `publico/estudo.js`, **depois** de ele
+escutar as mensagens: com o `src` direto no HTML, o `'pronto'` do módulo às
+vezes chegava antes do ouvinte e o estudo abria em branco — só em produção.
+
 A casca agrupa as mudanças (800 ms) e grava com `PUT /api/estudos/:id/premissas`.
 Ela **não lê** as premissas: guarda o JSON como veio e o devolve ao abrir. A
 migração de formato de premissas antigas é do módulo, não da casca.

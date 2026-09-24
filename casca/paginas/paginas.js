@@ -191,7 +191,7 @@ export function paginaEstudo(config, usuario, { estudo, caminho }) {
     corpo: html`
 ${barra(config, usuario, trilha)}
 <iframe id="modulo" title="${modulo.nome}" data-estudo="${estudo.id}"
-  src="/m/${modulo.pasta}/index.html?casca"></iframe>`,
+  data-src="/m/${modulo.pasta}/index.html?casca"></iframe>`,
   });
 }
 
