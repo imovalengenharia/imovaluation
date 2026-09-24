@@ -45,9 +45,10 @@ npm run test:navegador    # a ponte casca ↔ módulo no Chromium
 ## O que já existe
 
 - **Conta** — cadastro, entrar, sair, recuperação de senha por e-mail. Um login é uma pessoa.
-- **Modelagens** — a primeira tela depois de entrar: um cartão por modelagem (por ora, o
-  Involutivo de Glebas) e a lista "continuar de onde parou".
-- **Pastas de trabalho** — dentro de cada modelagem; cada pasta com vários estudos, em
+- **Metodologias** — a primeira tela depois de entrar mostra só elas, para escolher (por
+  ora, o Involutivo de Glebas).
+- **Pastas de trabalho** — dentro de cada metodologia, sem misturar com as de outra; cada
+  pasta com vários estudos, em
   cartões que mostram os números principais de cada um. Renomear, duplicar (para montar
   cenários), mover e apagar.
 - **Estudos** — abrem a modelagem exatamente onde pararam (premissas, aba e ponto da

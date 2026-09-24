@@ -1,4 +1,5 @@
-/* A tela inicial (as modelagens) e a área de trabalho de cada modelagem. */
+/* A tela inicial (só as metodologias) e a área de trabalho de cada uma:
+   as pastas e os estudos daquela metodologia, e de nenhuma outra. */
 import { criarPastas } from '../pastas.js';
 import { MODULOS, moduloExiste } from '../modulos.js';
 import { paginaModelagens, paginaAreaDeTrabalho } from '../paginas/paginas.js';
@@ -9,11 +10,8 @@ export default async function rotasModelagens(app) {
   const P = criarPastas(banco);
   app.addHook('onRequest', app.exigirLogin);
 
-  app.get('/modelagens', async (req, reply) => {
-    const uid = req.usuario.id;
-    const [contagens, recentes] = await Promise.all([P.contagens(uid), P.recentes(uid, 5)]);
-    return reply.pagina(paginaModelagens(config, req.usuario, { contagens, recentes }));
-  });
+  /* Depois do login: só as metodologias, para escolher. */
+  app.get('/modelagens', async (req, reply) => reply.pagina(paginaModelagens(config, req.usuario)));
 
   async function area(req, reply, modulo, pastaId) {
     if (!moduloExiste(modulo)) return reply.callNotFound();
@@ -23,10 +21,6 @@ export default async function rotasModelagens(app) {
     if (pastaId) {
       pasta = pastas.find(p => p.id === pastaId);
       if (!pasta) return reply.callNotFound();
-    } else if (pastas.length) {
-      /* sem pasta escolhida, abre a que foi mexida por último */
-      pasta = [...pastas].sort((a, b) => (b.mexida_em || b.criada_em) - (a.mexida_em || a.criada_em))[0];
-      return reply.redirect(urlPasta(modulo, pasta.id));
     }
     const estudos = pasta ? await P.estudos(uid, pasta.id) : [];
     return reply.pagina(paginaAreaDeTrabalho(config, req.usuario, {

@@ -14,14 +14,18 @@ const novaPasta = async (c, nome) => idDe(await c.post('/modelagens/involutivo/p
 const novoEstudo = async (c, pasta, nome) => idDe(await c.post(`/pastas/${pasta}/estudos`, { nome }));
 const salvar = (c, id, premissas, resumo) => c.put(`/api/estudos/${id}/premissas`, { premissas, resumo });
 
-test('depois de entrar, a primeira tela são as modelagens', async () => {
+test('depois de entrar, aparecem só as metodologias — nenhuma pasta, nenhum estudo', async () => {
   const c = await cadastrar(T.app, 'nova@exemplo.com');
   assert.equal((await c.get('/')).headers.location, '/modelagens');
+  const p = idDe(await c.post('/modelagens/involutivo/pastas', { nome: 'Pasta que não aparece aqui' }));
+  const e = idDe(await c.post(`/pastas/${p}/estudos`, { nome: 'Estudo que não aparece aqui' }));
+  await c.get('/estudos/' + e);
   const r = await c.get('/modelagens');
   assert.equal(r.statusCode, 200);
+  assert.match(r.body, /Escolha a metodologia/);
   assert.match(r.body, /href="\/modelagens\/involutivo"/);
   assert.match(r.body, /Involutivo de Glebas/);
-  assert.match(r.body, /Nenhum estudo ainda/);
+  assert.doesNotMatch(r.body, /Pasta que não aparece aqui|Estudo que não aparece aqui|\/estudos\//);
 });
 
 test('modelagem sem pastas convida a criar a primeira', async () => {
@@ -32,16 +36,17 @@ test('modelagem sem pastas convida a criar a primeira', async () => {
   assert.equal((await c.get('/modelagens/nao-existe')).statusCode, 404);
 });
 
-test('pasta nova abre em seguida; sem pasta escolhida, abre a última mexida', async () => {
+test('a metodologia abre nas pastas dela; pasta nova abre em seguida', async () => {
   const r = await ana.post('/modelagens/involutivo/pastas', { nome: 'Clientes 2026' });
   assert.equal(r.statusCode, 303);
   assert.match(r.headers.location, /^\/modelagens\/involutivo\/[0-9a-f-]{36}$/);
   const pagina = await ana.get(r.headers.location);
   assert.match(pagina.body, /<h1>Clientes 2026<\/h1>/);
   assert.match(pagina.body, /Criar o primeiro estudo desta pasta/);
-  const semEscolha = await ana.get('/modelagens/involutivo');
-  assert.equal(semEscolha.statusCode, 302);
-  assert.match(semEscolha.headers.location, /^\/modelagens\/involutivo\//);
+  const metodologia = await ana.get('/modelagens/involutivo');
+  assert.equal(metodologia.statusCode, 200, 'não pula para dentro de uma pasta');
+  assert.match(metodologia.body, /Nova pasta de trabalho/);
+  assert.match(metodologia.body, new RegExp(`href="${r.headers.location}"`));
 });
 
 test('vários estudos numa pasta; cada um abre o módulo e guarda onde parou', async () => {
@@ -78,17 +83,13 @@ test('vários estudos numa pasta; cada um abre o módulo e guarda onde parou', a
   assert.match(area.body, /2 estudos/);
 });
 
-test('olhar a vista não conta como edição; abrir entra em "continuar de onde parou"', async () => {
+test('olhar a vista não conta como edição', async () => {
   const pasta = await novaPasta(ana, 'Recentes');
   const e = await novoEstudo(ana, pasta, 'Gleba recente');
   const antes = (await T.banco.um('SELECT atualizado_em FROM estudo WHERE id = $1', [e])).atualizado_em;
   await ana.put(`/api/estudos/${e}/vista`, { vista: { aba: 'premissas' } });
   const depois = (await T.banco.um('SELECT atualizado_em FROM estudo WHERE id = $1', [e])).atualizado_em;
   assert.equal(depois.getTime(), antes.getTime());
-  await ana.get('/estudos/' + e);
-  const inicio = await ana.get('/modelagens');
-  assert.match(inicio.body, /Continuar de onde parou/);
-  assert.match(inicio.body, new RegExp(`href="/estudos/${e}"`));
 });
 
 test('o resumo mandado ao abrir não conta como edição', async () => {

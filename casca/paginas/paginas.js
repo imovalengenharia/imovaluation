@@ -160,52 +160,28 @@ const ILUSTRACOES = {
   </svg>`,
 };
 
-/* ------------------------------------------------- a tela inicial: modelagens */
-export function paginaModelagens(config, usuario, { contagens, recentes }) {
+/* ------------------------------------------- a tela inicial: as metodologias */
+/* Depois do login, só a escolha da metodologia. Pastas e estudos moram dentro
+   de cada uma e só aparecem depois dela — nada de uma se mistura com outra. */
+export function paginaModelagens(config, usuario) {
   const primeiroNome = String(usuario.nome).trim().split(/\s+/)[0];
-  return documento({ titulo: 'Modelagens', config, corpo: html`
+  return documento({ titulo: 'Metodologias', config, corpo: html`
 ${barra(config, usuario)}
 <main class="inicio">
   <section class="saudacao">
-    <p class="sobretitulo">Modelagens</p>
     <h1>${saudacao()}, ${primeiroNome}.</h1>
-    <p class="lead">Escolha a modelagem para abrir as suas pastas de trabalho.</p>
+    <p class="lead">Escolha a metodologia.</p>
   </section>
-
-  <section class="modelagens" aria-label="Modelagens disponíveis">
-    ${Object.values(MODULOS).map(m => {
-      const c = contagens[m.id] || { pastas: 0, estudos: 0 };
-      return html`<a class="modelagem" href="/modelagens/${m.id}">
+  <section class="modelagens" aria-label="Metodologias">
+    ${Object.values(MODULOS).map(m => html`<a class="modelagem" href="/modelagens/${m.id}">
         <div class="quadro-ilustracao">${ILUSTRACOES[m.ilustracao] || ''}</div>
         <div class="corpo">
           <h2>${m.nome}</h2>
           <p>${m.descricao}</p>
-          <div class="rodape-cartao">
-            <span class="contagem">${c.estudos
-              ? `${plural(c.pastas, 'pasta', 'pastas')} · ${plural(c.estudos, 'estudo', 'estudos')}`
-              : 'Nenhum estudo ainda'}</span>
-            <span class="seta">Abrir <span aria-hidden="true">→</span></span>
-          </div>
+          <div class="rodape-cartao"><span></span><span class="seta">Abrir <span aria-hidden="true">→</span></span></div>
         </div>
-      </a>`;
-    })}
-    <div class="modelagem em-breve" aria-hidden="true">
-      <div class="corpo"><h2>Próximas modelagens</h2>
-        <p>Cada modelagem nova aparece aqui, com as suas próprias pastas de trabalho.</p></div>
-    </div>
+      </a>`)}
   </section>
-
-  ${recentes.length ? html`<section class="recentes">
-    <h2>Continuar de onde parou</h2>
-    <ul class="lista-recentes">
-      ${recentes.map(r => html`<li><a href="/estudos/${r.id}">
-        <span class="nome">${r.nome}</span>
-        <span class="onde">${MODULOS[r.modulo]?.nome || r.modulo} · ${r.pasta_nome}${
-          r.vista?.rotulo ? ` · parou em ${r.vista.rotulo}` : ''}</span>
-        <span class="quando">${haQuanto(r.aberto_em)}</span>
-      </a></li>`)}
-    </ul>
-  </section>` : ''}
 </main>` });
 }
 
@@ -265,15 +241,43 @@ ${dialogo(`${d}-apagar`, 'Apagar estudo', html`<form method="post" action="/estu
 }
 
 export function paginaAreaDeTrabalho(config, usuario, { modulo, pastas, pasta, estudos, erro, ok }) {
-  const passos = [{ rotulo: 'Modelagens', href: '/modelagens' },
-    pasta ? { rotulo: modulo.nome, href: `/modelagens/${modulo.id}` } : { rotulo: modulo.nome }];
+  const passos = [{ rotulo: 'Metodologias', href: '/modelagens' },
+    pasta ? { rotulo: modulo.nome, href: `/modelagens/${modulo.id}` } : { rotulo: modulo.nome },
+    ...(pasta ? [{ rotulo: pasta.nome }] : [])];
   const novaPasta = (classe = '') => html`<form class="nova-pasta ${classe}" method="post" action="/modelagens/${modulo.id}/pastas">
     <input type="text" name="nome" placeholder="Nome da nova pasta" required maxlength="120" aria-label="Nome da nova pasta">
     <button class="botao ${classe ? '' : 'leve'}" type="submit">${classe ? 'Criar pasta' : '+'}</button>
   </form>`;
 
   let conteudo;
-  if (!pasta) {
+  if (!pasta && pastas.length) {
+    /* a metodologia aberta: as pastas dela, e o caminho para criar outra */
+    conteudo = html`
+    <header class="cab-pasta">
+      <div>
+        <p class="sobretitulo">Metodologia</p>
+        <h1>${modulo.nome}</h1>
+        <p class="meta">${plural(pastas.length, 'pasta de trabalho', 'pastas de trabalho')}</p>
+      </div>
+      <div class="acoes"><button type="button" class="botao" data-abrir="m-nova-pasta">+ Nova pasta</button></div>
+    </header>
+    <div class="estudos">
+      ${pastas.map(p => html`<a class="estudo pasta-cartao" href="/modelagens/${modulo.id}/${p.id}">
+        <span class="icone-pasta" aria-hidden="true"></span>
+        <h3>${p.nome}</h3>
+        <p class="sem-calculo">${p.estudos ? plural(p.estudos, 'estudo', 'estudos') : 'Pasta vazia'}</p>
+        <footer><span>${p.mexida_em ? `Mexida ${haQuanto(p.mexida_em)}` : `Criada ${haQuanto(p.criada_em)}`}</span>
+          <span class="seta">Abrir <span aria-hidden="true">→</span></span></footer>
+      </a>`)}
+      <button type="button" class="estudo novo" data-abrir="m-nova-pasta">
+        <span class="mais" aria-hidden="true">+</span><span>Nova pasta de trabalho</span>
+      </button>
+    </div>
+    ${dialogo('m-nova-pasta', 'Nova pasta de trabalho', html`<form method="post" action="/modelagens/${modulo.id}/pastas">
+      <p>Uma pasta por cliente, por cidade ou por gleba. Os estudos de ${modulo.nome} ficam dentro dela.</p>
+      <input type="text" name="nome" placeholder="Ex.: Clientes 2026" required maxlength="120" aria-label="Nome da pasta">
+      ${botoesDialogo('Criar pasta')}</form>`)}`;
+  } else if (!pasta) {
     conteudo = html`<div class="vazio-grande">
       ${ILUSTRACOES.pasta}
       <h1>Comece por uma pasta de trabalho</h1>
@@ -291,6 +295,7 @@ export function paginaAreaDeTrabalho(config, usuario, { modulo, pastas, pasta, e
         <p class="meta">${plural(estudos.length, 'estudo', 'estudos')} · criada ${haQuanto(pasta.criada_em)}</p>
       </div>
       <div class="acoes">
+        <a class="botao leve" href="/modelagens/${modulo.id}">← Todas as pastas</a>
         <button type="button" class="botao leve" data-abrir="p-renomear">Renomear</button>
         <button type="button" class="botao leve" data-abrir="p-apagar">Apagar</button>
         <button type="button" class="botao" data-abrir="p-novo">+ Novo estudo</button>
@@ -344,7 +349,7 @@ ${barra(config, usuario, trilha(passos))}
 /* ----------------------------------------------------------------- estudo */
 export function paginaEstudo(config, usuario, { estudo, modulo }) {
   const passos = [
-    { rotulo: 'Modelagens', href: '/modelagens' },
+    { rotulo: 'Metodologias', href: '/modelagens' },
     { rotulo: modulo.nome, href: `/modelagens/${modulo.id}` },
     { rotulo: estudo.pasta_nome, href: `/modelagens/${modulo.id}/${estudo.pasta_id}` },
     { rotulo: estudo.nome },
@@ -363,5 +368,5 @@ export function paginaErro(config, usuario, titulo, texto) {
   return documento({ titulo, config, corpo: html`
 ${usuario ? barra(config, usuario) : ''}
 <main class="inicio"><section class="saudacao"><h1>${titulo}</h1><p class="lead">${texto}</p>
-<p><a href="/modelagens">Voltar às modelagens</a></p></section></main>` });
+<p><a href="/modelagens">Voltar às metodologias</a></p></section></main>` });
 }

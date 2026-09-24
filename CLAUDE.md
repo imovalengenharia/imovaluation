@@ -120,10 +120,12 @@ ociosa que cai — banco reiniciado, por exemplo — derruba o servidor inteiro.
 - `servidor.js` monta tudo: cabeçalhos de segurança, checagem de `Origin`,
   leitura da sessão, porteiro (`app.exigirLogin`), estáticos, rotas.
 - `rotas/conta.js` — cadastro, entrar, sair, recuperação de senha.
-- A navegação é **modelagens → pastas de trabalho → estudos**:
-  `/modelagens` (um cartão por módulo + "continuar de onde parou"),
-  `/modelagens/:modulo/:pasta` (pastas à esquerda, estudos em cartões à direita),
-  `/estudos/:id` (o módulo). Rotas em `rotas/modelagens.js`, `rotas/pastas.js`,
+- A navegação é **metodologia → pastas de trabalho → estudos**, e cada nível só
+  mostra o que é dele — decisão do dono do produto, repetida duas vezes:
+  `/modelagens` mostra **só as metodologias** (nada de pasta, estudo ou lista de
+  recentes que misture metodologias); `/modelagens/:modulo` mostra as pastas
+  **daquela** metodologia; `/modelagens/:modulo/:pasta`, os estudos da pasta;
+  `/estudos/:id`, o módulo. Na tela, o nome é "metodologia"; no código, `modulo`. Rotas em `rotas/modelagens.js`, `rotas/pastas.js`,
   `rotas/estudos.js` (com a API da ponte); consultas em `pastas.js`.
 - Diálogos são `<dialog>` nativos abertos por `data-abrir="<id>"`
   (`publico/casca.js`); as ações em si são formulários comuns.
