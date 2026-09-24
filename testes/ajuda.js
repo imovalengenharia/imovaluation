@@ -2,14 +2,18 @@
    migrado do começo — DATABASE_URL_TESTE, que a suíte APAGA. */
 import { lerConfig } from '../casca/config.js';
 import { criarBanco } from '../casca/banco.js';
+import { criarBancoEmbutido } from '../casca/banco-embutido.js';
 import { migrar } from '../casca/migrar.js';
 import { criarServidor } from '../casca/servidor.js';
 
+/* BANCO_TESTE=embutido roda a mesma suíte no PGlite, o banco de quem usa a
+   plataforma no próprio computador — em memória, novo a cada arquivo. */
 export async function subir(sobrepor = {}) {
-  const url = process.env.DATABASE_URL_TESTE;
+  const embutido = process.env.BANCO_TESTE === 'embutido';
+  const url = embutido ? 'embutido' : process.env.DATABASE_URL_TESTE;
   if (!url) throw new Error('defina DATABASE_URL_TESTE (veja .env.exemplo) — a suíte apaga esse banco');
-  const banco = criarBanco(url);
-  await banco.consulta('DROP SCHEMA public CASCADE; CREATE SCHEMA public;');
+  const banco = embutido ? await criarBancoEmbutido() : criarBanco(url);
+  if (!embutido) await banco.consulta('DROP SCHEMA public CASCADE; CREATE SCHEMA public;');
   await migrar(banco, () => {});
   const enviados = [];
   const correio = { enviados, async enviar(m) { enviados.push(m); } };

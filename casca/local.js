@@ -1,67 +1,51 @@
-/* A Imovaluation no computador de quem usa, sem Docker e sem instalar
-   Postgres: o banco vem embutido (pacote embedded-postgres) e mora na pasta
-   Imovaluation dentro da pasta do usuário — fora da pasta do código, para
-   sobreviver a cada atualização. Roda com:  node casca/local.js
-   (os atalhos iniciar.bat / iniciar.command fazem isso). */
-import { existsSync, mkdirSync } from 'node:fs';
+/* A Imovaluation no computador de quem usa: só o Node, nada para instalar.
+   O banco é o PGlite — o próprio Postgres em WebAssembly, dentro deste
+   processo — e mora na pasta Imovaluation dentro da pasta do usuário, fora da
+   pasta do código, para sobreviver a cada atualização.
+   Roda com:  node casca/local.js  (os atalhos iniciar.bat / iniciar.command fazem isso). */
+import { mkdirSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { spawn } from 'node:child_process';
 
-/* No Windows, o Postgres costuma falhar em caminho com acento (C:\Users\João):
-   nesse caso o banco vai para C:\Imovaluation. */
-const naCasa = join(homedir(), 'Imovaluation');
-const PASTA = process.env.IMOVALUATION_DADOS
-  || (process.platform === 'win32' && /[^\x20-\x7e]/.test(naCasa) ? 'C:\\Imovaluation' : naCasa);
+const PASTA = process.env.IMOVALUATION_DADOS || join(homedir(), 'Imovaluation');
 const DIR_BANCO = join(PASTA, 'banco');
-const PORTA_BANCO = 54329;                       // longe da 5432, que pode já ter dono
 const PORTA = Number(process.env.PORTA || 3000);
 const ENDERECO = `http://localhost:${PORTA}`;
 
-let EmbeddedPostgres;
-try { ({ default: EmbeddedPostgres } = await import('embedded-postgres')); }
+let criarBancoEmbutido;
+try { ({ criarBancoEmbutido } = await import('./banco-embutido.js')); }
 catch {
-  console.error('\nFalta instalar as dependências. Rode antes:  npm install --omit=dev\n');
+  console.error('\nFalta instalar os componentes. Rode antes:  npm ci --omit=dev\n');
   process.exit(1);
 }
 
 mkdirSync(PASTA, { recursive: true });
-const pg = new EmbeddedPostgres({
-  databaseDir: DIR_BANCO, port: PORTA_BANCO,
-  user: 'imovaluation', password: 'imovaluation', persistent: true,
-  /* UTF-8 sempre: sem isso o Windows cria o banco na codificação regional
-     (WIN1252) e recusa o que não cabe nela */
-  initdbFlags: ['--encoding=UTF8', '--locale=C'],
-  onLog: () => {}, onError: m => { if (String(m).trim()) console.error(String(m).trim()); },
-});
+console.log('Imovaluation: abrindo o banco em', DIR_BANCO);
+const banco = await criarBancoEmbutido(DIR_BANCO);
 
-console.log('Imovaluation: preparando o banco em', DIR_BANCO);
-const novo = !existsSync(join(DIR_BANCO, 'PG_VERSION'));
-if (novo) await pg.initialise();
-await pg.start();
-if (novo) await pg.createDatabase('imovaluation');
-
-let descer = async () => {};
+let descer = () => banco.fechar();
+let parando = false;
 async function encerrar() {
+  if (parando) return;
+  parando = true;
   console.log('\nParando a Imovaluation...');
   try { await descer(); } catch {}
-  try { await pg.stop(); } catch {}
   process.exit(0);
 }
 /* SIGHUP é o que o Windows manda quando a janela é fechada no X */
-for (const sinal of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.once(sinal, encerrar);
+for (const sinal of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.on(sinal, encerrar);
 
 try {
-  process.env.DATABASE_URL = `postgres://imovaluation:imovaluation@127.0.0.1:${PORTA_BANCO}/imovaluation`;
   process.env.URL_PUBLICA ??= ENDERECO;
   const { lerConfig } = await import('./config.js');
   const { subir } = await import('./iniciar.js');
   /* só este computador enxerga a plataforma: ninguém da rede entra */
-  ({ descer } = await subir({ ...lerConfig(), porta: PORTA, host: 'localhost' }));
+  ({ descer } = await subir({ ...lerConfig(), urlBanco: 'embutido', porta: PORTA, host: 'localhost' }, banco));
 } catch (err) {
   if (err.code === 'EADDRINUSE') console.error(`\nA porta ${PORTA} já está em uso — a Imovaluation já está aberta em outra janela?`);
   else console.error(err);
-  await pg.stop().catch(() => {});
+  await banco.fechar().catch(() => {});
   process.exit(1);
 }
 

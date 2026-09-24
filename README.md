@@ -5,28 +5,24 @@ aplicativo dentro dela. O **Involutivo de Glebas** é o primeiro.
 
 ## Usar no seu computador
 
-Só precisa do **Node.js** (gratuito), versão LTS: https://nodejs.org — sem Docker, sem
-instalar banco de dados: o Postgres vem embutido e se prepara sozinho na primeira vez.
+Não instala nada e não pede senha de administrador.
 
-1. Instale o Node.js (versão **LTS**), com as opções padrão.
-2. Baixe o código: no GitHub, botão verde **Code → Download ZIP**, e descompacte.
-3. Na pasta descompactada, dê dois cliques em:
+1. Baixe o código: no GitHub, botão verde **Code → Download ZIP**, e descompacte.
+2. Na pasta descompactada, dê dois cliques em:
    - **Windows:** `iniciar.bat` (se aparecer "O Windows protegeu o computador":
      **Mais informações → Executar assim mesmo**)
    - **Mac:** `iniciar.command` (se o Mac bloquear: botão direito → **Abrir**)
-4. O navegador abre em http://localhost:3000. Crie a sua conta e use.
+3. O navegador abre em http://localhost:3000. Crie a sua conta e use.
+
+Na primeira vez, o atalho baixa sozinho o Node.js portátil oficial (se o computador
+não tiver) e os componentes: 2 a 5 minutos. Depois, abre em segundos.
 
 Uma janela preta fica aberta enquanto a plataforma roda: **fechar a janela para a
-plataforma**. Na primeira vez leva de 1 a 3 minutos (instala os componentes); depois,
-segundos.
-
-Os estudos ficam na pasta `Imovaluation`, dentro da sua pasta de usuário — fora da pasta
-do código. **Para atualizar**, baixe o ZIP de novo, descompacte onde quiser e rode o
-`iniciar`: os estudos continuam lá.
+plataforma**. Os estudos ficam na pasta `Imovaluation`, dentro da sua pasta de usuário
+— fora da pasta do código. **Para atualizar**, baixe o ZIP de novo, descompacte e rode
+o `iniciar`: os estudos continuam lá.
 
 Sem serviço de e-mail, o link de "esqueci a senha" aparece na própria janela preta.
-
-Com Docker, em vez do Node: `docker compose up --build -d`.
 
 ## Desenvolver
 

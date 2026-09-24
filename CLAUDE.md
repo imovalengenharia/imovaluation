@@ -25,9 +25,9 @@ docker compose -f compose.yaml -f compose.dev.yaml up -d banco   # só o Postgre
 cp .env.exemplo .env
 npm install
 npm run dev                 # migra o banco e sobe a casca, recarregando ao salvar
-npm test                    # casca (node:test, banco real) + auditoria do involutivo
+npm test                    # casca no Postgres e no PGlite + auditoria do involutivo
 npm run test:navegador      # a ponte casca ↔ módulo no Chromium (Playwright)
-npm run local               # como o usuário roda: Postgres embutido em ~/Imovaluation, abre o navegador
+npm run local               # como o usuário roda: PGlite em ~/Imovaluation, abre o navegador
 docker compose up --build -d # a plataforma inteira em Docker (Dockerfile + compose.yaml)
 node --env-file=.env --test --test-concurrency=1 --test-name-pattern='recuperação' 'testes/*.test.js'
 cd modulos/involutivo && node testes/auditoria.js                  # só o motor
@@ -79,22 +79,29 @@ navegador sem build e as suítes fazem `require` do motor; a casca é ESM.
 
 ### Rodar no computador de quem usa
 
-`iniciar.bat` / `iniciar.command` → `casca/local.js`: sobe um Postgres embutido
-(`embedded-postgres`, dependência **opcional**) na porta 54329, com os dados em
-`~/Imovaluation` — fora da pasta do código, para sobreviver a cada ZIP novo —, e a
-casca em `localhost:3000`, só para este computador. Precisa só do Node; Docker
-não é opção para todo mundo (sem virtualização na BIOS, ele nem abre). Servidores
-instalam com `--omit=optional`, para não baixar o Postgres embutido à toa.
+`iniciar.bat` / `iniciar.command` → `casca/local.js`. O banco é o **PGlite**
+(`casca/banco-embutido.js`): o próprio Postgres compilado para WebAssembly, dentro
+do processo do Node, com os dados em `~/Imovaluation` — fora da pasta do código,
+para sobreviver a cada ZIP novo. A casca sobe em `localhost:3000`, só para este
+computador.
 
-- O banco embutido nasce **UTF-8 com `--locale=C`**: sem isso, no Windows, herda a
-  codificação regional (WIN1252).
-- Postgres no Windows falha em caminho com acento: nesse caso os dados vão para
-  `C:\Imovaluation`.
-- O Postgres se recusa a rodar com privilégio de administrador: o atalho nunca deve
-  ser aberto "como administrador".
-- O pool do `pg` tem ouvinte de `'error'` (`banco.js`): sem ele, qualquer conexão
-  ociosa que cai — banco reiniciado, ou o Ctrl+C que derruba o Postgres junto —
-  derruba o servidor inteiro.
+Cada escolha aqui veio de um bloqueio real no computador de quem usa:
+
+- **Docker** não abre sem virtualização ligada na BIOS.
+- **Instalador do Node** pede administrador. Os atalhos baixam o Node **portátil**
+  oficial (versão e SHA-256 fixos no atalho) para a pasta do usuário, uma vez só.
+- **Postgres nativo embutido** (`embedded-postgres`, abandonado): depende do
+  `VCRUNTIME140.dll`, se recusa a rodar como administrador e falha em caminho com
+  acento no Windows. O PGlite não tem nenhum desses problemas.
+
+`banco-embutido.js` tem a mesma interface de `banco.js`. O PGlite é uma conexão
+só: dentro de `transacao(fn)`, use só o `c.query` recebido — chamar o banco de fora
+ali dentro trava para sempre. **`npm test` roda a suíte nos dois bancos**
+(`test:embutido` = `BANCO_TESTE=embutido`, em memória). Servidores instalam com
+`--omit=optional` e não levam o PGlite.
+
+O pool do `pg` tem ouvinte de `'error'` (`banco.js`): sem ele, qualquer conexão
+ociosa que cai — banco reiniciado, por exemplo — derruba o servidor inteiro.
 
 ## A casca — arquitetura
 
