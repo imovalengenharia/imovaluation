@@ -170,7 +170,7 @@ ${barra(config, usuario)}
 <main class="inicio">
   <section class="saudacao">
     <h1>${saudacao()}, ${primeiroNome}.</h1>
-    <p class="lead">Escolha a metodologia.</p>
+    <p class="lead">Escolha o tipo de análise da qualidade do investimento imobiliário:</p>
   </section>
   <section class="modelagens" aria-label="Metodologias">
     ${Object.values(MODULOS).map(m => html`<a class="modelagem" href="/modelagens/${m.id}">
@@ -274,15 +274,12 @@ export function paginaAreaDeTrabalho(config, usuario, { modulo, pastas, pasta, e
       </button>
     </div>
     ${dialogo('m-nova-pasta', 'Nova pasta de trabalho', html`<form method="post" action="/modelagens/${modulo.id}/pastas">
-      <p>Uma pasta por cliente, por cidade ou por gleba. Os estudos de ${modulo.nome} ficam dentro dela.</p>
       <input type="text" name="nome" placeholder="Ex.: Clientes 2026" required maxlength="120" aria-label="Nome da pasta">
       ${botoesDialogo('Criar pasta')}</form>`)}`;
   } else if (!pasta) {
     conteudo = html`<div class="vazio-grande">
       ${ILUSTRACOES.pasta}
       <h1>Comece por uma pasta de trabalho</h1>
-      <p>Uma pasta por cliente, por cidade ou por gleba — como fizer sentido para você.
-         Dentro dela ficam os estudos, cada um salvo exatamente onde você parou.</p>
       ${novaPasta('grande')}
     </div>`;
   } else {
@@ -309,7 +306,6 @@ export function paginaAreaDeTrabalho(config, usuario, { modulo, pastas, pasta, e
       </button>
     </div>
     ${dialogo('p-novo', 'Novo estudo', html`<form method="post" action="/pastas/${pasta.id}/estudos">
-      <p>${modulo.nome}, na pasta <strong>${pasta.nome}</strong>. O estudo abre em seguida e se salva sozinho.</p>
       <input type="text" name="nome" placeholder="Ex.: Gleba Itu — cenário base" required maxlength="160" aria-label="Nome do estudo">
       ${botoesDialogo('Criar e abrir')}</form>`)}
     ${dialogo('p-renomear', 'Renomear pasta', html`<form method="post" action="/pastas/${pasta.id}/renomear">

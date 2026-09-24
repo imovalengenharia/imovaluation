@@ -4,9 +4,9 @@
 export const MODULOS = {
   involutivo: {
     id: 'involutivo',
-    nome: 'Involutivo de Glebas',
-    descricao: 'Valor de gleba urbanizável pelo método involutivo: áreas, faseamento, '
-      + 'vendas, fluxo de caixa mês a mês e a TIR travada na TMA.',
+    nome: 'Glebas urbanizáveis',
+    descricao: 'Loteamentos abertos e condomínios de lotes: áreas, faseamento, vendas, '
+      + 'fluxo de caixa mês a mês e os indicadores de retorno do empreendimento.',
     pasta: 'involutivo',          // modulos/involutivo/, publicado em /m/involutivo/
     /* desenho do cartão: uma gleba parcelada em quadras e lotes */
     ilustracao: 'gleba',

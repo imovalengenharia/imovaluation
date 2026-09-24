@@ -22,9 +22,9 @@ test('depois de entrar, aparecem só as metodologias — nenhuma pasta, nenhum e
   await c.get('/estudos/' + e);
   const r = await c.get('/modelagens');
   assert.equal(r.statusCode, 200);
-  assert.match(r.body, /Escolha a metodologia/);
+  assert.match(r.body, /Escolha o tipo de análise da qualidade do investimento imobiliário/);
   assert.match(r.body, /href="\/modelagens\/involutivo"/);
-  assert.match(r.body, /Involutivo de Glebas/);
+  assert.match(r.body, /Glebas urbanizáveis/);
   assert.doesNotMatch(r.body, /Pasta que não aparece aqui|Estudo que não aparece aqui|\/estudos\//);
 });
 
