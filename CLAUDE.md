@@ -128,7 +128,13 @@ ociosa que cai — banco reiniciado, por exemplo — derruba o servidor inteiro.
   `/modelagens` mostra **só as metodologias** (nada de pasta, estudo ou lista de
   recentes que misture metodologias); `/modelagens/:modulo` mostra as pastas
   **daquela** metodologia; `/modelagens/:modulo/:pasta`, os estudos da pasta;
-  `/estudos/:id`, o módulo. Na tela, o nome é "metodologia"; no código, `modulo`. Rotas em `rotas/modelagens.js`, `rotas/pastas.js`,
+  `/estudos/:id`, o módulo. Na tela, o nome é "metodologia"; no código, `modulo`.
+- Nas grades de pastas e de estudos, o quadrado **"Nova pasta de trabalho" /
+  "Novo estudo" vem sempre em primeiro**; o que já existe vem ao lado e abaixo,
+  nunca antes dele (pedido do dono do produto). Cada cartão mostra **criada/o em**
+  (data) e **alterada/o em** (data e hora, fuso de São Paulo), automáticas: a
+  pasta usa a mais recente entre `pasta.alterada_em` (renomear, estudo que entra,
+  sai ou é apagado) e o `atualizado_em` dos estudos dela. Rotas em `rotas/modelagens.js`, `rotas/pastas.js`,
   `rotas/estudos.js` (com a API da ponte); consultas em `pastas.js`.
 - Diálogos são `<dialog>` nativos abertos por `data-abrir="<id>"`
   (`publico/casca.js`); as ações em si são formulários comuns.

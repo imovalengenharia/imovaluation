@@ -49,6 +49,7 @@ export default async function rotasEstudos(app) {
     const destino = await P.pasta(uid, req.body?.destino);
     if (!destino || destino.modulo !== e.modulo) return reply.redirect(urlPasta(e.modulo, e.pasta_id, 'destino'), 303);
     await banco.consulta('UPDATE estudo SET pasta_id = $1 WHERE id = $2', [destino.id, e.id]);
+    await banco.consulta('UPDATE pasta SET alterada_em = now() WHERE id = ANY($1::uuid[])', [[e.pasta_id, destino.id]]);
     return reply.redirect(urlPasta(e.modulo, destino.id, 'movido'), 303);
   });
 
@@ -56,6 +57,7 @@ export default async function rotasEstudos(app) {
     const e = await P.estudo(req.usuario.id, req.params.id);
     if (!e) return reply.callNotFound();
     await banco.consulta('DELETE FROM estudo WHERE id = $1', [e.id]);
+    await banco.consulta('UPDATE pasta SET alterada_em = now() WHERE id = $1', [e.pasta_id]);
     return reply.redirect(urlPasta(e.modulo, e.pasta_id, 'estudo-apagado'), 303);
   });
 

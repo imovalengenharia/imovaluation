@@ -79,8 +79,46 @@ test('vários estudos numa pasta; cada um abre o módulo e guarda onde parou', a
   assert.match(area.body, /Estudo 1/);
   assert.match(area.body, /Estudo 2/);
   assert.match(area.body, /R\$ 40\.726\.692/, 'o cartão mostra o resumo');
-  assert.match(area.body, /parou em <em>Fluxo de caixa<\/em>/);
+  assert.match(area.body, /Parou em <em>Fluxo de caixa<\/em>/);
   assert.match(area.body, /2 estudos/);
+});
+
+test('"nova pasta" e "novo estudo" vêm sempre em primeiro; pastas e estudos mostram as datas', async () => {
+  const p = await novaPasta(ana, 'Aaa primeira em ordem');
+  const e = await novoEstudo(ana, p, 'Estudo com datas');
+  const hoje = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+
+  const metodologia = (await ana.get('/modelagens/involutivo')).body;
+  const grade = metodologia.slice(metodologia.indexOf('<div class="estudos">'));
+  assert.ok(grade.indexOf('Nova pasta de trabalho') < grade.indexOf('pasta-cartao'), 'o quadrado de nova pasta vem antes das pastas');
+  assert.match(grade, new RegExp(`Criada em ${hoje.replace(/\//g, '\\/')}`));
+  assert.match(grade, /Alterada em \d{2}\/\d{2}\/\d{4}, \d{2}:\d{2}/);
+
+  const pasta = (await ana.get(`/modelagens/involutivo/${p}`)).body;
+  const estudos = pasta.slice(pasta.indexOf('<div class="estudos">'));
+  assert.ok(estudos.indexOf('Criar o primeiro estudo') === -1 && estudos.indexOf('Novo estudo') < estudos.indexOf('<article'),
+    'o quadrado de novo estudo vem antes dos estudos');
+  assert.match(estudos, new RegExp(`Criado em ${hoje.replace(/\//g, '\\/')}`));
+  assert.match(estudos, /Alterado em \d{2}\/\d{2}\/\d{4}, \d{2}:\d{2}/);
+  assert.match(pasta, /criada em \d{2}\/\d{2}\/\d{4} ·/);
+});
+
+test('a data de alteração da pasta acompanha o que acontece nela', async () => {
+  const a = await novaPasta(ana, 'Datas A');
+  const b = await novaPasta(ana, 'Datas B');
+  const e = await novoEstudo(ana, a, 'Vai e volta');
+  const antigo = "2020-01-01T12:00:00Z";
+  await T.banco.consulta('UPDATE pasta SET alterada_em = $1, criada_em = $1 WHERE id = ANY($2::uuid[])', [antigo, [a, b]]);
+  await T.banco.consulta('UPDATE estudo SET atualizado_em = $1 WHERE id = $2', [antigo, e]);
+  const alterada = async id => (await T.banco.um(
+    `SELECT greatest(p.alterada_em, (SELECT max(atualizado_em) FROM estudo WHERE pasta_id = p.id)) AS d FROM pasta p WHERE id = $1`, [id])).d;
+  assert.equal((await alterada(b)).getUTCFullYear(), 2020);
+  await ana.post(`/estudos/${e}/mover`, { destino: b });
+  assert.ok((await alterada(a)).getUTCFullYear() > 2020, 'a pasta de onde o estudo saiu mudou');
+  assert.ok((await alterada(b)).getUTCFullYear() > 2020, 'a pasta para onde ele foi também');
+  await T.banco.consulta('UPDATE pasta SET alterada_em = $1 WHERE id = $2', [antigo, b]);
+  await salvar(ana, e, { x: 2 });
+  assert.ok((await alterada(b)).getUTCFullYear() > 2020, 'editar um estudo altera a pasta');
 });
 
 test('olhar a vista não conta como edição', async () => {

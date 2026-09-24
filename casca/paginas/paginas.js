@@ -116,25 +116,19 @@ export function paginaRedefinir(config, { token = '', erro = '', invalido = fals
 
 /* ------------------------------------------------------------ utilidades */
 const FUSO = 'America/Sao_Paulo';
-const dataCurta = d => new Date(d).toLocaleDateString('pt-BR',
-  { day: 'numeric', month: 'short', year: 'numeric', timeZone: FUSO }).replace(/\. de /g, ' ').replace(/ de /g, ' ');
-
-/* "há 5 min", "há 3 h", "ontem", "há 4 dias", ou a data */
-export function haQuanto(d, agora = Date.now()) {
-  if (!d) return '';
-  const s = (agora - new Date(d).getTime()) / 1000;
-  if (s < 60) return 'há pouco';
-  if (s < 3600) return `há ${Math.floor(s / 60)} min`;
-  if (s < 86400) return `há ${Math.floor(s / 3600)} h`;
-  if (s < 172800) return 'ontem';
-  if (s < 604800) return `há ${Math.floor(s / 86400)} dias`;
-  return `em ${dataCurta(d)}`;
-}
 
 function saudacao() {
   const h = Number(new Date().toLocaleString('en-US', { hour: 'numeric', hour12: false, timeZone: FUSO }));
   return h < 5 ? 'Boa noite' : h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
 }
+
+/* datas por extenso curto, no fuso de quem usa: 24/09/2026 e 24/09/2026, 14:32 */
+const data = d => new Date(d).toLocaleDateString('pt-BR', { timeZone: FUSO });
+const dataHora = d => new Date(d).toLocaleString('pt-BR',
+  { timeZone: FUSO, day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+const datas = (criado, alterado, genero) => html`<span class="datas">
+  <span>${genero === 'a' ? 'Criada' : 'Criado'} em ${data(criado)}</span>
+  <span>${genero === 'a' ? 'Alterada' : 'Alterado'} em ${dataHora(alterado || criado)}</span></span>`;
 
 const plural = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
 
@@ -219,9 +213,9 @@ function cartaoEstudo(e, pastas, pastaAtual) {
   ${destaque ? html`<div class="destaque"><span class="rotulo">${destaque[0]}</span><span class="valor">${destaque[1]}</span></div>
   <dl class="numeros">${demais.map(([r, v]) => html`<div><dt>${r}</dt><dd>${v}</dd></div>`)}</dl>`
   : html`<p class="sem-calculo">Ainda sem premissas. Abra para começar.</p>`}
+  ${e.vista?.rotulo ? html`<p class="parou">Parou em <em>${e.vista.rotulo}</em></p>` : ''}
   <footer>
-    <span>${e.atualizado_em ? `Editado ${haQuanto(e.atualizado_em)}` : ''}${
-      e.vista?.rotulo ? html` · parou em <em>${e.vista.rotulo}</em>` : ''}</span>
+    ${datas(e.criado_em, e.atualizado_em, 'o')}
     <span class="seta">${destaque || e.vista ? 'Continuar' : 'Começar'} <span aria-hidden="true">→</span></span>
   </footer>
 </article>
@@ -262,16 +256,16 @@ export function paginaAreaDeTrabalho(config, usuario, { modulo, pastas, pasta, e
       <div class="acoes"><button type="button" class="botao" data-abrir="m-nova-pasta">+ Nova pasta</button></div>
     </header>
     <div class="estudos">
+      <button type="button" class="estudo novo" data-abrir="m-nova-pasta">
+        <span class="mais" aria-hidden="true">+</span><span>Nova pasta de trabalho</span>
+      </button>
       ${pastas.map(p => html`<a class="estudo pasta-cartao" href="/modelagens/${modulo.id}/${p.id}">
         <span class="icone-pasta" aria-hidden="true"></span>
         <h3>${p.nome}</h3>
         <p class="sem-calculo">${p.estudos ? plural(p.estudos, 'estudo', 'estudos') : 'Pasta vazia'}</p>
-        <footer><span>${p.mexida_em ? `Mexida ${haQuanto(p.mexida_em)}` : `Criada ${haQuanto(p.criada_em)}`}</span>
+        <footer>${datas(p.criada_em, p.alterada_em, 'a')}
           <span class="seta">Abrir <span aria-hidden="true">→</span></span></footer>
       </a>`)}
-      <button type="button" class="estudo novo" data-abrir="m-nova-pasta">
-        <span class="mais" aria-hidden="true">+</span><span>Nova pasta de trabalho</span>
-      </button>
     </div>
     ${dialogo('m-nova-pasta', 'Nova pasta de trabalho', html`<form method="post" action="/modelagens/${modulo.id}/pastas">
       <input type="text" name="nome" placeholder="Ex.: Clientes 2026" required maxlength="120" aria-label="Nome da pasta">
@@ -289,7 +283,8 @@ export function paginaAreaDeTrabalho(config, usuario, { modulo, pastas, pasta, e
       <div>
         <p class="sobretitulo">Pasta de trabalho</p>
         <h1>${pasta.nome}</h1>
-        <p class="meta">${plural(estudos.length, 'estudo', 'estudos')} · criada ${haQuanto(pasta.criada_em)}</p>
+        <p class="meta">${plural(estudos.length, 'estudo', 'estudos')} · criada em ${data(pasta.criada_em)} ·
+          alterada em ${dataHora(pasta.alterada_em || pasta.criada_em)}</p>
       </div>
       <div class="acoes">
         <a class="botao leve" href="/modelagens/${modulo.id}">← Todas as pastas</a>
@@ -299,11 +294,11 @@ export function paginaAreaDeTrabalho(config, usuario, { modulo, pastas, pasta, e
       </div>
     </header>
     <div class="estudos">
-      ${estudos.map(e => cartaoEstudo(e, pastas, pasta))}
       <button type="button" class="estudo novo" data-abrir="p-novo">
         <span class="mais" aria-hidden="true">+</span>
         <span>${vazia ? 'Criar o primeiro estudo desta pasta' : 'Novo estudo'}</span>
       </button>
+      ${estudos.map(e => cartaoEstudo(e, pastas, pasta))}
     </div>
     ${dialogo('p-novo', 'Novo estudo', html`<form method="post" action="/pastas/${pasta.id}/estudos">
       <input type="text" name="nome" placeholder="Ex.: Gleba Itu — cenário base" required maxlength="160" aria-label="Nome do estudo">

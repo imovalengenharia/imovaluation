@@ -7,7 +7,10 @@ export const uuidValido = v => typeof v === 'string' && UUID.test(v);
 export function criarPastas(banco) {
   return {
     pasta: (uid, id) => uuidValido(id)
-      ? banco.um('SELECT id, modulo, nome, criada_em FROM pasta WHERE usuario_id = $1 AND id = $2', [uid, id])
+      ? banco.um(
+        `SELECT p.id, p.modulo, p.nome, p.criada_em,
+                greatest(p.alterada_em, (SELECT max(e.atualizado_em) FROM estudo e WHERE e.pasta_id = p.id)) AS alterada_em
+           FROM pasta p WHERE p.usuario_id = $1 AND p.id = $2`, [uid, id])
       : null,
 
     estudo: (uid, id) => uuidValido(id)
@@ -21,12 +24,12 @@ export function criarPastas(banco) {
     pastas: (uid, modulo) => banco.todos(
       `SELECT p.id, p.nome, p.criada_em,
               (SELECT count(*) FROM estudo e WHERE e.pasta_id = p.id)::int AS estudos,
-              (SELECT max(coalesce(e.aberto_em, e.atualizado_em)) FROM estudo e WHERE e.pasta_id = p.id) AS mexida_em
+              greatest(p.alterada_em, (SELECT max(e.atualizado_em) FROM estudo e WHERE e.pasta_id = p.id)) AS alterada_em
          FROM pasta p WHERE p.usuario_id = $1 AND p.modulo = $2
         ORDER BY lower(p.nome)`, [uid, modulo]),
 
     estudos: (uid, pastaId) => banco.todos(
-      `SELECT id, nome, resumo, vista, atualizado_em, aberto_em FROM estudo
+      `SELECT id, nome, resumo, vista, criado_em, atualizado_em, aberto_em FROM estudo
         WHERE usuario_id = $1 AND pasta_id = $2
         ORDER BY atualizado_em DESC`, [uid, pastaId]),
   };

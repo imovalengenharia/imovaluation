@@ -160,6 +160,9 @@ a.modelagem:focus-visible{outline:3px solid var(--acento-fraco);border-color:var
   padding-top:10px;border-top:1px solid var(--rule-soft);font-size:12px;color:var(--muted)}
 .estudo footer em{font-style:normal;color:var(--ink2)}
 .estudo footer .seta{white-space:nowrap}
+.estudo .datas{display:flex;flex-direction:column;gap:1px;font-variant-numeric:tabular-nums}
+.estudo .parou{margin:0;font-size:12px;color:var(--muted)}
+.estudo .parou em{font-style:normal;color:var(--ink2)}
 .pasta-cartao{text-decoration:none;color:inherit;min-height:160px}
 .icone-pasta{width:30px;height:23px;border:1.6px solid var(--acento);border-radius:3px;background:var(--acento-fraco);
   clip-path:polygon(0 0,40% 0,50% 18%,100% 18%,100% 100%,0 100%)}

@@ -12,7 +12,7 @@ export default async function rotasPastas(app) {
     if (!pasta) return reply.callNotFound();
     const nome = lerNome(req.body?.nome, 120);
     if (!nome) return reply.redirect(urlPasta(pasta.modulo, pasta.id, 'nome'), 303);
-    await banco.consulta('UPDATE pasta SET nome = $1 WHERE id = $2', [nome, pasta.id]);
+    await banco.consulta('UPDATE pasta SET nome = $1, alterada_em = now() WHERE id = $2', [nome, pasta.id]);
     return reply.redirect(urlPasta(pasta.modulo, pasta.id), 303);
   });
 
