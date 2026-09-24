@@ -135,7 +135,12 @@ ociosa que cai — banco reiniciado, por exemplo — derruba o servidor inteiro.
   nunca antes dele (pedido do dono do produto). Cada cartão mostra **criada/o em**
   (data) e **alterada/o em** (data e hora, fuso de São Paulo), automáticas: a
   pasta usa a mais recente entre `pasta.alterada_em` (renomear, estudo que entra,
-  sai ou é apagado) e o `atualizado_em` dos estudos dela. Rotas em `rotas/modelagens.js`, `rotas/pastas.js`,
+  sai ou é apagado) e o `atualizado_em` dos estudos dela.
+- A coluna lateral mostra o nível de dentro: na metodologia, as **pastas**; dentro
+  de uma pasta, os **estudos na pasta** (nunca as outras pastas).
+- Pastas e estudos, na lateral e nos quadros, em **ordem alfabética e numérica**
+  ("Estudo 2" antes de "Estudo 10", sem distinguir maiúscula nem acento):
+  `Intl.Collator('pt-BR', { numeric: true })` em `pastas.js`, igual nos dois bancos. Rotas em `rotas/modelagens.js`, `rotas/pastas.js`,
   `rotas/estudos.js` (com a API da ponte); consultas em `pastas.js`.
 - Diálogos são `<dialog>` nativos abertos por `data-abrir="<id>"`
   (`publico/casca.js`); as ações em si são formulários comuns.

@@ -1,6 +1,11 @@
 /* Consultas de pastas e estudos. Toda consulta leva o usuario_id: o que não é
    do usuário simplesmente não existe para ele (404, nunca 403). */
 
+/* Ordem alfabética e numérica, como uma pessoa lê: "Estudo 2" antes de
+   "Estudo 10", sem diferença entre maiúscula, minúscula e acento. */
+const ordem = new Intl.Collator('pt-BR', { numeric: true, sensitivity: 'base' });
+const emOrdem = linhas => linhas.sort((a, b) => ordem.compare(a.nome, b.nome));
+
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const uuidValido = v => typeof v === 'string' && UUID.test(v);
 
@@ -26,11 +31,11 @@ export function criarPastas(banco) {
               (SELECT count(*) FROM estudo e WHERE e.pasta_id = p.id)::int AS estudos,
               greatest(p.alterada_em, (SELECT max(e.atualizado_em) FROM estudo e WHERE e.pasta_id = p.id)) AS alterada_em
          FROM pasta p WHERE p.usuario_id = $1 AND p.modulo = $2
-        ORDER BY lower(p.nome)`, [uid, modulo]),
+        `, [uid, modulo]).then(emOrdem),
 
     estudos: (uid, pastaId) => banco.todos(
       `SELECT id, nome, resumo, vista, criado_em, atualizado_em, aberto_em FROM estudo
         WHERE usuario_id = $1 AND pasta_id = $2
-        ORDER BY atualizado_em DESC`, [uid, pastaId]),
+        `, [uid, pastaId]).then(emOrdem),
   };
 }

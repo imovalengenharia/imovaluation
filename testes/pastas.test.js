@@ -122,6 +122,25 @@ test('a data de alteração da pasta acompanha o que acontece nela', async () =>
   assert.ok((await alterada(b)).getUTCFullYear() > 2020, 'editar um estudo altera a pasta');
 });
 
+test('ordem alfabética e numérica, e a lateral da pasta lista os estudos dela', async () => {
+  const c = await cadastrar(T.app, 'ordem@exemplo.com');
+  const nova = async nome => idDe(await c.post('/modelagens/involutivo/pastas', { nome }));
+  const pz = await nova('Zeta'); await nova('pasta 10'); await nova('Pasta 2'); await nova('Ágata');
+  const met = (await c.get('/modelagens/involutivo')).body;
+  const ordemPastas = [...met.matchAll(/<h3>([^<]+)<\/h3>/g)].map(m => m[1]);
+  assert.deepEqual(ordemPastas, ['Ágata', 'Pasta 2', 'pasta 10', 'Zeta']);
+
+  for (const n of ['Estudo 10', 'estudo 2', 'Estudo 1', 'Área norte']) await c.post(`/pastas/${pz}/estudos`, { nome: n });
+  const pag = (await c.get(`/modelagens/involutivo/${pz}`)).body;
+  const lateral = pag.slice(pag.indexOf('<aside'), pag.indexOf('</aside>'));
+  assert.match(lateral, /Estudos na pasta/);
+  assert.doesNotMatch(lateral, /Pasta 2|Ágata/, 'a lateral não mostra as outras pastas');
+  const naLateral = [...lateral.matchAll(/<span class="nome">([^<]+)<\/span>/g)].map(m => m[1]);
+  assert.deepEqual(naLateral, ['Área norte', 'Estudo 1', 'estudo 2', 'Estudo 10']);
+  const nosQuadros = [...pag.matchAll(/<h3>([^<]+)<\/h3>/g)].map(m => m[1]);
+  assert.deepEqual(nosQuadros, naLateral, 'os quadros seguem a mesma ordem');
+});
+
 test('olhar a vista não conta como edição', async () => {
   const pasta = await novaPasta(ana, 'Recentes');
   const e = await novoEstudo(ana, pasta, 'Gleba recente');

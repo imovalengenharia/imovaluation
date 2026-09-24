@@ -303,17 +303,24 @@ export function paginaAreaDeTrabalho(config, usuario, { modulo, pastas, pasta, e
   return documento({ titulo: pasta ? `${pasta.nome} · ${modulo.nome}` : modulo.nome, config, corpo: html`
 ${barra(config, usuario, trilha(passos))}
 <div class="area">
-  <aside class="lateral" aria-label="Pastas de trabalho">
+  ${pasta ? html`<aside class="lateral" aria-label="Estudos na pasta">
+    <div class="lateral-titulo">
+      <span class="sobretitulo">${pasta.nome}</span>
+      <h2>Estudos na pasta</h2>
+    </div>
+    ${estudos.length ? html`<nav class="lista-pastas lista-estudos">
+      ${estudos.map(e => html`<a href="/estudos/${e.id}"><span class="nome">${e.nome}</span></a>`)}
+    </nav>` : ''}
+  </aside>` : html`<aside class="lateral" aria-label="Pastas de trabalho">
     <div class="lateral-titulo">
       <span class="sobretitulo">${modulo.nome}</span>
       <h2>Pastas de trabalho</h2>
     </div>
     ${pastas.length ? html`<nav class="lista-pastas">
-      ${pastas.map(p => html`<a href="/modelagens/${modulo.id}/${p.id}" class="${pasta && p.id === pasta.id ? 'ativa' : ''}"
-        ${pasta && p.id === pasta.id ? html`aria-current="page"` : ''}>
+      ${pastas.map(p => html`<a href="/modelagens/${modulo.id}/${p.id}">
         <span class="nome">${p.nome}</span><span class="qtd">${p.estudos}</span></a>`)}
     </nav>` : ''}
-  </aside>
+  </aside>`}
   <main class="conteudo">
     ${aviso(ok)}${aviso(erro, 'erro')}
     ${conteudo}

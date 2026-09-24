@@ -130,6 +130,7 @@ a.modelagem:focus-visible{outline:3px solid var(--acento-fraco);border-color:var
 .lista-pastas a.ativa{background:var(--acento-fraco);color:var(--ink)}
 .lista-pastas a.ativa::before{opacity:1;color:var(--acento)}
 .lista-pastas .nome{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lista-estudos a::before{width:10px;height:13px;border-radius:1.5px;clip-path:polygon(0 0,65% 0,100% 28%,100% 100%,0 100%)}
 .lista-pastas .qtd{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
 
 .conteudo{padding:32px 36px 64px;min-width:0}
