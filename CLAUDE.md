@@ -130,7 +130,8 @@ ociosa que cai — banco reiniciado, por exemplo — derruba o servidor inteiro.
   **daquela** metodologia; `/modelagens/:modulo/:pasta`, os estudos da pasta;
   `/estudos/:id`, o módulo. Na tela, o nome é "metodologia"; no código, `modulo`.
 - Nas grades de pastas e de estudos, o quadrado **"Nova pasta de trabalho" /
-  "Novo estudo" vem sempre em primeiro**; o que já existe vem ao lado e abaixo,
+  "Novo estudo" vem sempre em primeiro** e é o único jeito de criar pasta (sem
+  campo na lateral, sem botão no topo); metodologia sem pastas mostra só ele; o que já existe vem ao lado e abaixo,
   nunca antes dele (pedido do dono do produto). Cada cartão mostra **criada/o em**
   (data) e **alterada/o em** (data e hora, fuso de São Paulo), automáticas: a
   pasta usa a mais recente entre `pasta.alterada_em` (renomear, estudo que entra,

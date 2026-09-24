@@ -147,11 +147,6 @@ const ILUSTRACOES = {
     </g>
     <circle class="marco" cx="178" cy="44" r="4"/>
   </svg>`,
-  pasta: html`<svg viewBox="0 0 120 90" class="ilustracao" aria-hidden="true">
-    <path class="terreno" d="M10 22 L10 78 L110 78 L110 30 L56 30 L46 18 L14 18 Z"/>
-    <path class="via" d="M10 38 L110 38"/>
-    <g class="lotes"><path d="M26 52 L70 52"/><path d="M26 62 L90 62"/></g>
-  </svg>`,
 };
 
 /* ------------------------------------------- a tela inicial: as metodologias */
@@ -238,22 +233,18 @@ export function paginaAreaDeTrabalho(config, usuario, { modulo, pastas, pasta, e
   const passos = [{ rotulo: 'Metodologias', href: '/modelagens' },
     pasta ? { rotulo: modulo.nome, href: `/modelagens/${modulo.id}` } : { rotulo: modulo.nome },
     ...(pasta ? [{ rotulo: pasta.nome }] : [])];
-  const novaPasta = (classe = '') => html`<form class="nova-pasta ${classe}" method="post" action="/modelagens/${modulo.id}/pastas">
-    <input type="text" name="nome" placeholder="Nome da nova pasta" required maxlength="120" aria-label="Nome da nova pasta">
-    <button class="botao ${classe ? '' : 'leve'}" type="submit">${classe ? 'Criar pasta' : '+'}</button>
-  </form>`;
 
   let conteudo;
-  if (!pasta && pastas.length) {
-    /* a metodologia aberta: as pastas dela, e o caminho para criar outra */
+  if (!pasta) {
+    /* a metodologia aberta: o quadrado de criar pasta sempre em primeiro, e as
+       pastas que existirem ao lado e abaixo. Sem pastas, só o quadrado. */
     conteudo = html`
     <header class="cab-pasta">
       <div>
         <p class="sobretitulo">Metodologia</p>
         <h1>${modulo.nome}</h1>
-        <p class="meta">${plural(pastas.length, 'pasta de trabalho', 'pastas de trabalho')}</p>
+        ${pastas.length ? html`<p class="meta">${plural(pastas.length, 'pasta de trabalho', 'pastas de trabalho')}</p>` : ''}
       </div>
-      <div class="acoes"><button type="button" class="botao" data-abrir="m-nova-pasta">+ Nova pasta</button></div>
     </header>
     <div class="estudos">
       <button type="button" class="estudo novo" data-abrir="m-nova-pasta">
@@ -270,12 +261,6 @@ export function paginaAreaDeTrabalho(config, usuario, { modulo, pastas, pasta, e
     ${dialogo('m-nova-pasta', 'Nova pasta de trabalho', html`<form method="post" action="/modelagens/${modulo.id}/pastas">
       <input type="text" name="nome" placeholder="Ex.: Clientes 2026" required maxlength="120" aria-label="Nome da pasta">
       ${botoesDialogo('Criar pasta')}</form>`)}`;
-  } else if (!pasta) {
-    conteudo = html`<div class="vazio-grande">
-      ${ILUSTRACOES.pasta}
-      <h1>Comece por uma pasta de trabalho</h1>
-      ${novaPasta('grande')}
-    </div>`;
   } else {
     const vazia = !estudos.length;
     conteudo = html`
@@ -327,8 +312,7 @@ ${barra(config, usuario, trilha(passos))}
       ${pastas.map(p => html`<a href="/modelagens/${modulo.id}/${p.id}" class="${pasta && p.id === pasta.id ? 'ativa' : ''}"
         ${pasta && p.id === pasta.id ? html`aria-current="page"` : ''}>
         <span class="nome">${p.nome}</span><span class="qtd">${p.estudos}</span></a>`)}
-    </nav>` : html`<p class="sem-pastas">Nenhuma pasta ainda.</p>`}
-    ${pastas.length ? novaPasta() : ''}
+    </nav>` : ''}
   </aside>
   <main class="conteudo">
     ${aviso(ok)}${aviso(erro, 'erro')}

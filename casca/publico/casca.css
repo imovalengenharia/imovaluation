@@ -131,10 +131,6 @@ a.modelagem:focus-visible{outline:3px solid var(--acento-fraco);border-color:var
 .lista-pastas a.ativa::before{opacity:1;color:var(--acento)}
 .lista-pastas .nome{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lista-pastas .qtd{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
-.sem-pastas{color:var(--muted);font-size:var(--t-nota);padding:0 8px;margin:0}
-.nova-pasta{display:flex;gap:6px;padding:0 4px;margin-top:4px}
-.nova-pasta input{height:32px;font-size:13px}
-.nova-pasta .botao{height:32px;padding:0 12px}
 
 .conteudo{padding:32px 36px 64px;min-width:0}
 .cab-pasta{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;
@@ -185,12 +181,6 @@ a.botao{display:inline-flex;align-items:center;text-decoration:none}
 .menu-lista button:hover{background:var(--elev)}
 .menu-lista .perigo{color:var(--neg)}
 
-/* nenhuma pasta ainda: o convite ocupa o centro */
-.vazio-grande{max-width:520px;margin:10vh auto 0;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px}
-.vazio-grande .ilustracao{width:140px}
-.vazio-grande p{color:var(--ink2);margin:0 0 8px}
-.nova-pasta.grande{width:100%;max-width:420px;padding:0}
-.nova-pasta.grande input,.nova-pasta.grande .botao{height:var(--alt);font-size:14px}
 
 /* ---------- diálogos ---------- */
 .dialogo{border:1px solid var(--rule);border-radius:10px;padding:22px 22px 18px;width:min(440px,calc(100vw - 32px));

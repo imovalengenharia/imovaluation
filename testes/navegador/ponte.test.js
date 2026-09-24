@@ -32,8 +32,12 @@ async function entrarNovo(email) {
 async function criarEstudo(pg, pasta, nome) {
   await pg.goto(base + '/modelagens');
   await pg.click('a.modelagem');
-  const campoPasta = pg.locator('input[placeholder="Nome da nova pasta"]');
-  if (pasta) { await campoPasta.first().fill(pasta); await campoPasta.first().press('Enter'); await pg.waitForURL(/\/modelagens\/involutivo\/.+/); }
+  if (pasta) {                                           // o quadrado "Nova pasta de trabalho", primeiro da grade
+    await pg.click('.estudos .estudo.novo');
+    await pg.fill('#m-nova-pasta input[name=nome]', pasta);
+    await pg.click('#m-nova-pasta button[type=submit]');
+    await pg.waitForURL(/\/modelagens\/involutivo\/.+/);
+  }
   else await pg.click('.pasta-cartao');                  // a metodologia abre nas pastas: entra na primeira
   await pg.click('.cab-pasta [data-abrir="p-novo"]');
   await pg.fill('#p-novo input[name=nome]', nome);

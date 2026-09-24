@@ -32,7 +32,8 @@ test('modelagem sem pastas convida a criar a primeira', async () => {
   const c = await cadastrar(T.app, 'vazia@exemplo.com');
   const r = await c.get('/modelagens/involutivo');
   assert.equal(r.statusCode, 200);
-  assert.match(r.body, /Comece por uma pasta de trabalho/);
+  assert.match(r.body, /Nova pasta de trabalho/, 'só o quadrado de criar');
+  assert.doesNotMatch(r.body, /pasta-cartao|Nome da nova pasta/);
   assert.equal((await c.get('/modelagens/nao-existe')).statusCode, 404);
 });
 
