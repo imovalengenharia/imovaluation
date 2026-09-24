@@ -1,4 +1,4 @@
-# Plataforma de involutivo — glebas urbanizáveis
+# Glebas urbanizáveis — análise da qualidade do investimento
 
 Aplicação web que substitui a planilha `INVOLUTIVO_LOTEAMENTO`: o usuário digita as
 premissas (as mesmas células azuis da planilha) e recebe o fluxo de caixa mês a mês,

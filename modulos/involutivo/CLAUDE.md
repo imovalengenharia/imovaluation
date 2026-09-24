@@ -1,7 +1,11 @@
-# CLAUDE.md — Involutivo de Glebas
+# CLAUDE.md — Glebas urbanizáveis
 
-Avaliação de terreno pelo método involutivo: fluxo de caixa mês a mês,
-demonstrativo, safras de venda e a TIR travada na TMA. É o primeiro módulo da
+Análise da qualidade do investimento em glebas urbanizáveis (loteamento aberto e
+condomínio de lotes): fluxo de caixa mês a mês, demonstrativo, safras de venda e
+indicadores. O **involutivo é um método de avaliação dentro do estudo** — com a
+TIR travada na TMA, ele devolve o valor da gleba —, não o nome do produto. Na
+tela o módulo se chama "Glebas urbanizáveis"; a pasta e o id continuam
+`involutivo` (estudos salvos apontam para esse id). É o primeiro módulo da
 plataforma; as convenções de interface e a fronteira com a casca estão no
 `CLAUDE.md` da raiz. Aqui fica o que é só deste módulo.
 

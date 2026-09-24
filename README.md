@@ -1,7 +1,7 @@
 # Imovaluation
 
 Plataforma de modelagens imobiliárias: a casca autentica, cobra e guarda; cada modelagem é um
-aplicativo dentro dela. O **Involutivo de Glebas** é o primeiro.
+aplicativo dentro dela. A de **Glebas urbanizáveis** é a primeira.
 
 ## Usar no seu computador
 
@@ -46,7 +46,7 @@ npm run test:navegador    # a ponte casca ↔ módulo no Chromium
 
 - **Conta** — cadastro, entrar, sair, recuperação de senha por e-mail. Um login é uma pessoa.
 - **Metodologias** — a primeira tela depois de entrar mostra só elas, para escolher (por
-  ora, o Involutivo de Glebas).
+  ora, Glebas urbanizáveis).
 - **Pastas de trabalho** — dentro de cada metodologia, sem misturar com as de outra; cada
   pasta com vários estudos, em
   cartões que mostram os números principais de cada um. Renomear, duplicar (para montar

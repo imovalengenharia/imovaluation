@@ -5,8 +5,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## O que é
 
 **Imovaluation** é uma plataforma de modelagens: a **casca** autentica, cobra e
-guarda; cada **modelagem** é um aplicativo dentro dela. O Involutivo de Glebas é
-o primeiro. A plataforma nasceu do zero — nada de código, modelo de dados ou
+guarda; cada **modelagem** (na tela, "tipo de análise da qualidade do
+investimento imobiliário") é um aplicativo dentro dela. A primeira é **Glebas
+urbanizáveis** (`modulos/involutivo/`). Atenção ao vocabulário, que o dono do
+produto corrigiu: **involutivo é um método de avaliação usado dentro do estudo**,
+não o nome da análise — na interface, o produto é "Glebas urbanizáveis". A plataforma nasceu do zero — nada de código, modelo de dados ou
 hábito de projeto anterior. O nome exibido vem de `PLATAFORMA_NOME`
 (padrão `Imovaluation`).
 

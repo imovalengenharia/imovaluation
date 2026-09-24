@@ -1,5 +1,5 @@
 /* ============================================================================
-   PLATAFORMA DE INVOLUTIVO — interface
+   GLEBAS URBANIZÁVEIS — interface
    Uma aba por planilha, na mesma ordem e com a mesma lógica do arquivo de
    origem. Campo azul = célula digitável. Valor em cinza = fórmula.
    ========================================================================== */
@@ -1110,7 +1110,7 @@
 
       boxTopo.appendChild(e('div', { cls: 'destaque-gleba' }, [
         e('div', {}, [
-          e('div', { cls: 'k', txt: i.modoTerreno === 'resolver' ? 'Teto de aquisição da gleba' : 'Valor da gleba informado' }),
+          e('div', { cls: 'k', txt: i.modoTerreno === 'resolver' ? 'Teto de aquisição da gleba · método involutivo' : 'Valor da gleba informado' }),
           e('div', { cls: 'v', txt: R$(i.valorTerreno) }),
           e('div', { cls: 'n', txt: 'em moeda da data-base, somando dinheiro e permuta' +
             (i.modoTerreno === 'resolver' ? ' · TIR travada na TMA de ' + pc(i.tma) : ' · valor informado') })
@@ -1318,7 +1318,7 @@
       contas.sort(function (a, b) { return a[1] - b[1]; });
       p('As maiores aplicações do ciclo, em moeda da base: ' + contas.slice(0, 4).map(function (c) {
         return c[0].toLowerCase() + ' ' + num(R$(-c[1])); }).join(', ') + '.');
-      h('5 · Valor da gleba');
+      h(i.modoTerreno === 'resolver' ? '5 · Valor da gleba pelo método involutivo' : '5 · Valor da gleba');
       p('O pagamento da gleba está estruturado ' + (i.formaTerreno === 'avista' ? 'integralmente à vista'
           : i.formaTerreno === 'permuta' ? 'integralmente em permuta financeira'
           : 'em regime misto: ' + pc(i.pctDinheiroEfetivo) + ' em dinheiro e o restante em permuta') +
@@ -1586,7 +1586,7 @@
             vista: { aba: abaAtiva, rotulo: aba ? aba.rot : '', rolagem: rolagem } }, location.origin);
         },
       };
-      if (m.estudo.nome) document.title = m.estudo.nome + ' · Involutivo de Glebas';
+      if (m.estudo.nome) document.title = m.estudo.nome + ' · Glebas urbanizáveis';
       /* reabre onde parou: mesma aba, mesmo ponto da página */
       var v = m.estudo.vista;
       if (v && typeof v.aba === 'string') abaAtiva = v.aba;
@@ -1697,7 +1697,7 @@
       P = premissasPadrao(); rolagem = {}; recalcular(); montarFolha();
     });
     document.getElementById('btn-json').addEventListener('click', function () {
-      baixar('premissas-involutivo.json', JSON.stringify(P, null, 2), 'application/json');
+      baixar('premissas-glebas-urbanizaveis.json', JSON.stringify(P, null, 2), 'application/json');
     });
     document.getElementById('btn-csv').addEventListener('click', function () {
       var cols = Motor.COLUNAS.concat([['liquida', 'Receita líquida'], ['fluxo', 'Fluxo do mês'], ['acum', 'Caixa acumulado']]);
@@ -1706,7 +1706,7 @@
         l.push([m.mes].concat(cols.map(function (c) {
           return String(Math.round(m[c[0]] * 100) / 100).replace('.', ','); })).join(';'));
       });
-      baixar('fluxo-involutivo.csv', '﻿' + l.join('\n'), 'text/csv;charset=utf-8');
+      baixar('fluxo-glebas-urbanizaveis.csv', '﻿' + l.join('\n'), 'text/csv;charset=utf-8');
     });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar);
