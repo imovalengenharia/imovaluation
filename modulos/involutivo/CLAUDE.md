@@ -5,6 +5,10 @@ demonstrativo, safras de venda e a TIR travada na TMA. É o primeiro módulo da
 plataforma; as convenções de interface e a fronteira com a casca estão no
 `CLAUDE.md` da raiz. Aqui fica o que é só deste módulo.
 
+O histórico do módulo antes de entrar na plataforma — 52 commits, da primeira
+versão à auditoria do motor — está no branch `historico/involutivo`
+(`git log historico/involutivo`). Os caminhos lá são relativos a esta pasta.
+
 ## Comandos
 
 ```bash
