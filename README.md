@@ -42,14 +42,16 @@ npm test                  # casca contra um Postgres real + auditoria do involut
 npm run test:navegador    # a ponte casca ↔ módulo no Chromium
 ```
 
-## O que já existe (fatia 1)
+## O que já existe
 
 - **Conta** — cadastro, entrar, sair, recuperação de senha por e-mail. Um login é uma pessoa.
-- **Banco** — `usuario`, `sessao`, `recuperacao_senha`, `assinatura` (vazia até a
-  fatia da cobrança), `pasta`, `estudo`. Migrações em `casca/migracoes/`.
-- **Pastas de trabalho** — pastas dentro de pastas; criar, renomear, mover, apagar
-  (só vazias). Estudos na raiz ou em qualquer pasta.
-- **Involutivo dentro** — cada estudo abre o módulo e salva sozinho as premissas no banco.
+- **Modelagens** — a primeira tela depois de entrar: um cartão por modelagem (por ora, o
+  Involutivo de Glebas) e a lista "continuar de onde parou".
+- **Pastas de trabalho** — dentro de cada modelagem; cada pasta com vários estudos, em
+  cartões que mostram os números principais de cada um. Renomear, duplicar (para montar
+  cenários), mover e apagar.
+- **Estudos** — abrem a modelagem exatamente onde pararam (premissas, aba e ponto da
+  página) e se salvam sozinhos a cada mudança.
 
 ## Próximas fatias
 

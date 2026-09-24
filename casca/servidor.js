@@ -10,6 +10,7 @@ import { COOKIE_SESSAO } from './config.js';
 import { criarCorreio } from './email.js';
 import { paginaErro } from './paginas/paginas.js';
 import rotasConta from './rotas/conta.js';
+import rotasModelagens from './rotas/modelagens.js';
 import rotasPastas from './rotas/pastas.js';
 import rotasEstudos from './rotas/estudos.js';
 
@@ -108,9 +109,10 @@ export async function criarServidor({ config, banco, correio, logger = true }) {
     return { ok: true };
   });
 
-  app.get('/', async (req, reply) => reply.redirect(req.usuario ? '/pastas' : '/entrar'));
+  app.get('/', async (req, reply) => reply.redirect(req.usuario ? '/modelagens' : '/entrar'));
 
   await app.register(rotasConta);
+  await app.register(rotasModelagens);
   await app.register(rotasPastas);
   await app.register(rotasEstudos);
 

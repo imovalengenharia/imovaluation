@@ -26,5 +26,5 @@ test('site de teste: a hospedagem confere a saúde sem senha', async () => {
 test('com a senha de acesso, o login continua valendo por cima', async () => {
   const c = cliente(T.app);
   const h = { headers: basico('equipe:senha-do-teste') };
-  assert.equal((await c.get('/pastas', h)).statusCode, 302);
+  assert.equal((await c.get('/modelagens', h)).statusCode, 302);
 });

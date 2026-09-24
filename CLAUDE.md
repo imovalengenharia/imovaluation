@@ -51,9 +51,21 @@ Na prática: a página `/estudos/:id` é só a barra da casca e um `<iframe>` co
 ```
 módulo → casca   { canal, tipo: 'pronto', modulo }            ao carregar
 casca  → módulo  { canal, tipo: 'abrir', usuario: { nome },
-                   estudo: { id, nome, modulo, premissas } }  premissas null = estudo novo
-módulo → casca   { canal, tipo: 'mudou', premissas }          a cada recálculo, o P inteiro
+                   estudo: { id, nome, modulo, premissas, vista } }
+                                                              premissas null = estudo novo
+módulo → casca   { canal, tipo: 'resumo', resumo }            logo depois de abrir
+módulo → casca   { canal, tipo: 'mudou', premissas, resumo }  a cada recálculo, o P inteiro
+módulo → casca   { canal, tipo: 'vista', vista }              troca de aba, rolagem
 ```
+
+- **`resumo`**: até 6 pares `[rótulo, valor]` já escritos pelo módulo; a casca
+  mostra no cartão do estudo sem entender nenhum. Mandado também ao abrir, para
+  o cartão ter números mesmo sem edição (`PUT /api/estudos/:id/resumo`, que não
+  mexe em `atualizado_em`).
+- **`vista`**: onde a leitura parou (no involutivo: `{ aba, rotulo, rolagem }`).
+  A casca grava à parte (`PUT /api/estudos/:id/vista`), sem contar como edição:
+  troca de aba grava na hora, rolagem espera 1,5 s parada. O `rotulo` aparece no
+  cartão ("parou em Fluxo de caixa"). É assim que o estudo reabre onde parou.
 
 O `src` do iframe só é posto por `publico/estudo.js`, **depois** de ele
 escutar as mensagens: com o `src` direto no HTML, o `'pronto'` do módulo às
@@ -108,8 +120,13 @@ ociosa que cai — banco reiniciado, por exemplo — derruba o servidor inteiro.
 - `servidor.js` monta tudo: cabeçalhos de segurança, checagem de `Origin`,
   leitura da sessão, porteiro (`app.exigirLogin`), estáticos, rotas.
 - `rotas/conta.js` — cadastro, entrar, sair, recuperação de senha.
-- `rotas/pastas.js`, `rotas/estudos.js` — pastas de trabalho e estudos, e a API
-  da ponte. `pastas.js` (na raiz da casca) tem as consultas de árvore.
+- A navegação é **modelagens → pastas de trabalho → estudos**:
+  `/modelagens` (um cartão por módulo + "continuar de onde parou"),
+  `/modelagens/:modulo/:pasta` (pastas à esquerda, estudos em cartões à direita),
+  `/estudos/:id` (o módulo). Rotas em `rotas/modelagens.js`, `rotas/pastas.js`,
+  `rotas/estudos.js` (com a API da ponte); consultas em `pastas.js`.
+- Diálogos são `<dialog>` nativos abertos por `data-abrir="<id>"`
+  (`publico/casca.js`); as ações em si são formulários comuns.
 - `paginas/` — HTML por template literal (`html\`\``), que escapa tudo o que é
   interpolado. Não há motor de template. Não há JavaScript de página, exceto
   `publico/estudo.js` (o lado casca da ponte).
@@ -125,9 +142,11 @@ ociosa que cai — banco reiniciado, por exemplo — derruba o servidor inteiro.
   `usuario_id`, e o que é de outro responde 404, nunca 403. As chaves
   compostas `(usuario_id, pai_id)` e `(usuario_id, pasta_id)` fazem o próprio
   banco recusar pasta ou estudo pendurado em pasta alheia.
-- **Pasta com conteúdo não se apaga.** Nenhum estudo some por cascata.
-- Mover e apagar pasta correm sob `pg_advisory_xact_lock` por usuário: dois
-  movimentos simultâneos não fecham um ciclo.
+- **A pasta é de uma modelagem, e tem um nível só** (migração 002; `pai_id` ficou
+  no banco, sempre nulo). O estudo mora sempre numa pasta da **mesma**
+  modelagem: a chave `(usuario_id, pasta_id, modulo)` faz o banco recusar o resto.
+- **Pasta com estudos não se apaga.** Nenhum estudo some por cascata.
+- Duplicar estudo é o jeito de fazer cenário: copia premissas, resumo e vista.
 - `assinatura` existe desde a primeira migração, vazia: a cobrança é a
   próxima fatia (Stripe, cartão e Pix; o plano libera módulos).
 

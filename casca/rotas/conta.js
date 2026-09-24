@@ -7,8 +7,8 @@ import { COOKIE_SESSAO } from '../config.js';
 const normalizarEmail = e => String(e || '').trim().toLowerCase();
 const emailValido = e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) && e.length <= 254;
 
-/* Só volta para caminho interno: "/pastas/x", nunca "//outro.site" nem URL absoluta. */
-const destinoSeguro = v => (typeof v === 'string' && /^\/(?![/\\])/.test(v)) ? v : '/pastas';
+/* Só volta para caminho interno: "/modelagens/x", nunca "//outro.site" nem URL absoluta. */
+const destinoSeguro = v => (typeof v === 'string' && /^\/(?![/\\])/.test(v)) ? v : '/modelagens';
 
 /* Freio contra adivinhação de senha, em memória: 10 falhas em 15 minutos por
    e-mail, 50 por IP (um escritório inteiro sai pelo mesmo IP). */
@@ -42,7 +42,7 @@ export default async function rotasConta(app) {
 
   /* ------------------------------------------------------------ entrar */
   app.get('/entrar', async (req, reply) => {
-    if (req.usuario) return reply.redirect('/pastas');
+    if (req.usuario) return reply.redirect('/modelagens');
     const ok = req.query.senha === 'nova' ? 'Senha alterada. Entre com a senha nova.' : '';
     return reply.pagina(paginaEntrar(config, { ok, voltar: destinoSeguro(req.query.voltar) }));
   });
@@ -69,7 +69,7 @@ export default async function rotasConta(app) {
 
   /* ---------------------------------------------------------- cadastro */
   app.get('/cadastro', async (req, reply) => {
-    if (req.usuario) return reply.redirect('/pastas');
+    if (req.usuario) return reply.redirect('/modelagens');
     return reply.pagina(paginaCadastro(config, {}, SENHA_MINIMO));
   });
 
@@ -90,7 +90,7 @@ export default async function rotasConta(app) {
        ON CONFLICT (email) DO NOTHING RETURNING id`, [email, nome, hash]);
     if (!u) return falha('Já existe uma conta com este e-mail. Entre, ou recupere a senha.');
     await abrirSessao(reply, u.id);
-    return reply.redirect('/pastas', 303);
+    return reply.redirect('/modelagens', 303);
   });
 
   /* -------------------------------------------------------------- sair */

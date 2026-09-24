@@ -14,6 +14,7 @@ function documento({ titulo, config, corpo, classe = '', cabeca = '' }) {
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="${FONTES}">
 <link rel="stylesheet" href="/publico/casca.css">
+<script src="/publico/casca.js" defer></script>
 ${cabeca}
 </head>
 <body class="${classe}">
@@ -22,15 +23,25 @@ ${corpo}
 </html>`.texto;
 }
 
+/* A barra de cima: a marca leva sempre às modelagens; no meio, a trilha de
+   onde se está; à direita, quem entrou. */
 function barra(config, usuario, meio = '') {
   return html`<header class="barra">
-  <a class="marca" href="/pastas">${config.nome}</a>
+  <a class="marca" href="/modelagens">${config.nome}</a>
   ${meio}
   <span class="vazio"></span>
-  <span class="quem">${usuario.nome}</span>
+  <span class="quem"><span class="avatar" aria-hidden="true">${iniciais(usuario.nome)}</span>${usuario.nome}</span>
   <form method="post" action="/sair"><button class="acao" type="submit">Sair</button></form>
 </header>`;
 }
+
+function trilha(passos) {
+  return html`<nav class="trilha" aria-label="Onde você está">${passos.map((p, i) => html`${i ? html`<span class="sep">/</span>` : ''}${
+    p.href ? html`<a href="${p.href}">${p.rotulo}</a>` : html`<span class="atual">${p.rotulo}</span>`}`)}</nav>`;
+}
+
+const iniciais = nome => String(nome).trim().split(/\s+/).filter(Boolean)
+  .map(p => p[0]).slice(0, 2).join('').toUpperCase();
 
 const aviso = (texto, tipo = '') => texto ? html`<div class="aviso ${tipo}" role="alert">${texto}</div>` : '';
 
@@ -103,93 +114,246 @@ export function paginaRedefinir(config, { token = '', erro = '', invalido = fals
   </form>`);
 }
 
-/* ----------------------------------------------------------------- pastas */
-const dataCurta = d => new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+/* ------------------------------------------------------------ utilidades */
+const FUSO = 'America/Sao_Paulo';
+const dataCurta = d => new Date(d).toLocaleDateString('pt-BR',
+  { day: 'numeric', month: 'short', year: 'numeric', timeZone: FUSO }).replace(/\. de /g, ' ').replace(/ de /g, ' ');
 
-function opcoesDestino(destinos, atual, excluir) {
-  return html`<option value="" ${atual ? '' : 'selected'}>Início</option>
-  ${destinos.filter(d => d.id !== excluir).map(d =>
-    html`<option value="${d.id}" ${d.id === atual ? 'selected' : ''}>${'  '.repeat(d.nivel)}${d.nome}</option>`)}`;
+/* "há 5 min", "há 3 h", "ontem", "há 4 dias", ou a data */
+export function haQuanto(d, agora = Date.now()) {
+  if (!d) return '';
+  const s = (agora - new Date(d).getTime()) / 1000;
+  if (s < 60) return 'há pouco';
+  if (s < 3600) return `há ${Math.floor(s / 60)} min`;
+  if (s < 86400) return `há ${Math.floor(s / 3600)} h`;
+  if (s < 172800) return 'ontem';
+  if (s < 604800) return `há ${Math.floor(s / 86400)} dias`;
+  return `em ${dataCurta(d)}`;
 }
 
-function menuItem(tipo, item, destinos) {
-  const base = `/${tipo}/${item.id}`;
-  const excluir = tipo === 'pastas' ? item.id : null;
-  const paiAtual = tipo === 'pastas' ? item.pai_id : item.pasta_id;
-  return html`<details><summary aria-label="Ações">⋯</summary><div class="menu">
-    <form method="post" action="${base}/renomear">
-      <input type="text" name="nome" value="${item.nome}" required aria-label="Nome">
-      <button class="botao leve" type="submit">Renomear</button></form>
-    <form method="post" action="${base}/mover">
-      <select name="destino" aria-label="Mover para">${opcoesDestino(destinos, paiAtual, excluir)}</select>
-      <button class="botao leve" type="submit">Mover</button></form>
-    <form method="post" action="${base}/apagar">
-      <button class="link-botao perigo" type="submit">Apagar ${tipo === 'pastas' ? 'pasta' : 'estudo'}</button></form>
-  </div></details>`;
+function saudacao() {
+  const h = Number(new Date().toLocaleString('en-US', { hour: 'numeric', hour12: false, timeZone: FUSO }));
+  return h < 5 ? 'Boa noite' : h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
 }
 
-export function paginaPastas(config, usuario, { pasta, caminho, pastas, estudos, destinos, erro, ok }) {
-  const aqui = pasta ? pasta.id : '';
-  const trilha = html`<div class="caminho">${pasta
-    ? html`<a href="/pastas">Início</a>${caminho.map(c => html` / <a href="/pastas/${c.id}">${c.nome}</a>`)}`
-    : html`&nbsp;`}</div>`;
-  const vazio = !pastas.length && !estudos.length;
-  const modulos = Object.values(MODULOS);
+const plural = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
 
-  return documento({ titulo: pasta ? pasta.nome : 'Início', config, corpo: html`
+/* Desenhos em traço, na cor dos tokens: nada de imagem externa. */
+const ILUSTRACOES = {
+  /* uma gleba de contorno irregular, cortada por uma via curva em quadras e lotes */
+  gleba: html`<svg viewBox="0 0 240 150" class="ilustracao" aria-hidden="true">
+    <path class="terreno" d="M18 30 L92 12 L178 20 L224 58 L214 122 L140 140 L46 132 L12 88 Z"/>
+    <path class="via" d="M12 88 C70 70 120 96 214 70"/>
+    <path class="via" d="M92 12 C100 60 108 100 140 140"/>
+    <g class="lotes">
+      <path d="M30 40 L86 26 L90 58 L34 72 Z"/><path d="M48 36 L52 68"/><path d="M68 31 L72 63"/>
+      <path d="M104 20 L170 28 L200 56 L112 70 Z"/><path d="M126 23 L130 67"/><path d="M148 26 L154 63"/>
+      <path d="M24 98 C60 88 90 96 104 102 L112 126 L50 122 Z"/><path d="M60 94 L66 123"/><path d="M84 96 L88 124"/>
+      <path d="M122 100 C150 92 180 86 206 82 L200 114 L142 128 Z"/><path d="M150 94 L158 124"/><path d="M178 88 L182 118"/>
+    </g>
+    <circle class="marco" cx="178" cy="44" r="4"/>
+  </svg>`,
+  pasta: html`<svg viewBox="0 0 120 90" class="ilustracao" aria-hidden="true">
+    <path class="terreno" d="M10 22 L10 78 L110 78 L110 30 L56 30 L46 18 L14 18 Z"/>
+    <path class="via" d="M10 38 L110 38"/>
+    <g class="lotes"><path d="M26 52 L70 52"/><path d="M26 62 L90 62"/></g>
+  </svg>`,
+};
+
+/* ------------------------------------------------- a tela inicial: modelagens */
+export function paginaModelagens(config, usuario, { contagens, recentes }) {
+  const primeiroNome = String(usuario.nome).trim().split(/\s+/)[0];
+  return documento({ titulo: 'Modelagens', config, corpo: html`
 ${barra(config, usuario)}
-<main class="pagina">
-  <div class="cabeca"><div>${trilha}<h1>${pasta ? pasta.nome : 'Início'}</h1></div></div>
-  ${aviso(ok)}${aviso(erro, 'erro')}
-  <div class="quadro">
-    ${vazio ? html`<div class="vazia">Pasta vazia. Crie uma pasta ou um estudo abaixo.</div>` : html`
-    <ul class="lista">
-      ${pastas.map(p => html`<li>
-        <span class="icone">▸</span>
-        <span class="nome"><a href="/pastas/${p.id}">${p.nome}</a></span>
-        <span class="meta">${p.itens} ${p.itens === 1 ? 'item' : 'itens'}</span>
-        ${menuItem('pastas', p, destinos)}</li>`)}
-      ${estudos.map(e => html`<li>
-        <span class="icone">≡</span>
-        <span class="nome"><a href="/estudos/${e.id}">${e.nome}</a></span>
-        <span class="meta">${MODULOS[e.modulo]?.nome || e.modulo} · ${dataCurta(e.atualizado_em)}</span>
-        ${menuItem('estudos', e, destinos)}</li>`)}
-    </ul>`}
-  </div>
-  <div class="novos">
-    <section class="quadro"><h2>Novo estudo</h2>
-      <form method="post" action="/estudos">
-        <input type="hidden" name="pasta" value="${aqui}">
-        <input type="text" name="nome" placeholder="Nome do estudo" required maxlength="160" aria-label="Nome do estudo">
-        ${modulos.length > 1 ? html`<select name="modulo" aria-label="Modelagem">
-          ${modulos.map(m => html`<option value="${m.id}">${m.nome}</option>`)}</select>`
-        : html`<input type="hidden" name="modulo" value="${modulos[0].id}">`}
-        ${modulos.length > 1 ? '' : html`<span class="nota">${modulos[0].nome}</span>`}
-        <button class="botao" type="submit">Criar estudo</button>
-      </form></section>
-    <section class="quadro"><h2>Nova pasta</h2>
-      <form method="post" action="/pastas">
-        <input type="hidden" name="pai" value="${aqui}">
-        <input type="text" name="nome" placeholder="Nome da pasta" required maxlength="120" aria-label="Nome da pasta">
-        <button class="botao leve" type="submit">Criar pasta</button>
-      </form></section>
-  </div>
+<main class="inicio">
+  <section class="saudacao">
+    <p class="sobretitulo">Modelagens</p>
+    <h1>${saudacao()}, ${primeiroNome}.</h1>
+    <p class="lead">Escolha a modelagem para abrir as suas pastas de trabalho.</p>
+  </section>
+
+  <section class="modelagens" aria-label="Modelagens disponíveis">
+    ${Object.values(MODULOS).map(m => {
+      const c = contagens[m.id] || { pastas: 0, estudos: 0 };
+      return html`<a class="modelagem" href="/modelagens/${m.id}">
+        <div class="quadro-ilustracao">${ILUSTRACOES[m.ilustracao] || ''}</div>
+        <div class="corpo">
+          <h2>${m.nome}</h2>
+          <p>${m.descricao}</p>
+          <div class="rodape-cartao">
+            <span class="contagem">${c.estudos
+              ? `${plural(c.pastas, 'pasta', 'pastas')} · ${plural(c.estudos, 'estudo', 'estudos')}`
+              : 'Nenhum estudo ainda'}</span>
+            <span class="seta">Abrir <span aria-hidden="true">→</span></span>
+          </div>
+        </div>
+      </a>`;
+    })}
+    <div class="modelagem em-breve" aria-hidden="true">
+      <div class="corpo"><h2>Próximas modelagens</h2>
+        <p>Cada modelagem nova aparece aqui, com as suas próprias pastas de trabalho.</p></div>
+    </div>
+  </section>
+
+  ${recentes.length ? html`<section class="recentes">
+    <h2>Continuar de onde parou</h2>
+    <ul class="lista-recentes">
+      ${recentes.map(r => html`<li><a href="/estudos/${r.id}">
+        <span class="nome">${r.nome}</span>
+        <span class="onde">${MODULOS[r.modulo]?.nome || r.modulo} · ${r.pasta_nome}${
+          r.vista?.rotulo ? ` · parou em ${r.vista.rotulo}` : ''}</span>
+        <span class="quando">${haQuanto(r.aberto_em)}</span>
+      </a></li>`)}
+    </ul>
+  </section>` : ''}
 </main>` });
 }
 
+/* ------------------------------------------- a área de trabalho da modelagem */
+function dialogo(id, titulo, conteudo) {
+  return html`<dialog id="${id}" class="dialogo" aria-labelledby="${id}-t">
+  <h2 id="${id}-t">${titulo}</h2>
+  ${conteudo}
+</dialog>`;
+}
+
+const botoesDialogo = (rotulo, classe = '') => html`<div class="botoes">
+  <button type="button" class="botao leve" data-fechar>Cancelar</button>
+  <button type="submit" class="botao ${classe}">${rotulo}</button></div>`;
+
+function cartaoEstudo(e, pastas, pastaAtual) {
+  const outras = pastas.filter(p => p.id !== pastaAtual.id);
+  const resumo = Array.isArray(e.resumo) ? e.resumo : [];
+  const [destaque, ...demais] = resumo;
+  const d = `e-${e.id}`;
+  return html`<article class="estudo">
+  <a class="cobre" href="/estudos/${e.id}" aria-label="Abrir ${e.nome}"></a>
+  <header>
+    <h3>${e.nome}</h3>
+    <details class="menu">
+      <summary aria-label="Ações do estudo">⋯</summary>
+      <div class="menu-lista">
+        <button type="button" data-abrir="${d}-renomear">Renomear</button>
+        <button type="button" data-abrir="${d}-duplicar">Duplicar</button>
+        ${outras.length ? html`<button type="button" data-abrir="${d}-mover">Mover para…</button>` : ''}
+        <button type="button" class="perigo" data-abrir="${d}-apagar">Apagar</button>
+      </div>
+    </details>
+  </header>
+  ${destaque ? html`<div class="destaque"><span class="rotulo">${destaque[0]}</span><span class="valor">${destaque[1]}</span></div>
+  <dl class="numeros">${demais.map(([r, v]) => html`<div><dt>${r}</dt><dd>${v}</dd></div>`)}</dl>`
+  : html`<p class="sem-calculo">Ainda sem premissas. Abra para começar.</p>`}
+  <footer>
+    <span>${e.atualizado_em ? `Editado ${haQuanto(e.atualizado_em)}` : ''}${
+      e.vista?.rotulo ? html` · parou em <em>${e.vista.rotulo}</em>` : ''}</span>
+    <span class="seta">${destaque || e.vista ? 'Continuar' : 'Começar'} <span aria-hidden="true">→</span></span>
+  </footer>
+</article>
+${dialogo(`${d}-renomear`, 'Renomear estudo', html`<form method="post" action="/estudos/${e.id}/renomear">
+  <input type="text" name="nome" value="${e.nome}" required maxlength="160" aria-label="Nome do estudo">
+  ${botoesDialogo('Salvar')}</form>`)}
+${dialogo(`${d}-duplicar`, 'Duplicar estudo', html`<form method="post" action="/estudos/${e.id}/duplicar">
+  <p>Cria uma cópia com as mesmas premissas, nesta pasta — o jeito de montar outro cenário.</p>
+  <input type="text" name="nome" value="${e.nome} (cópia)" required maxlength="160" aria-label="Nome da cópia">
+  ${botoesDialogo('Duplicar')}</form>`)}
+${outras.length ? dialogo(`${d}-mover`, 'Mover estudo', html`<form method="post" action="/estudos/${e.id}/mover">
+  <select name="destino" aria-label="Pasta de destino">${outras.map(p => html`<option value="${p.id}">${p.nome}</option>`)}</select>
+  ${botoesDialogo('Mover')}</form>`) : ''}
+${dialogo(`${d}-apagar`, 'Apagar estudo', html`<form method="post" action="/estudos/${e.id}/apagar">
+  <p>Apagar <strong>${e.nome}</strong>? As premissas e os resultados dele se perdem, e não há como desfazer.</p>
+  ${botoesDialogo('Apagar', 'perigo')}</form>`)}`;
+}
+
+export function paginaAreaDeTrabalho(config, usuario, { modulo, pastas, pasta, estudos, erro, ok }) {
+  const passos = [{ rotulo: 'Modelagens', href: '/modelagens' },
+    pasta ? { rotulo: modulo.nome, href: `/modelagens/${modulo.id}` } : { rotulo: modulo.nome }];
+  const novaPasta = (classe = '') => html`<form class="nova-pasta ${classe}" method="post" action="/modelagens/${modulo.id}/pastas">
+    <input type="text" name="nome" placeholder="Nome da nova pasta" required maxlength="120" aria-label="Nome da nova pasta">
+    <button class="botao ${classe ? '' : 'leve'}" type="submit">${classe ? 'Criar pasta' : '+'}</button>
+  </form>`;
+
+  let conteudo;
+  if (!pasta) {
+    conteudo = html`<div class="vazio-grande">
+      ${ILUSTRACOES.pasta}
+      <h1>Comece por uma pasta de trabalho</h1>
+      <p>Uma pasta por cliente, por cidade ou por gleba — como fizer sentido para você.
+         Dentro dela ficam os estudos, cada um salvo exatamente onde você parou.</p>
+      ${novaPasta('grande')}
+    </div>`;
+  } else {
+    const vazia = !estudos.length;
+    conteudo = html`
+    <header class="cab-pasta">
+      <div>
+        <p class="sobretitulo">Pasta de trabalho</p>
+        <h1>${pasta.nome}</h1>
+        <p class="meta">${plural(estudos.length, 'estudo', 'estudos')} · criada ${haQuanto(pasta.criada_em)}</p>
+      </div>
+      <div class="acoes">
+        <button type="button" class="botao leve" data-abrir="p-renomear">Renomear</button>
+        <button type="button" class="botao leve" data-abrir="p-apagar">Apagar</button>
+        <button type="button" class="botao" data-abrir="p-novo">+ Novo estudo</button>
+      </div>
+    </header>
+    <div class="estudos">
+      ${estudos.map(e => cartaoEstudo(e, pastas, pasta))}
+      <button type="button" class="estudo novo" data-abrir="p-novo">
+        <span class="mais" aria-hidden="true">+</span>
+        <span>${vazia ? 'Criar o primeiro estudo desta pasta' : 'Novo estudo'}</span>
+      </button>
+    </div>
+    ${dialogo('p-novo', 'Novo estudo', html`<form method="post" action="/pastas/${pasta.id}/estudos">
+      <p>${modulo.nome}, na pasta <strong>${pasta.nome}</strong>. O estudo abre em seguida e se salva sozinho.</p>
+      <input type="text" name="nome" placeholder="Ex.: Gleba Itu — cenário base" required maxlength="160" aria-label="Nome do estudo">
+      ${botoesDialogo('Criar e abrir')}</form>`)}
+    ${dialogo('p-renomear', 'Renomear pasta', html`<form method="post" action="/pastas/${pasta.id}/renomear">
+      <input type="text" name="nome" value="${pasta.nome}" required maxlength="120" aria-label="Nome da pasta">
+      ${botoesDialogo('Salvar')}</form>`)}
+    ${dialogo('p-apagar', 'Apagar pasta', vazia
+      ? html`<form method="post" action="/pastas/${pasta.id}/apagar">
+          <p>Apagar a pasta <strong>${pasta.nome}</strong>? Ela está vazia.</p>
+          ${botoesDialogo('Apagar', 'perigo')}</form>`
+      : html`<p>A pasta <strong>${pasta.nome}</strong> tem ${plural(estudos.length, 'estudo', 'estudos')}.
+          Mova ou apague os estudos antes — nenhum estudo some junto com a pasta.</p>
+          <div class="botoes"><button type="button" class="botao" data-fechar>Entendi</button></div>`)}`;
+  }
+
+  return documento({ titulo: pasta ? `${pasta.nome} · ${modulo.nome}` : modulo.nome, config, corpo: html`
+${barra(config, usuario, trilha(passos))}
+<div class="area">
+  <aside class="lateral" aria-label="Pastas de trabalho">
+    <div class="lateral-titulo">
+      <span class="sobretitulo">${modulo.nome}</span>
+      <h2>Pastas de trabalho</h2>
+    </div>
+    ${pastas.length ? html`<nav class="lista-pastas">
+      ${pastas.map(p => html`<a href="/modelagens/${modulo.id}/${p.id}" class="${pasta && p.id === pasta.id ? 'ativa' : ''}"
+        ${pasta && p.id === pasta.id ? html`aria-current="page"` : ''}>
+        <span class="nome">${p.nome}</span><span class="qtd">${p.estudos}</span></a>`)}
+    </nav>` : html`<p class="sem-pastas">Nenhuma pasta ainda.</p>`}
+    ${pastas.length ? novaPasta() : ''}
+  </aside>
+  <main class="conteudo">
+    ${aviso(ok)}${aviso(erro, 'erro')}
+    ${conteudo}
+  </main>
+</div>` });
+}
+
 /* ----------------------------------------------------------------- estudo */
-export function paginaEstudo(config, usuario, { estudo, caminho }) {
-  const modulo = MODULOS[estudo.modulo];
-  const trilha = html`<nav class="trilha" aria-label="Local do estudo">
-    <a href="/pastas">Início</a>
-    ${caminho.map(c => html`<span>/</span><a href="/pastas/${c.id}">${c.nome}</a>`)}
-    <span>/</span><span class="atual">${estudo.nome}</span>
-  </nav><span class="estado" id="estado" aria-live="polite"></span>`;
+export function paginaEstudo(config, usuario, { estudo, modulo }) {
+  const passos = [
+    { rotulo: 'Modelagens', href: '/modelagens' },
+    { rotulo: modulo.nome, href: `/modelagens/${modulo.id}` },
+    { rotulo: estudo.pasta_nome, href: `/modelagens/${modulo.id}/${estudo.pasta_id}` },
+    { rotulo: estudo.nome },
+  ];
   return documento({
-    titulo: estudo.nome, config, classe: 'estudo',
+    titulo: estudo.nome, config, classe: 'pagina-estudo',
     cabeca: html`<script src="/publico/estudo.js" defer></script>`,
     corpo: html`
-${barra(config, usuario, trilha)}
+${barra(config, usuario, html`${trilha(passos)}<span class="estado" id="estado" aria-live="polite"></span>`)}
 <iframe id="modulo" title="${modulo.nome}" data-estudo="${estudo.id}"
   data-src="/m/${modulo.pasta}/index.html?casca"></iframe>`,
   });
@@ -198,5 +362,6 @@ ${barra(config, usuario, trilha)}
 export function paginaErro(config, usuario, titulo, texto) {
   return documento({ titulo, config, corpo: html`
 ${usuario ? barra(config, usuario) : ''}
-<main class="pagina"><h1>${titulo}</h1><p>${texto}</p><p><a href="/pastas">Voltar às pastas</a></p></main>` });
+<main class="inicio"><section class="saudacao"><h1>${titulo}</h1><p class="lead">${texto}</p>
+<p><a href="/modelagens">Voltar às modelagens</a></p></section></main>` });
 }

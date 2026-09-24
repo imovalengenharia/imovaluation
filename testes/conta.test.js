@@ -7,9 +7,9 @@ before(async () => { T = await subir(); });
 after(() => T?.descer());
 
 test('sem sessão, as páginas mandam para /entrar lembrando o destino', async () => {
-  const r = await cliente(T.app).get('/pastas/abc');
+  const r = await cliente(T.app).get('/modelagens/abc');
   assert.equal(r.statusCode, 302);
-  assert.equal(r.headers.location, '/entrar?voltar=%2Fpastas%2Fabc');
+  assert.equal(r.headers.location, '/entrar?voltar=%2Fmodelagens%2Fabc');
 });
 
 test('sem sessão, a API responde 401 e os módulos não são servidos', async () => {
@@ -20,7 +20,7 @@ test('sem sessão, a API responde 401 e os módulos não são servidos', async (
 
 test('cadastro abre sessão, normaliza o e-mail e guarda só o hash da senha', async () => {
   const c = await cadastrar(T.app, '  Ana@Exemplo.COM ', 'senha-da-ana-123', 'Ana');
-  assert.equal((await c.get('/pastas')).statusCode, 200);
+  assert.equal((await c.get('/modelagens')).statusCode, 200);
   const u = await T.banco.um("SELECT email, senha_hash FROM usuario WHERE nome = 'Ana'");
   assert.equal(u.email, 'ana@exemplo.com');
   assert.match(u.senha_hash, /^scrypt\$/);
@@ -50,23 +50,23 @@ test('entrar, sair: a sessão some do banco ao sair', async () => {
   assert.equal(inexistente.statusCode, 401);
   assert.equal(inexistente.body.includes('não conferem'), true, 'mesma mensagem: não revela quem tem conta');
 
-  const r = await c.post('/entrar', { email: 'CAIO@exemplo.com', senha: 'senha-do-caio-1', voltar: '/pastas?x=1' });
+  const r = await c.post('/entrar', { email: 'CAIO@exemplo.com', senha: 'senha-do-caio-1', voltar: '/modelagens?x=1' });
   assert.equal(r.statusCode, 303);
-  assert.equal(r.headers.location, '/pastas?x=1');
-  assert.equal((await c.get('/pastas')).statusCode, 200);
+  assert.equal(r.headers.location, '/modelagens?x=1');
+  assert.equal((await c.get('/modelagens')).statusCode, 200);
 
   const antes = await T.banco.um('SELECT count(*)::int AS n FROM sessao');
   await c.post('/sair');
   const depois = await T.banco.um('SELECT count(*)::int AS n FROM sessao');
   assert.equal(depois.n, antes.n - 1);
-  assert.equal((await c.get('/pastas')).statusCode, 302);
+  assert.equal((await c.get('/modelagens')).statusCode, 302);
 });
 
 test('o destino depois de entrar é sempre interno', async () => {
   await cadastrar(T.app, 'davi@exemplo.com', 'senha-do-davi-1');
   for (const voltar of ['//mal.exemplo', 'https://mal.exemplo', '/\\mal.exemplo']) {
     const r = await cliente(T.app).post('/entrar', { email: 'davi@exemplo.com', senha: 'senha-do-davi-1', voltar });
-    assert.equal(r.headers.location, '/pastas', voltar);
+    assert.equal(r.headers.location, '/modelagens', voltar);
   }
 });
 
@@ -75,7 +75,7 @@ test('sessão expirada vale o mesmo que nenhuma', async () => {
   await T.banco.consulta(
     `UPDATE sessao SET expira_em = now() - interval '1 second'
       WHERE usuario_id = (SELECT id FROM usuario WHERE email = 'eva@exemplo.com')`);
-  assert.equal((await c.get('/pastas')).statusCode, 302);
+  assert.equal((await c.get('/modelagens')).statusCode, 302);
 });
 
 test('o freio segura a décima primeira tentativa errada', async () => {
@@ -88,9 +88,9 @@ test('o freio segura a décima primeira tentativa errada', async () => {
 
 test('POST vindo de outro site é recusado', async () => {
   const c = await cadastrar(T.app, 'gil@exemplo.com');
-  const r = await c.post('/pastas', { nome: 'x' }, { headers: { origin: 'https://mal.exemplo' } });
+  const r = await c.post('/modelagens/involutivo/pastas', { nome: 'x' }, { headers: { origin: 'https://mal.exemplo' } });
   assert.equal(r.statusCode, 403);
-  const ok = await c.post('/pastas', { nome: 'x' }, { headers: { origin: 'http://localhost:80' } });
+  const ok = await c.post('/modelagens/involutivo/pastas', { nome: 'x' }, { headers: { origin: 'http://localhost:80' } });
   assert.equal(ok.statusCode, 303);
 });
 
@@ -115,7 +115,7 @@ test('recuperação: o link vale uma vez, troca a senha e derruba as sessões', 
   assert.equal(r.statusCode, 303);
   assert.equal(r.headers.location, '/entrar?senha=nova');
 
-  assert.equal((await velha.get('/pastas')).statusCode, 302, 'a sessão antiga caiu');
+  assert.equal((await velha.get('/modelagens')).statusCode, 302, 'a sessão antiga caiu');
   assert.equal((await c.post('/redefinir', { token, senha: 'outra-senha-nova' })).statusCode, 400, 'link usado');
   assert.equal((await c.post('/entrar', { email: 'hana@exemplo.com', senha: 'senha-antiga-123' })).statusCode, 401);
   assert.equal((await c.post('/entrar', { email: 'hana@exemplo.com', senha: 'senha-nova-da-hana' })).statusCode, 303);

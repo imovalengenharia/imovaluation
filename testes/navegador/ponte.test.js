@@ -24,18 +24,29 @@ async function entrarNovo(email) {
   await pg.goto(base + '/cadastro');
   await pg.fill('#nome', 'Pessoa'); await pg.fill('#email', email); await pg.fill('#senha', 'senha-bem-longa');
   await pg.click('button[type=submit]');
-  await pg.waitForURL(base + '/pastas');
+  await pg.waitForURL(base + '/modelagens');
   return { pg, erros };
 }
 
-const primeiroCampo = fr => fr.locator('#folha input:not([type=hidden]):not([readonly])').first();
-
-test('o módulo abre o estudo que a casca entrega e devolve cada mudança para o banco', async () => {
-  const { pg, erros } = await entrarNovo('ponte@exemplo.com');
-  await pg.fill('input[placeholder="Nome do estudo"]', 'Gleba Itu');
-  await pg.click('text=Criar estudo');
+/* modelagens → involutivo → pasta nova → estudo novo, pelos cliques da tela */
+async function criarEstudo(pg, pasta, nome) {
+  await pg.goto(base + '/modelagens');
+  await pg.click('a.modelagem');
+  const campoPasta = pg.locator('input[placeholder="Nome da nova pasta"]');
+  if (pasta) { await campoPasta.fill(pasta); await campoPasta.press('Enter'); await pg.waitForURL(/\/modelagens\/involutivo\/.+/); }
+  await pg.click('.cab-pasta [data-abrir="p-novo"]');
+  await pg.fill('#p-novo input[name=nome]', nome);
+  await pg.click('#p-novo button[type=submit]');
   await pg.waitForURL(/\/estudos\//);
-  const id = pg.url().split('/').pop();
+  return pg.url().split('/').pop();
+}
+
+const primeiroCampo = fr => fr.locator('#folha input:not([type=hidden]):not([readonly])').first();
+const salvo = pg => pg.waitForFunction(() => document.getElementById('estado').textContent === 'Salvo');
+
+test('do login ao estudo: cada mudança vai para o banco, e o cartão mostra o resumo', async () => {
+  const { pg, erros } = await entrarNovo('ponte@exemplo.com');
+  const id = await criarEstudo(pg, 'Clientes 2026', 'Gleba Itu');
 
   const fr = pg.frameLocator('#modulo');
   const campo = primeiroCampo(fr);
@@ -43,33 +54,63 @@ test('o módulo abre o estudo que a casca entrega e devolve cada mudança para o
   assert.equal(await fr.locator('#btn-json').textContent(), 'Baixar premissas');
 
   await campo.fill('123456'); await campo.press('Tab');
-  await pg.waitForFunction(() => document.getElementById('estado').textContent === 'Salvo');
-  const salvo = await T.banco.um('SELECT premissas FROM estudo WHERE id = $1', [id]);
-  assert.ok(salvo.premissas && salvo.premissas.areas, 'as premissas chegaram ao banco');
+  await salvo(pg);
+  const guardado = await T.banco.um('SELECT premissas, resumo FROM estudo WHERE id = $1', [id]);
+  assert.ok(guardado.premissas && guardado.premissas.areas, 'as premissas chegaram ao banco');
+  assert.equal(guardado.resumo[0][0], 'Valor da gleba', 'e o resumo do topo também');
 
-  await pg.reload();
+  await pg.click('.trilha a:nth-of-type(3)');           // volta à pasta pela trilha
+  await pg.waitForURL(/\/modelagens\/involutivo\/.+/);
+  assert.match(await pg.textContent('.estudo .destaque .valor'), /^R\$/);
+
+  await pg.click('.estudo .cobre');
   await primeiroCampo(fr).waitFor();
   assert.equal(await primeiroCampo(fr).inputValue(), '123.456', 'reaberto, o estudo volta do banco');
   assert.deepEqual(erros, []);
 });
 
-test('dois estudos não se misturam, e nada vai para o localStorage', async () => {
-  const { pg } = await entrarNovo('dois@exemplo.com');
-  const ids = [];
-  for (const nome of ['Um', 'Dois']) {
-    await pg.goto(base + '/pastas');
-    await pg.fill('input[placeholder="Nome do estudo"]', nome);
-    await pg.click('text=Criar estudo');
-    await pg.waitForURL(/\/estudos\//);
-    ids.push(pg.url().split('/').pop());
+test('abrir sem editar já põe os números no cartão', async () => {
+  const { pg } = await entrarNovo('sonumeros@exemplo.com');
+  const id = await criarEstudo(pg, 'Só olhar', 'Aberto e fechado');
+  await primeiroCampo(pg.frameLocator('#modulo')).waitFor();
+  let r = null;
+  for (let i = 0; i < 20 && !r; i++) {
+    await pg.waitForTimeout(100);
+    r = (await T.banco.um('SELECT resumo FROM estudo WHERE id = $1', [id])).resumo;
   }
+  assert.equal(r?.[0]?.[0], 'Valor da gleba');
+});
+
+test('reabre onde parou: na mesma aba', async () => {
+  const { pg } = await entrarNovo('vista@exemplo.com');
+  const id = await criarEstudo(pg, 'Vista', 'Onde parei');
   const fr = pg.frameLocator('#modulo');
-  await pg.goto(base + '/estudos/' + ids[0]);
+  await primeiroCampo(fr).waitFor();
+  await fr.locator('#abas button', { hasText: 'Demonstrativo' }).click();
+  /* a troca de aba grava na hora — sem esperar a rolagem assentar */
+  let gravada = null;
+  for (let i = 0; i < 20 && !gravada; i++) {
+    await pg.waitForTimeout(100);
+    gravada = (await T.banco.um('SELECT vista FROM estudo WHERE id = $1', [id])).vista;
+  }
+  assert.equal(gravada?.aba, 'drf', 'a aba gravou em menos de 2 s');
+
+  await pg.goto(base + '/estudos/' + id);
+  await fr.locator('#abas button[aria-selected="true"]').waitFor();
+  assert.equal(await fr.locator('#abas button[aria-selected="true"]').textContent(), 'Demonstrativo');
+  const v = await T.banco.um('SELECT vista FROM estudo WHERE id = $1', [id]);
+  assert.equal(v.vista.rotulo, 'Demonstrativo');
+});
+
+test('dois estudos da mesma pasta não se misturam, e nada vai para o localStorage', async () => {
+  const { pg } = await entrarNovo('dois@exemplo.com');
+  const um = await criarEstudo(pg, 'Mesma pasta', 'Um');
+  const fr = pg.frameLocator('#modulo');
   await primeiroCampo(fr).waitFor();
   await primeiroCampo(fr).fill('777'); await primeiroCampo(fr).press('Tab');
-  await pg.waitForFunction(() => document.getElementById('estado').textContent === 'Salvo');
-
-  await pg.goto(base + '/estudos/' + ids[1]);
+  await salvo(pg);
+  const dois = await criarEstudo(pg, null, 'Dois');
+  assert.notEqual(um, dois);
   await primeiroCampo(fr).waitFor();
   assert.notEqual(await primeiroCampo(fr).inputValue(), '777');
   const local = await pg.evaluate(() => localStorage.getItem('involutivo.premissas'));

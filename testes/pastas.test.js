@@ -10,124 +10,190 @@ before(async () => {
 });
 after(() => T?.descer());
 
-const novaPasta = async (c, nome, pai = '') => idDe(await c.post('/pastas', { nome, pai }));
-const novoEstudo = async (c, nome, pasta = '') =>
-  idDe(await c.post('/estudos', { nome, pasta, modulo: 'involutivo' }));
+const novaPasta = async (c, nome) => idDe(await c.post('/modelagens/involutivo/pastas', { nome }));
+const novoEstudo = async (c, pasta, nome) => idDe(await c.post(`/pastas/${pasta}/estudos`, { nome }));
+const salvar = (c, id, premissas, resumo) => c.put(`/api/estudos/${id}/premissas`, { premissas, resumo });
 
-test('pastas dentro de pastas, com o caminho de volta até o início', async () => {
-  const clientes = await novaPasta(ana, 'Clientes');
-  const itu = await novaPasta(ana, 'Itu', clientes);
-  const r = await ana.get('/pastas/' + itu);
+test('depois de entrar, a primeira tela são as modelagens', async () => {
+  const c = await cadastrar(T.app, 'nova@exemplo.com');
+  assert.equal((await c.get('/')).headers.location, '/modelagens');
+  const r = await c.get('/modelagens');
   assert.equal(r.statusCode, 200);
-  assert.match(r.body, new RegExp(`<a href="/pastas/${clientes}">Clientes</a>`));
-  const raiz = await ana.get('/pastas');
-  assert.match(raiz.body, />Clientes</);
-  assert.doesNotMatch(raiz.body, />Itu</, 'a subpasta não aparece na raiz');
+  assert.match(r.body, /href="\/modelagens\/involutivo"/);
+  assert.match(r.body, /Involutivo de Glebas/);
+  assert.match(r.body, /Nenhum estudo ainda/);
+});
+
+test('modelagem sem pastas convida a criar a primeira', async () => {
+  const c = await cadastrar(T.app, 'vazia@exemplo.com');
+  const r = await c.get('/modelagens/involutivo');
+  assert.equal(r.statusCode, 200);
+  assert.match(r.body, /Comece por uma pasta de trabalho/);
+  assert.equal((await c.get('/modelagens/nao-existe')).statusCode, 404);
+});
+
+test('pasta nova abre em seguida; sem pasta escolhida, abre a última mexida', async () => {
+  const r = await ana.post('/modelagens/involutivo/pastas', { nome: 'Clientes 2026' });
+  assert.equal(r.statusCode, 303);
+  assert.match(r.headers.location, /^\/modelagens\/involutivo\/[0-9a-f-]{36}$/);
+  const pagina = await ana.get(r.headers.location);
+  assert.match(pagina.body, /<h1>Clientes 2026<\/h1>/);
+  assert.match(pagina.body, /Criar o primeiro estudo desta pasta/);
+  const semEscolha = await ana.get('/modelagens/involutivo');
+  assert.equal(semEscolha.statusCode, 302);
+  assert.match(semEscolha.headers.location, /^\/modelagens\/involutivo\//);
+});
+
+test('vários estudos numa pasta; cada um abre o módulo e guarda onde parou', async () => {
+  const pasta = await novaPasta(ana, 'Itu');
+  const r = await ana.post(`/pastas/${pasta}/estudos`, { nome: 'Estudo 1' });
+  assert.match(r.headers.location, /^\/estudos\/[0-9a-f-]{36}$/, 'o estudo novo abre em seguida');
+  const e1 = idDe(r);
+  const e2 = await novoEstudo(ana, pasta, 'Estudo 2');
+
+  const pagina = await ana.get('/estudos/' + e1);
+  assert.equal(pagina.statusCode, 200);
+  assert.match(pagina.body, /data-src="\/m\/involutivo\/index.html\?casca"/);
+  assert.match(pagina.body, />Itu</, 'a trilha mostra a pasta');
+
+  const aberto = (await ana.get('/api/estudos/' + e1)).json();
+  assert.equal(aberto.estudo.premissas, null);
+  assert.equal(aberto.usuario.email, undefined, 'o módulo recebe só o que precisa');
+
+  const premissas = { areas: { gleba: 160084 }, lista: [1, null, 'x'] };
+  const resumo = [['Valor da gleba', 'R$ 40.726.692'], ['TIR real', '21,7 %']];
+  assert.equal((await salvar(ana, e1, premissas, resumo)).statusCode, 200);
+  assert.equal((await ana.put(`/api/estudos/${e1}/vista`, { vista: { aba: 'fluxo', rotulo: 'Fluxo de caixa', rolagem: { fluxo: 320 } } })).statusCode, 200);
+
+  const volta = (await ana.get('/api/estudos/' + e1)).json().estudo;
+  assert.deepEqual(volta.premissas, premissas, 'reabre com as premissas salvas');
+  assert.deepEqual(volta.vista, { aba: 'fluxo', rotulo: 'Fluxo de caixa', rolagem: { fluxo: 320 } }, 'e onde parou');
+  assert.equal((await ana.get('/api/estudos/' + e2)).json().estudo.premissas, null, 'o outro estudo não mudou');
+
+  const area = await ana.get(`/modelagens/involutivo/${pasta}`);
+  assert.match(area.body, /Estudo 1/);
+  assert.match(area.body, /Estudo 2/);
+  assert.match(area.body, /R\$ 40\.726\.692/, 'o cartão mostra o resumo');
+  assert.match(area.body, /parou em <em>Fluxo de caixa<\/em>/);
+  assert.match(area.body, /2 estudos/);
+});
+
+test('olhar a vista não conta como edição; abrir entra em "continuar de onde parou"', async () => {
+  const pasta = await novaPasta(ana, 'Recentes');
+  const e = await novoEstudo(ana, pasta, 'Gleba recente');
+  const antes = (await T.banco.um('SELECT atualizado_em FROM estudo WHERE id = $1', [e])).atualizado_em;
+  await ana.put(`/api/estudos/${e}/vista`, { vista: { aba: 'premissas' } });
+  const depois = (await T.banco.um('SELECT atualizado_em FROM estudo WHERE id = $1', [e])).atualizado_em;
+  assert.equal(depois.getTime(), antes.getTime());
+  await ana.get('/estudos/' + e);
+  const inicio = await ana.get('/modelagens');
+  assert.match(inicio.body, /Continuar de onde parou/);
+  assert.match(inicio.body, new RegExp(`href="/estudos/${e}"`));
+});
+
+test('o resumo mandado ao abrir não conta como edição', async () => {
+  const e = await novoEstudo(ana, await novaPasta(ana, 'Só abrir'), 'Aberto');
+  const antes = (await T.banco.um('SELECT atualizado_em FROM estudo WHERE id = $1', [e])).atualizado_em;
+  assert.equal((await ana.put(`/api/estudos/${e}/resumo`, { resumo: [['Valor da gleba', 'R$ 9']] })).statusCode, 200);
+  const d = await T.banco.um('SELECT resumo, atualizado_em FROM estudo WHERE id = $1', [e]);
+  assert.deepEqual(d.resumo, [['Valor da gleba', 'R$ 9']]);
+  assert.equal(d.atualizado_em.getTime(), antes.getTime());
+  assert.equal((await ana.put(`/api/estudos/${e}/resumo`, { resumo: 'x' })).statusCode, 400);
+  assert.equal((await beto.put(`/api/estudos/${e}/resumo`, { resumo: [['a', 'b']] })).statusCode, 404);
+});
+
+test('duplicar faz um cenário: mesmas premissas, outro nome, mesma pasta', async () => {
+  const pasta = await novaPasta(ana, 'Cenários');
+  const e = await novoEstudo(ana, pasta, 'Base');
+  await salvar(ana, e, { x: 1 }, [['Valor', 'R$ 1']]);
+  const r = await ana.post(`/estudos/${e}/duplicar`, { nome: 'Conservador' });
+  assert.equal(r.headers.location, `/modelagens/involutivo/${pasta}?r=duplicado`);
+  const copia = await T.banco.um("SELECT premissas, pasta_id FROM estudo WHERE nome = 'Conservador'");
+  assert.deepEqual(copia.premissas, { x: 1 });
+  assert.equal(copia.pasta_id, pasta);
+});
+
+test('renomear, mover entre pastas e apagar estudo', async () => {
+  const a = await novaPasta(ana, 'Origem');
+  const b = await novaPasta(ana, 'Destino');
+  const e = await novoEstudo(ana, a, 'Primeiro');
+  await ana.post(`/estudos/${e}/renomear`, { nome: '  Cenário   base ' });
+  assert.equal((await T.banco.um('SELECT nome FROM estudo WHERE id = $1', [e])).nome, 'Cenário base');
+  assert.match((await ana.post(`/estudos/${e}/renomear`, { nome: '  ' })).headers.location, /r=nome/);
+
+  assert.equal((await ana.post(`/estudos/${e}/mover`, { destino: b })).headers.location, `/modelagens/involutivo/${b}?r=movido`);
+  assert.equal((await T.banco.um('SELECT pasta_id FROM estudo WHERE id = $1', [e])).pasta_id, b);
+
+  assert.equal((await ana.post(`/estudos/${e}/apagar`)).headers.location, `/modelagens/involutivo/${b}?r=estudo-apagado`);
+  assert.equal(await T.banco.um('SELECT 1 FROM estudo WHERE id = $1', [e]), null);
+});
+
+test('pasta com estudos não se apaga; vazia, sim; renomear pasta', async () => {
+  const p = await novaPasta(ana, 'Cheia');
+  const e = await novoEstudo(ana, p, 'Dentro');
+  assert.equal((await ana.post(`/pastas/${p}/apagar`)).headers.location, `/modelagens/involutivo/${p}?r=pasta-nao-vazia`);
+  assert.ok(await T.banco.um('SELECT 1 FROM estudo WHERE id = $1', [e]));
+  await ana.post(`/pastas/${p}/renomear`, { nome: 'Esvaziada' });
+  assert.equal((await T.banco.um('SELECT nome FROM pasta WHERE id = $1', [p])).nome, 'Esvaziada');
+  await ana.post(`/estudos/${e}/apagar`);
+  assert.equal((await ana.post(`/pastas/${p}/apagar`)).headers.location, '/modelagens/involutivo?r=pasta-apagada');
+  assert.equal(await T.banco.um('SELECT 1 FROM pasta WHERE id = $1', [p]), null);
 });
 
 test('o nome chega escapado na página', async () => {
-  const id = await novaPasta(ana, '<script>alert(1)</script>');
-  const r = await ana.get('/pastas/' + id);
+  const p = await novaPasta(ana, '<script>alert(1)</script>');
+  const r = await ana.get(`/modelagens/involutivo/${p}`);
   assert.doesNotMatch(r.body, /<script>alert/);
   assert.match(r.body, /&lt;script&gt;alert\(1\)&lt;\/script&gt;/);
 });
 
 test('o que é de um usuário não existe para o outro', async () => {
   const pasta = await novaPasta(ana, 'Particular');
-  const estudo = await novoEstudo(ana, 'Estudo da Ana', pasta);
-  assert.equal((await beto.get('/pastas/' + pasta)).statusCode, 404);
+  const estudo = await novoEstudo(ana, pasta, 'Estudo da Ana');
+  assert.equal((await beto.get(`/modelagens/involutivo/${pasta}`)).statusCode, 404);
   assert.equal((await beto.get('/estudos/' + estudo)).statusCode, 404);
   assert.equal((await beto.get('/api/estudos/' + estudo)).statusCode, 404);
-  assert.equal((await beto.put(`/api/estudos/${estudo}/premissas`, { premissas: { x: 1 } })).statusCode, 404);
+  assert.equal((await salvar(beto, estudo, { x: 1 })).statusCode, 404);
+  assert.equal((await beto.put(`/api/estudos/${estudo}/vista`, { vista: { aba: 'x' } })).statusCode, 404);
   assert.equal((await beto.post(`/pastas/${pasta}/renomear`, { nome: 'meu' })).statusCode, 404);
+  assert.equal((await beto.post(`/pastas/${pasta}/estudos`, { nome: 'intruso' })).statusCode, 404);
   assert.equal((await beto.post(`/estudos/${estudo}/apagar`)).statusCode, 404);
-  /* nem como destino: Beto não cria pasta nem estudo dentro da pasta da Ana */
-  const intruso = await beto.post('/pastas', { nome: 'intrusa', pai: pasta });
-  assert.equal(intruso.headers.location, '/pastas?r=destino');
-  const beto1 = await novaPasta(beto, 'Do Beto');
-  assert.equal((await beto.post(`/pastas/${beto1}/mover`, { destino: pasta })).headers.location,
-    `/pastas?r=destino`);
-  const r = await ana.get('/pastas/' + pasta);
+  assert.equal((await beto.post(`/estudos/${estudo}/duplicar`)).statusCode, 404);
+  /* nem como destino: Beto não move estudo dele para a pasta da Ana */
+  const doBeto = await novoEstudo(beto, await novaPasta(beto, 'Do Beto'), 'Estudo do Beto');
+  assert.match((await beto.post(`/estudos/${doBeto}/mover`, { destino: pasta })).headers.location, /r=destino/);
+  const r = await ana.get(`/modelagens/involutivo/${pasta}`);
   assert.match(r.body, /Estudo da Ana/);
-  assert.doesNotMatch(r.body, /intrusa|Do Beto/);
+  assert.doesNotMatch(r.body, /intruso|Estudo do Beto/);
 });
 
-test('o banco também recusa pasta pendurada em pasta alheia', async () => {
+test('o banco recusa estudo em pasta alheia ou de outra modelagem', async () => {
   const daAna = await novaPasta(ana, 'Só da Ana');
-  const beto = await T.banco.um("SELECT id FROM usuario WHERE email = 'beto@exemplo.com'");
-  await assert.rejects(
-    T.banco.consulta('INSERT INTO pasta (usuario_id, pai_id, nome) VALUES ($1, $2, $3)', [beto.id, daAna, 'x']),
+  const b = await T.banco.um("SELECT id FROM usuario WHERE email = 'beto@exemplo.com'");
+  const a = await T.banco.um("SELECT id FROM usuario WHERE email = 'ana@exemplo.com'");
+  await assert.rejects(T.banco.consulta(
+    "INSERT INTO estudo (usuario_id, pasta_id, modulo, nome) VALUES ($1, $2, 'involutivo', 'x')", [b.id, daAna]),
+    { code: '23503' });
+  await assert.rejects(T.banco.consulta(
+    "INSERT INTO estudo (usuario_id, pasta_id, modulo, nome) VALUES ($1, $2, 'outra', 'x')", [a.id, daAna]),
     { code: '23503' });
 });
 
 test('id malformado é 404, não erro', async () => {
-  assert.equal((await ana.get('/pastas/nao-e-uuid')).statusCode, 404);
+  assert.equal((await ana.get('/modelagens/involutivo/nao-e-uuid')).statusCode, 404);
   assert.equal((await ana.get('/estudos/1')).statusCode, 404);
   assert.equal((await ana.get('/api/estudos/1')).statusCode, 404);
+  assert.equal((await ana.post('/pastas/1/estudos', { nome: 'x' })).statusCode, 404);
 });
 
-test('mover: não entra em si mesma nem em descendente', async () => {
-  const a = await novaPasta(ana, 'A');
-  const b = await novaPasta(ana, 'B', a);
-  const c = await novaPasta(ana, 'C', b);
-  assert.equal((await ana.post(`/pastas/${a}/mover`, { destino: c })).headers.location, `/pastas?r=ciclo`);
-  assert.equal((await ana.post(`/pastas/${a}/mover`, { destino: a })).headers.location, `/pastas?r=ciclo`);
-  const ok = await ana.post(`/pastas/${c}/mover`, { destino: '' });
-  assert.equal(ok.headers.location, '/pastas');
-  const pai = await T.banco.um('SELECT pai_id FROM pasta WHERE id = $1', [c]);
-  assert.equal(pai.pai_id, null);
-});
-
-test('renomear pasta e estudo; nome vazio é recusado', async () => {
-  const p = await novaPasta(ana, 'Rascunho');
-  const e = await novoEstudo(ana, 'Primeiro', p);
-  await ana.post(`/pastas/${p}/renomear`, { nome: '  Definitivo   2026 ' });
-  await ana.post(`/estudos/${e}/renomear`, { nome: 'Cenário base' });
-  assert.equal((await T.banco.um('SELECT nome FROM pasta WHERE id = $1', [p])).nome, 'Definitivo 2026');
-  assert.equal((await T.banco.um('SELECT nome FROM estudo WHERE id = $1', [e])).nome, 'Cenário base');
-  assert.match((await ana.post(`/pastas/${p}/renomear`, { nome: '   ' })).headers.location, /r=nome/);
-});
-
-test('pasta com conteúdo não se apaga; vazia, sim', async () => {
-  const p = await novaPasta(ana, 'Cheia');
-  const e = await novoEstudo(ana, 'Dentro', p);
-  const r = await ana.post(`/pastas/${p}/apagar`);
-  assert.equal(r.headers.location, `/pastas/${p}?r=pasta-nao-vazia`);
-  assert.ok(await T.banco.um('SELECT 1 FROM estudo WHERE id = $1', [e]));
-  await ana.post(`/estudos/${e}/mover`, { destino: '' });
-  assert.equal((await ana.post(`/pastas/${p}/apagar`)).headers.location, '/pastas?r=apagada');
-  assert.equal(await T.banco.um('SELECT 1 FROM pasta WHERE id = $1', [p]), null);
-});
-
-test('estudo: nasce sem premissas, guarda o JSON que o módulo devolve e o entrega de volta', async () => {
-  const e = await novoEstudo(ana, 'Gleba Itu');
-  const pagina = await ana.get('/estudos/' + e);
-  assert.equal(pagina.statusCode, 200);
-  assert.match(pagina.body, /data-src="\/m\/involutivo\/index.html\?casca"/);
-  assert.match(pagina.body, new RegExp(`data-estudo="${e}"`));
-
-  const aberto = (await ana.get('/api/estudos/' + e)).json();
-  assert.equal(aberto.estudo.premissas, null);
-  assert.equal(aberto.estudo.modulo, 'involutivo');
-  assert.equal(aberto.usuario.nome, 'Pessoa');
-  assert.equal(aberto.usuario.email, undefined, 'o módulo recebe só o que precisa');
-
-  const premissas = { areas: { gleba: 160084 }, planos: [{ n: 1 }], lista: [1, null, 'x'] };
-  const r = await ana.put(`/api/estudos/${e}/premissas`, { premissas });
-  assert.equal(r.statusCode, 200);
-  assert.deepEqual((await ana.get('/api/estudos/' + e)).json().estudo.premissas, premissas);
-});
-
-test('premissas que não são objeto são recusadas', async () => {
-  const e = await novoEstudo(ana, 'Teimoso');
+test('premissas e vista que não são objeto são recusadas; resumo estranho é ignorado', async () => {
+  const e = await novoEstudo(ana, await novaPasta(ana, 'Teimosa'), 'Teimoso');
   for (const premissas of [null, 3, 'x', [1, 2]]) {
-    assert.equal((await ana.put(`/api/estudos/${e}/premissas`, { premissas })).statusCode, 400, JSON.stringify(premissas));
+    assert.equal((await salvar(ana, e, premissas)).statusCode, 400, JSON.stringify(premissas));
   }
-});
-
-test('modelagem desconhecida não vira estudo', async () => {
-  const r = await ana.post('/estudos', { nome: 'X', pasta: '', modulo: 'nao-existe' });
-  assert.equal(r.headers.location, '/pastas?r=modulo');
+  assert.equal((await ana.put(`/api/estudos/${e}/vista`, { vista: 'x' })).statusCode, 400);
+  assert.equal((await salvar(ana, e, { ok: 1 }, 'não é lista')).statusCode, 200);
+  assert.equal((await T.banco.um('SELECT resumo FROM estudo WHERE id = $1', [e])).resumo, null);
 });
 
 test('o módulo é servido a quem entrou, sem a suíte nem as notas internas', async () => {

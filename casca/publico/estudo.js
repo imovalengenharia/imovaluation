@@ -9,6 +9,7 @@
   var id = quadro.getAttribute('data-estudo');
   var url = '/api/estudos/' + encodeURIComponent(id);
   var pendente = null, timer = null, gravando = false, parado = false;
+  var vista = null, timerVista = null, abaGravada = null;
 
   function mostrar(texto, erro) {
     estado.textContent = texto;
@@ -20,7 +21,7 @@
   function gravar(finalizando) {
     clearTimeout(timer); timer = null;
     if (!pendente || gravando || parado) return;
-    var corpo = JSON.stringify({ premissas: pendente });
+    var corpo = JSON.stringify(pendente);
     pendente = null; gravando = true;
     mostrar('Salvando…');
     fetch(url + '/premissas', {
@@ -38,7 +39,7 @@
     }).catch(function () {
       gravando = false;
       /* devolve à fila o que não foi, sem passar por cima de mudança mais nova */
-      if (!pendente) pendente = JSON.parse(corpo).premissas;
+      if (!pendente) pendente = JSON.parse(corpo);
       mostrar('Não salvo — tentando de novo', true);
       timer = setTimeout(gravar, 5000);
     });
@@ -57,12 +58,33 @@
         if (d) enviar({ canal: CANAL, tipo: 'abrir', usuario: d.usuario, estudo: d.estudo });
       }).catch(function () { mostrar('Não foi possível abrir o estudo', true); });
     } else if (m.tipo === 'mudou' && m.premissas) {
-      pendente = m.premissas;
+      pendente = { premissas: m.premissas, resumo: m.resumo || null };
       mostrar('Alterado');
       clearTimeout(timer);
       timer = setTimeout(gravar, ESPERA);
+    } else if (m.tipo === 'resumo' && m.resumo) {
+      fetch(url + '/resumo', { method: 'PUT', body: JSON.stringify({ resumo: m.resumo }), credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' } }).catch(function () {});
+    } else if (m.tipo === 'vista' && m.vista) {
+      /* onde a leitura parou: guarda à parte, sem contar como edição */
+      /* troca de aba grava na hora; a rolagem espera a pessoa parar */
+      var trocouAba = !vista || vista.aba !== m.vista.aba;
+      vista = m.vista;
+      clearTimeout(timerVista);
+      if (trocouAba && abaGravada !== m.vista.aba) gravarVista();
+      else timerVista = setTimeout(gravarVista, 1500);
     }
   });
+
+  function gravarVista(finalizando) {
+    clearTimeout(timerVista); timerVista = null;
+    if (!vista || parado) return;
+    var corpo = JSON.stringify({ vista: vista });
+    abaGravada = vista.aba;
+    vista = null;
+    fetch(url + '/vista', { method: 'PUT', body: corpo, keepalive: !!finalizando, credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' } }).catch(function () {});
+  }
 
   /* O módulo só carrega depois que a casca já escuta: se ele carregasse
      primeiro, o aviso de "pronto" podia chegar antes do ouvinte e se perder,
@@ -70,7 +92,10 @@
   quadro.src = quadro.getAttribute('data-src');
 
   /* Saindo com mudança na fila: grava já, e o navegador pergunta antes de fechar. */
-  window.addEventListener('pagehide', function () { if (pendente) gravar(true); });
+  window.addEventListener('pagehide', function () {
+    if (pendente) gravar(true);
+    if (vista) gravarVista(true);
+  });
   window.addEventListener('beforeunload', function (ev) {
     if (pendente || gravando) { gravar(true); ev.preventDefault(); ev.returnValue = ''; }
   });

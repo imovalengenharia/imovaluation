@@ -39,7 +39,9 @@ Três arquivos, e a fronteira entre eles é rígida:
   dentro da casca (`index.html?casca`), recebe o estudo dela e devolve `P` a
   cada recálculo — o bloco "a casca" antes de `iniciar()`. As migrações de
   formato ficam em `montar(p)` e valem para os dois caminhos: premissa salva no
-  banco da plataforma também envelhece.
+  banco da plataforma também envelhece. Na casca, o módulo também manda o
+  `resumo()` (os quatro números do topo, para o cartão do estudo) e a `vista`
+  (aba aberta e rolagem de cada aba), e reabre na aba e no ponto onde parou.
 - **`index.html`** — a página e **todo** o CSS, em tokens no `:root`.
 
 ### O contrato de cálculo

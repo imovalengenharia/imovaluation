@@ -1471,6 +1471,7 @@
         if (a.id === abaAtiva) return;
         rolagem[abaAtiva] = window.scrollY;
         abaAtiva = a.id; montarAbas(); montarFolha();
+        if (casca) casca.vista();
       });
       nav.appendChild(b);
     });
@@ -1514,11 +1515,17 @@
     ajustarPlanilha();
     var topo = document.getElementById('resumo-topo');
     topo.textContent = '';
-    [['Valor da gleba', R$(R.ind.valorTerreno)],
-     ['TIR real', R.ind.tir === null ? '—' : pc(R.ind.tir) + (R.ind.modoTerreno === 'resolver' ? ' = TMA' : '')],
-     ['Resultado', mi(R.ind.resultado)], ['Investimento', mi(R.ind.investimento)]].forEach(function (d) {
+    resumo().forEach(function (d) {
       topo.appendChild(e('div', {}, [e('span', { cls: 'r', txt: d[0] }), e('span', { cls: 'v', txt: d[1] })]));
     });
+  }
+
+  /* Os números do topo, já escritos. A casca os mostra no cartão do estudo
+     sem abrir o módulo — e sem entender nenhum deles. */
+  function resumo() {
+    return [['Valor da gleba', R$(R.ind.valorTerreno)],
+     ['TIR real', R.ind.tir === null ? '—' : pc(R.ind.tir) + (R.ind.modoTerreno === 'resolver' ? ' = TMA' : '')],
+     ['Resultado', mi(R.ind.resultado)], ['Investimento', mi(R.ind.investimento)]];
   }
 
   /* Trocar o tipo do produto troca o leque de formas de pagamento; o valor
@@ -1535,7 +1542,7 @@
     normalizarPagamentos();
     try { R = Motor.calcular(P); } catch (err) { console.error(err); return; }
     aplicar();
-    if (casca) casca.devolver(P);
+    if (casca) casca.devolver(P, resumo());
     else try { localStorage.setItem('involutivo.premissas', JSON.stringify(P)); } catch (err) {}
   }
 
@@ -1567,11 +1574,30 @@
       if (aberto || ev.source !== window.parent || ev.origin !== location.origin) return;
       if (!m || m.canal !== CANAL || m.tipo !== 'abrir' || !m.estudo) return;
       aberto = true;
-      casca = { devolver: function (p) {
-        window.parent.postMessage({ canal: CANAL, tipo: 'mudou', premissas: p }, location.origin);
-      } };
+      casca = {
+        devolver: function (p, r) {
+          window.parent.postMessage({ canal: CANAL, tipo: 'mudou', premissas: p, resumo: r }, location.origin);
+        },
+        /* onde a leitura está: a aba aberta e a rolagem de cada aba */
+        vista: function () {
+          rolagem[abaAtiva] = window.scrollY;
+          var aba = abasVisiveis().filter(function (a) { return a.id === abaAtiva; })[0];
+          window.parent.postMessage({ canal: CANAL, tipo: 'vista',
+            vista: { aba: abaAtiva, rotulo: aba ? aba.rot : '', rolagem: rolagem } }, location.origin);
+        },
+      };
       if (m.estudo.nome) document.title = m.estudo.nome + ' · Involutivo de Glebas';
+      /* reabre onde parou: mesma aba, mesmo ponto da página */
+      var v = m.estudo.vista;
+      if (v && typeof v.aba === 'string') abaAtiva = v.aba;
+      if (v && v.rolagem && typeof v.rolagem === 'object') rolagem = v.rolagem;
       montar(m.estudo.premissas);
+      /* os números do cartão valem já na abertura, mesmo sem edição */
+      window.parent.postMessage({ canal: CANAL, tipo: 'resumo', resumo: resumo() }, location.origin);
+      var parado = null;
+      window.addEventListener('scroll', function () {
+        clearTimeout(parado); parado = setTimeout(casca.vista, 600);
+      }, { passive: true });
       /* quem guarda é a casca, a cada mudança; o botão só baixa uma cópia */
       document.getElementById('btn-json').textContent = 'Baixar premissas';
     });
