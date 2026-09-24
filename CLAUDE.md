@@ -27,7 +27,8 @@ npm install
 npm run dev                 # migra o banco e sobe a casca, recarregando ao salvar
 npm test                    # casca (node:test, banco real) + auditoria do involutivo
 npm run test:navegador      # a ponte casca ↔ módulo no Chromium (Playwright)
-docker compose up --build -d # a plataforma inteira, como o usuário roda (Dockerfile + compose.yaml)
+npm run local               # como o usuário roda: Postgres embutido em ~/Imovaluation, abre o navegador
+docker compose up --build -d # a plataforma inteira em Docker (Dockerfile + compose.yaml)
 node --env-file=.env --test --test-concurrency=1 --test-name-pattern='recuperação' 'testes/*.test.js'
 cd modulos/involutivo && node testes/auditoria.js                  # só o motor
 ```
@@ -75,6 +76,25 @@ próprio — e uma entrada em `casca/modulos.js`. O lado módulo da ponte são ~
 linhas: copie o bloco "a casca" de `modulos/involutivo/app.js`. A pasta
 `modulos/` é CommonJS (`modulos/package.json`) porque os módulos rodam no
 navegador sem build e as suítes fazem `require` do motor; a casca é ESM.
+
+### Rodar no computador de quem usa
+
+`iniciar.bat` / `iniciar.command` → `casca/local.js`: sobe um Postgres embutido
+(`embedded-postgres`, dependência **opcional**) na porta 54329, com os dados em
+`~/Imovaluation` — fora da pasta do código, para sobreviver a cada ZIP novo —, e a
+casca em `localhost:3000`, só para este computador. Precisa só do Node; Docker
+não é opção para todo mundo (sem virtualização na BIOS, ele nem abre). Servidores
+instalam com `--omit=optional`, para não baixar o Postgres embutido à toa.
+
+- O banco embutido nasce **UTF-8 com `--locale=C`**: sem isso, no Windows, herda a
+  codificação regional (WIN1252).
+- Postgres no Windows falha em caminho com acento: nesse caso os dados vão para
+  `C:\Imovaluation`.
+- O Postgres se recusa a rodar com privilégio de administrador: o atalho nunca deve
+  ser aberto "como administrador".
+- O pool do `pg` tem ouvinte de `'error'` (`banco.js`): sem ele, qualquer conexão
+  ociosa que cai — banco reiniciado, ou o Ctrl+C que derruba o Postgres junto —
+  derruba o servidor inteiro.
 
 ## A casca — arquitetura
 

@@ -11,7 +11,8 @@
     "migrar": "node --env-file-if-exists=.env casca/migrar.js",
     "test": "node --env-file-if-exists=.env --test --test-concurrency=1 'testes/*.test.js' && npm run test:involutivo",
     "test:involutivo": "node modulos/involutivo/testes/auditoria.js > /dev/null && echo 'involutivo: auditoria OK'",
-    "test:navegador": "node --env-file-if-exists=.env --test --test-concurrency=1 'testes/navegador/*.test.js'"
+    "test:navegador": "node --env-file-if-exists=.env --test --test-concurrency=1 'testes/navegador/*.test.js'",
+    "local": "node casca/local.js"
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.2",
@@ -23,5 +24,8 @@
   },
   "devDependencies": {
     "playwright": "^1.56.1"
+  },
+  "optionalDependencies": {
+    "embedded-postgres": "17.10.0-beta.17"
   }
 }

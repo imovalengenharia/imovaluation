@@ -5,25 +5,28 @@ aplicativo dentro dela. O **Involutivo de Glebas** é o primeiro.
 
 ## Usar no seu computador
 
-Só precisa do **Docker Desktop** (gratuito): https://www.docker.com/products/docker-desktop/
+Só precisa do **Node.js** (gratuito), versão LTS: https://nodejs.org — sem Docker, sem
+instalar banco de dados: o Postgres vem embutido e se prepara sozinho na primeira vez.
 
-1. Instale e abra o Docker Desktop. Espere ele dizer que está rodando.
+1. Instale o Node.js (versão **LTS**), com as opções padrão.
 2. Baixe o código: no GitHub, botão verde **Code → Download ZIP**, e descompacte.
 3. Na pasta descompactada, dê dois cliques em:
-   - **Windows:** `iniciar.bat`
-   - **Mac:** `iniciar.command` (se o Mac bloquear, clique com o botão direito → Abrir)
+   - **Windows:** `iniciar.bat` (se aparecer "O Windows protegeu o computador":
+     **Mais informações → Executar assim mesmo**)
+   - **Mac:** `iniciar.command` (se o Mac bloquear: botão direito → **Abrir**)
 4. O navegador abre em http://localhost:3000. Crie a sua conta e use.
 
-Na primeira vez demora alguns minutos; depois, segundos. Para parar: `parar.bat` ou
-`parar.command`. Os estudos ficam guardados no seu computador e voltam na próxima vez.
+Uma janela preta fica aberta enquanto a plataforma roda: **fechar a janela para a
+plataforma**. Na primeira vez leva de 1 a 3 minutos (instala os componentes); depois,
+segundos.
 
-Sem os atalhos, no terminal, dentro da pasta: `docker compose up --build -d`.
+Os estudos ficam na pasta `Imovaluation`, dentro da sua pasta de usuário — fora da pasta
+do código. **Para atualizar**, baixe o ZIP de novo, descompacte onde quiser e rode o
+`iniciar`: os estudos continuam lá.
 
-**Para atualizar** quando houver versão nova: baixe o ZIP de novo, descompacte por cima
-e rode o `iniciar` outra vez. Os estudos continuam.
+Sem serviço de e-mail, o link de "esqueci a senha" aparece na própria janela preta.
 
-Sem serviço de e-mail, o link de "esqueci a senha" aparece no Docker Desktop:
-**Containers → imovaluation → plataforma → Logs**.
+Com Docker, em vez do Node: `docker compose up --build -d`.
 
 ## Desenvolver
 

@@ -8,7 +8,7 @@ services:
     plan: free
     region: virginia
     branch: main
-    buildCommand: npm ci --omit=dev
+    buildCommand: npm ci --omit=dev --omit=optional   # sem o Postgres embutido, que é só para rodar no computador
     startCommand: npm start          # aplica as migrações do banco e sobe a casca
     healthCheckPath: /saude
     envVars:
