@@ -147,9 +147,12 @@ button{font:inherit;color:inherit}
 .fio{height:2.2mm;background:var(--pg-marinho);flex:none}
 
 /* títulos e faixas */
-.tit{font-size:10.5pt;font-weight:700;color:var(--pg-rot);margin:2.6mm 0 1.2mm}
-.tit.menor{font-size:8.5pt;margin:2.5mm 0 1.2mm}
-.subtit{font-size:8.5pt;font-weight:700;color:var(--pg-rot);margin:2.5mm 0 1.2mm}
+/* tópico novo: respiro de 5 mm dos campos de cima, em todo o laudo; o
+   primeiro da página fica perto do cabeçalho */
+.tit{font-size:10.5pt;font-weight:700;color:var(--pg-rot);margin:5mm 0 1.2mm}
+.tit.menor{font-size:8.5pt}
+.corpo > .tit:first-child{margin-top:2.6mm}
+.subtit{font-size:8.5pt;font-weight:700;color:var(--pg-rot);margin:5mm 0 1.2mm}
 /* quadros lado a lado com a mesma altura: a caixa ocupa o que sobra da coluna
    e as linhas dividem a altura por igual */
 .colunas{align-items:stretch}
@@ -235,10 +238,12 @@ table.t.homog td{font-size:var(--t-denso)}
 .texto ul,.texto ol{margin:0;padding-left:5mm;white-space:normal}
 .texto li{white-space:pre-wrap}
 /* o editor: a mesma caixa do papel, digitável, com a barra de formatação em cima */
-.area-texto{display:flex;flex-direction:column}
+.area-texto{display:flex;flex-direction:column;position:relative}
 .texto.editor{background:var(--pg-edita);outline:none;cursor:text}
 .texto.editor:focus{background:var(--pg-cel);box-shadow:0 0 0 .35mm var(--campo-foco)}
-.ferramentas{display:flex;gap:1mm;padding:.8mm 0;flex-wrap:wrap}
+/* a barra fica na linha do título, à direita, fora do fluxo: a tela ocupa
+   a mesma altura que o papel */
+.ferramentas{display:flex;gap:1mm;padding:0 0 .8mm;position:absolute;right:0;bottom:100%}
 .ferramentas button{font:inherit;font-size:6.4pt;color:var(--pg-rot);background:var(--pg-cel);
   border:.25mm solid var(--pg-edita-borda);border-radius:.6mm;padding:.4mm 1.8mm;cursor:pointer;min-width:5mm}
 .ferramentas button:hover{background:var(--pg-edita)}
@@ -276,9 +281,13 @@ button.marca{padding:0;background:var(--pg-edita);cursor:pointer;font:inherit;fo
 .quadro-img.escolher:hover{outline:.4mm dashed var(--pg-edita-borda);outline-offset:-1.2mm}
 
 /* ---------- campos digitáveis, só na tela ---------- */
-.c{font:inherit;color:inherit;background:var(--pg-edita);border:none;border-bottom:.25mm solid var(--pg-edita-borda);
-  width:100%;min-width:0;padding:.2mm .6mm;border-radius:0;outline:none;height:auto}
+/* o campo tem a altura da linha de texto do papel: o sublinhado é sombra,
+   não borda, e não há respiro vertical — a tela mede o mesmo que a impressão */
+.c{font:inherit;color:inherit;background:var(--pg-edita);border:none;box-shadow:inset 0 -.25mm 0 var(--pg-edita-borda);
+  line-height:1.3;height:1.3em;display:block;
+  width:100%;min-width:0;padding:0 .6mm;border-radius:0;outline:none}
 .c:focus{background:var(--pg-cel);box-shadow:0 0 0 .35mm var(--campo-foco)}
+textarea.c.quebra{resize:none;overflow:hidden;white-space:pre-wrap;min-height:0;line-height:1.3;height:1.3em;overflow-wrap:anywhere}
 .c.num{text-align:inherit;font-variant-numeric:tabular-nums}
 .c.sugerido{color:var(--pg-sugerido)}
 select.c{appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:3mm;
@@ -296,7 +305,9 @@ td.dir .c{text-align:right}
 .afixo.junto{justify-content:flex-start}
 .afixo.junto > :last-child{flex:none}
 .afixo.junto .c{width:12mm}
-.linha-botoes{display:flex;gap:2mm;margin-top:1.2mm}
+/* botões de tela abaixo da tabela, fora do fluxo (a tela mede o mesmo que o papel) */
+.com-botoes{position:relative}
+.linha-botoes{display:flex;gap:2mm;position:absolute;left:0;top:100%;margin-top:1.2mm}
 .botao-linha{font:inherit;color:var(--pg-rot);background:var(--pg-edita);border:.25mm dashed var(--pg-edita-borda);
   border-radius:.6mm;padding:.6mm 2.4mm;cursor:pointer}
 .botao-linha:disabled{opacity:.45;cursor:not-allowed}

@@ -106,9 +106,24 @@ têm altura fixa de 78 mm (2/3 do que ocupavam esticadas); a faixa é
 "Infraestrutura do empreendimento"; as duas perguntas de divergência de área
 abrem a página de Restrições. Ambientes: 13 linhas no mínimo (não precisam
 acabar no fim da página); o botão "+ Linha de ambiente" (e "Remover última
-linha", só vazia) acrescenta até `AMB_MAX` (22), o que cabe na página — sem
+linha", só vazia) acrescenta até `AMB_MAX` (21), o que cabe na página — sem
 página de continuação, pedido do avaliador. Mudou a altura das observações ou
 de algo acima da tabela, remeça `AMB_MAX`.
+
+**A tela mede o mesmo que o papel** (pedido do avaliador: "o espaçamento da
+impressão representado fielmente nas abas de preenchimento"). Cada página da
+tela tem, bloco a bloco, a altura da página impressa. Por isso: o campo `.c`
+tem a altura da linha de texto (sublinhado em sombra, sem respiro vertical);
+campo de texto estreito que no papel quebra de linha usa `quebra: true`
+(textarea de uma linha que cresce); vazio no papel ocupa uma linha (espaço de
+largura zero); a barra de formatação fica na linha do título, fora do fluxo;
+botões só de tela (linhas de ambiente, adicionar fotos) ficam abaixo da
+grade, fora do fluxo (`.com-botoes` + `.linha-botoes`); as fotos paginam como
+no papel. Conferir com um script que compara, página a página, a altura de
+cada bloco do `.corpo` na tela e na aba Impressão.
+
+**Tópico novo** (`.tit`, `.subtit`): 5 mm de respiro dos campos de cima, em
+todo o laudo, sem `espaco()` antes; o primeiro da página fica a 2,6 mm.
 
 **Uma escala de letra só** (pedido do avaliador: "mesma fonte e tamanho para
 campos de mesma função"). Tokens no `.pagina`: `--t-campo` 6,6 pt para todo

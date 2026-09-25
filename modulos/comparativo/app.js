@@ -85,7 +85,7 @@
     ['piso', 'PISO', 12.8], ['teto', 'TETO', 12.8], ['porta', 'PORTA', 12.8], ['esquadrias', 'ESQUADRIAS', 12.8]];
   /* 13 linhas de ambiente no mínimo; o botão acrescenta até AMB_MAX, o que
      cabe na página da Região (sem página de continuação) */
-  var N_AMBIENTES = 13, AMB_MAX = 22, FOTOS_POR_PAGINA = 8;
+  var N_AMBIENTES = 13, AMB_MAX = 21, FOTOS_POR_PAGINA = 8;
   function ambienteVazio() {
     return { ambiente: '', quantidade: null, parede: '', piso: '', teto: '', porta: '', esquadrias: '',
              bancadas: '', metais: '' };
@@ -343,10 +343,24 @@
     ctx.txt = function (caminho, o) {
       o = o || {};
       var v = pegar(caminho);
-      if (papel) return e('span', { cls: o.cls, txt: semValor(v) ? (o.vazio || '') : String(v) });
-      var el = e('input', { cls: 'c ' + (o.cls || ''), type: 'text', value: semValor(v) ? '' : String(v),
-        placeholder: o.ph || '', 'aria-label': o.rot || caminho, spellcheck: 'false' });
-      el.addEventListener('input', function () { guardar(caminho, el.value); mudou(); });
+      /* vazio no papel ainda ocupa uma linha (espaço de largura zero): a linha
+         em branco mede o mesmo que a preenchida, e o mesmo que na tela */
+      if (papel) return e('span', { cls: o.cls, txt: semValor(v) ? (o.vazio || '\u200b') : String(v) });
+      /* quebra: o texto desce de linha como no papel (campo estreito de texto
+         longo), para a tela medir o mesmo que a impressão */
+      var el = o.quebra
+        ? e('textarea', { cls: 'c quebra ' + (o.cls || ''), rows: '1', placeholder: o.ph || '',
+            'aria-label': o.rot || caminho, spellcheck: 'false' })
+        : e('input', { cls: 'c ' + (o.cls || ''), type: 'text', value: semValor(v) ? '' : String(v),
+            placeholder: o.ph || '', 'aria-label': o.rot || caminho, spellcheck: 'false' });
+      if (o.quebra) {
+        el.value = semValor(v) ? '' : String(v);
+        el.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') ev.preventDefault(); });
+      }
+      el.addEventListener('input', function () {
+        if (o.quebra) { el.value = el.value.replace(/\n/g, ' '); crescer(el); }
+        guardar(caminho, el.value); mudou();
+      });
       return el;
     };
 
@@ -800,7 +814,7 @@
       faixa('INFRAESTRUTURA DO EMPREENDIMENTO', 'esq'), infra, espaco(),
       faixa('UNIDADE PRIVATIVA', 'esq'), unidade, espaco(),
       faixa(e('span', {}, ['DIVISÃO INTERNA POR AMBIENTE', e('span', { cls: 'info', txt: 'ⓘ' })]), 'esq'),
-      tabelaAmb(0, nAmb), botoesAmb()], { parte: 'regiao' })];
+      e('div', { cls: 'com-botoes' }, [tabelaAmb(0, nAmb), botoesAmb()])], { parte: 'regiao' })];
     return paginas;
   }
 
@@ -831,7 +845,7 @@
         g('15mm 20mm 8mm 1fr', [rot('Resposta:', 'claro'), val(ctx.sel(b + 'resposta', LS.validacao)),
           rot('Obs:', 'claro dir'), val(ctx.txt(b + 'obs'), 'pontilhado')])]);
     });
-    return [pagina(ctx, divergencias(ctx).concat([espaco('g2'),
+    return [pagina(ctx, divergencias(ctx).concat([
       tit('Restrições do Imóvel'),
       g('1fr 28mm', [rot('Considerando as diligências e aspectos técnicos analisados neste laudo, o imóvel é recomendado como garantia?'),
         rot('Data Vistoria', 'centro')]),
@@ -841,7 +855,6 @@
       e('div', { txt: 'Em caso negativo, justifique:', style: 'margin-bottom:1mm' }),
       ctx.area(r + 'justificativa', { alt: '20mm' }),
       espaco('g2')].concat(itens).concat([
-      espaco('g2'),
       e('div', { cls: 'subtit', txt: 'Observações Gerais:' }),
       ctx.area(r + 'observacoes', { alt: '32mm' })])), { parte: 'restricoes' })];
   }
@@ -873,7 +886,7 @@
 
   function fichaComparativo(ctx, i) {
     var b = 'amostra.' + i + '.';
-    var t = function (cam, o) { return val(ctx.txt(b + cam, o)); };
+    var t = function (cam, o) { o = o || {}; o.quebra = true; return val(ctx.txt(b + cam, o)); };
     var nn = function (cam, o) { return val(ctx.num(b + cam, o)); };
     var cols = '1.3fr 2.4fr 1.45fr 1.35fr 1.35fr .75fr 1.35fr 1.25fr';
     var R_ = function (x) { return rot(x, 'claro dir'); };
@@ -913,7 +926,7 @@
   }
 
   function folhaFichas(ctx) {
-    var p1 = [espaco(), fichaParadigma(ctx), espaco('g2'), tit('Amostra')];
+    var p1 = [espaco(), fichaParadigma(ctx), tit('Amostra')];
     for (var i = 0; i < 4; i++) p1.push(fichaComparativo(ctx, i));
     var p2 = [espaco(), fichaComparativo(ctx, 4),
       tit('Croqui de Situação do Imóvel Avaliando e Elementos Comparativos'),
@@ -1038,8 +1051,8 @@
         ['Médio', function (r) { return fn(r.est.medio); }],
         ['Máximo', function (r) { return fn(r.est.maximo); }]])], { gap: '7mm' });
 
-    var filhos = [espaco(), topo, espaco('g2'), tit('Tabela de Homogeneização'), tabela, avaliando, estatistica,
-      espaco('g2'), blocos, espaco('g2'),
+    var filhos = [espaco(), topo, tit('Tabela de Homogeneização'), tabela, avaliando, estatistica,
+      espaco('g2'), blocos,
       tit('Observações Gerais'), ctx.area(cal + 'observacoes', { alt: '90mm' }), espaco(),
       faixa('VALOR DE MERCADO'),
       e('div', { cls: 'caixa' }, [val(ctx.calc(function (r) { return rs(r.valor.mercado); }), 'centro')])];
@@ -1103,7 +1116,7 @@
           e('td', {}, [ctx.calc(function (r) { return fn(r.tabela.linhas[i].unit); })]),
           e('td', {}, [ctx.calc(function (r) { return fn(r.tabela.linhas[i].homog); })])]);
       })));
-    return [pagina(ctx, [tit('Poder de Predição do Modelo', 'menor'), caixa, leg, espaco(),
+    return [pagina(ctx, [tit('Poder de Predição do Modelo', 'menor'), caixa, leg,
       tit('Croqui de Localização', 'menor'),
       ctx.img('grafico.croqui', { nu: true, alt: '105mm', max: 2000, vazio: 'Clique para inserir o croqui de localização' })],
       { parte: 'grafico' })];
@@ -1179,7 +1192,7 @@
         if (ctx.papel) x.textContent = marcado ? 'X' : '';
         else {
           var b = e('button', { type: 'button', cls: 'marca', 'aria-label': m[1] + ' ' + op, txt: marcado ? 'X' : '',
-            style: 'margin:0 auto;width:4mm;height:3.4mm;font-weight:700' });
+            style: 'margin:0 auto;width:4mm;height:1.3em;display:flex;font-weight:700' });
           b.addEventListener('click', function () {
             guardar(l + m[0], pegar(l + m[0]) === op ? '' : op); mudou(); remontar();
           });
@@ -1232,17 +1245,20 @@
   /* ============================================================= FOTOS */
   function folhaFotos(ctx) {
     var fotos = P.fotos || [];
-    var total = ctx.papel ? fotos.length : fotos.length + 1;
-    var nPag = Math.max(1, Math.ceil(total / FOTOS_POR_PAGINA));
+    var nPag = Math.max(1, Math.ceil(fotos.length / FOTOS_POR_PAGINA));
     if (ctx.papel && !fotos.length) return [];
+    /* as páginas são as do papel; o botão de acrescentar fica abaixo da grade,
+       fora do fluxo, na última página (a tela mede o mesmo que a impressão) */
     return repetir(nPag, function (pg) {
       var celulas = [];
-      for (var k = pg * FOTOS_POR_PAGINA; k < Math.min(total, (pg + 1) * FOTOS_POR_PAGINA); k++) {
-        if (k < fotos.length) celulas.push(celulaFoto(ctx, k));
-        else celulas.push(botaoAdicionar('Adicionar fotos', 'fotos', { alt: '56mm' }));
+      for (var k = pg * FOTOS_POR_PAGINA; k < Math.min(fotos.length, (pg + 1) * FOTOS_POR_PAGINA); k++) {
+        celulas.push(celulaFoto(ctx, k));
       }
+      var grade = g('1fr 1fr', celulas, { gap: '6mm', estilo: 'row-gap:4mm' });
+      var ultima = pg === nPag - 1 && !ctx.papel;
       return pagina(ctx, [tit('Relatório Fotográfico', 'menor'),
-        g('1fr 1fr', celulas, { gap: '6mm', estilo: 'row-gap:4mm' })], { parte: 'fotos' });
+        ultima ? e('div', { cls: 'com-botoes' }, [grade, e('div', { cls: 'linha-botoes', style: 'margin-top:4mm' },
+          [botaoAdicionar('Adicionar fotos', 'fotos', { alt: 'auto', cls: 'botao-linha' })])]) : grade], { parte: 'fotos' });
     });
   }
   function celulaFoto(ctx, k) {
@@ -1268,7 +1284,7 @@
   }
   /* inserir várias imagens de uma vez, na ordem em que foram escolhidas */
   function botaoAdicionar(texto, lista, o) {
-    var b = e('button', { type: 'button', cls: 'adicionar', txt: '+ ' + texto, style: 'height:' + o.alt });
+    var b = e('button', { type: 'button', cls: o.cls || 'adicionar', txt: '+ ' + texto, style: 'height:' + o.alt });
     b.addEventListener('click', function () {
       escolherArquivos(true, function (arqs) {
         if (!arqs.length) return;
@@ -1356,8 +1372,11 @@
     aba.render(contexto(false)).forEach(function (p) { alvo.appendChild(p); });
     ajustarZoom();
     aplicar();
+    Array.prototype.forEach.call(alvo.querySelectorAll('textarea.quebra'), crescer);
     window.scrollTo(0, y);
   }
+  /* campo de texto que quebra: a altura acompanha as linhas */
+  function crescer(el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
   function remontar() { montarFolha(true); }
 
   /* A folha é A4 de verdade; na tela ela cresce até caber na largura. */
