@@ -439,8 +439,7 @@
       });
       var BOTOES = [['N', 'Negrito', 'bold', 'font-weight:700'], ['I', 'Itálico', 'italic', 'font-style:italic'],
         ['S', 'Sublinhado', 'underline', 'text-decoration:underline'], ['Subtítulo', 'Subtítulo', 'sub'],
-        ['• Lista', 'Lista com marcadores', 'insertUnorderedList'], ['1. Lista', 'Lista numerada', 'insertOrderedList'],
-        ['Limpar', 'Tirar a formatação do trecho', 'limpar']];
+        ['• Lista', 'Lista com marcadores', 'insertUnorderedList'], ['1. Lista', 'Lista numerada', 'insertOrderedList']];
       var barra = e('div', { cls: 'ferramentas', role: 'toolbar', 'aria-label': 'Formatação do texto' },
         BOTOES.map(function (b) {
           var bt = e('button', { type: 'button', txt: b[0], title: b[1], 'aria-label': b[1], style: b[3] || null });
@@ -451,8 +450,6 @@
             if (b[2] === 'sub') {
               var dentro = document.queryCommandValue('formatBlock').toLowerCase() === 'h4';
               document.execCommand('formatBlock', false, dentro ? 'div' : 'h4');
-            } else if (b[2] === 'limpar') {
-              document.execCommand('removeFormat'); document.execCommand('formatBlock', false, 'div');
             } else document.execCommand(b[2]);
             gravar();
           });

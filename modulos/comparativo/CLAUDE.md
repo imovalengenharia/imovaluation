@@ -90,8 +90,7 @@ campos saem em branco, porque lá não há campo, só texto. Cor nova na folha
 deriva desses tokens; nada de azul fixo.
 
 Texto corrido (observações, justificativa, texto da liquidação) é editado com
-uma **barra de ferramentas** — negrito, itálico, sublinhado, subtítulo, listas,
-limpar — e guardado como HTML de formatação. `limparHtml()` passa tudo por uma
+uma **barra de ferramentas** — negrito, itálico, sublinhado, subtítulo e listas — e guardado como HTML de formatação. `limparHtml()` passa tudo por uma
 lista de marcas permitidas (b, i, u, br, div, ul, ol, li, h4) antes de gravar e
 antes de mostrar: atributos, estilos e scripts somem, inclusive do que vem
 colado do Word. Tab insere tabulação (para alinhar colunas no texto). Estudos
