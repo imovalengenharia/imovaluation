@@ -130,7 +130,10 @@ button{font:inherit;color:inherit}
   box-shadow:var(--pg-sombra);padding:7mm 6mm 8mm;font-family:Arial,'Liberation Sans',Helvetica,sans-serif;
   font-size:var(--t-campo);line-height:1.3;position:relative;display:flex;flex-direction:column;
   /* escala única de letra do laudo: campo de mesma função, mesmo tamanho */
-  --t-campo:6.6pt;--t-denso:6.2pt;--t-faixa:7pt}
+  --t-campo:6.6pt;--t-denso:6.2pt;--t-faixa:7pt;
+  /* altura única de toda linha de campo (rótulo, valor, ficha, tabela),
+     bordas incluídas; o texto fica centrado nela */
+  --alt-linha:4.6mm;--resp-linha:.3mm}
 .pagina.anexo{padding:0;align-items:center;justify-content:center}
 .pagina.anexo img{max-width:100%;max-height:var(--pg-h);display:block}
 .pagina .corpo{background:var(--pg-area);flex:1;padding:3mm 2.4mm 3mm}
@@ -168,7 +171,7 @@ button{font:inherit;color:inherit}
 
 /* grades de rótulo e valor */
 .g{display:grid;align-items:stretch}
-.rot{font-weight:700;color:var(--pg-rot);padding:.7mm 1mm;display:flex;align-items:center;white-space:nowrap;min-width:0}
+.rot{font-weight:700;color:var(--pg-rot);padding:var(--resp-linha) 1mm;min-height:var(--alt-linha);display:flex;align-items:center;white-space:nowrap;min-width:0}
 .rot.tinta{color:var(--pg-tinta)}
 .rot.centro{justify-content:center}
 .rot.quebra{white-space:normal}
@@ -177,7 +180,7 @@ button{font:inherit;color:inherit}
 .rot.marinho{background:var(--pg-marinho);color:var(--pg-marinho-ink)}
 /* célula colorida sobre outra igual: um fio branco fino entre elas */
 .g + .g > .rot.marinho, .caixa > .g + .g > .rot.marinho{box-shadow:inset 0 .35mm 0 var(--pg-papel)}
-.val{padding:.7mm 1mm;display:flex;align-items:center;min-height:4.4mm;min-width:0;overflow-wrap:anywhere}
+.val{padding:var(--resp-linha) 1mm;display:flex;align-items:center;min-height:var(--alt-linha);min-width:0;overflow-wrap:anywhere}
 .val.cel{background:var(--pg-cel);border:.25mm solid var(--pg-fio)}
 /* células brancas empilhadas: nunca encostadas, que as duas bordas somam
    um fio grosso; um respiro entre elas, e os rótulos marinho usam o mesmo
@@ -199,9 +202,9 @@ button{font:inherit;color:inherit}
 .ficha-tec > .ult-col{border-right:0}
 .ficha-tec > .ult-lin{border-bottom:0}
 .ficha-perg{background:var(--pg-pergunta);color:var(--pg-rot);font-weight:700;
-  text-transform:uppercase;padding:.9mm 2mm;display:flex;align-items:center;white-space:nowrap}
-.ficha-resp{background:var(--pg-cel);color:var(--pg-tinta);padding:.7mm 2mm;min-width:0;
-  display:flex;align-items:center;min-height:4.6mm}
+  text-transform:uppercase;padding:var(--resp-linha) 2mm;min-height:var(--alt-linha);display:flex;align-items:center;white-space:nowrap}
+.ficha-resp{background:var(--pg-cel);color:var(--pg-tinta);padding:var(--resp-linha) 2mm;min-width:0;
+  display:flex;align-items:center;min-height:var(--alt-linha)}
 .ficha-resp .c{width:100%}
 /* no papel, o quadro termina pouco depois do texto */
 .caixa.justa{align-self:flex-start;justify-self:start;width:max-content;max-width:100%}
@@ -210,6 +213,14 @@ button{font:inherit;color:inherit}
 .caixa > .g + .g{border-top:.25mm solid var(--pg-fio)}
 .linhas > *{border-bottom:.25mm solid var(--pg-fio)}
 .linhas > *:last-child{border-bottom:0}
+/* linha com fio próprio (em cima ou embaixo): o fio entra na altura da linha,
+   para o passo entre linhas ser sempre --alt-linha */
+.caixa > .g + .g > .rot, .caixa > .g + .g > .val,
+.linhas > .g > .rot, .linhas > .g > .val,
+.ficha > .g > .rot, .ficha > .g > .val{min-height:calc(var(--alt-linha) - .25mm)}
+.linhas > .g:last-child > .rot, .linhas > .g:last-child > .val,
+.ficha > .g:last-child > .rot, .ficha > .g:last-child > .val{min-height:var(--alt-linha)}
+.ficha > .g.sep > .rot, .ficha > .g.sep > .val{min-height:calc(var(--alt-linha) - .35mm)}
 .caixa.linhas > .g + .g{border-top:0}
 .pontilhado{border-bottom:.25mm dotted var(--pg-borda)}
 .pagina a{color:var(--pg-link)}
@@ -219,9 +230,9 @@ button{font:inherit;color:inherit}
 /* tabelas da folha */
 table.t{width:100%;border-collapse:collapse;font-size:var(--t-campo)}
 table.t.denso{font-size:var(--t-denso)}
-table.t th{font-weight:700;color:var(--pg-tinta);padding:.9mm .8mm;text-align:center;vertical-align:middle;
+table.t th{font-weight:700;color:var(--pg-tinta);padding:var(--resp-linha) .8mm;height:var(--alt-linha);text-align:center;vertical-align:middle;
   border:.25mm solid var(--pg-fio);background:var(--pg-cel)}
-table.t td{padding:.5mm .8mm;text-align:center;border:.25mm solid var(--pg-fio);background:var(--pg-cel);
+table.t td{padding:var(--resp-linha) .8mm;height:var(--alt-linha);text-align:center;border:.25mm solid var(--pg-fio);background:var(--pg-cel);
   font-variant-numeric:tabular-nums;white-space:nowrap}
 table.t.marinho th{background:var(--pg-marinho);color:var(--pg-marinho-ink);border-color:var(--pg-marinho)}
 table.t td.esq{text-align:left} table.t td.dir{text-align:right}
@@ -267,7 +278,7 @@ button.marca{padding:0;background:var(--pg-edita);cursor:pointer;font:inherit;fo
   position:relative}
 .quadro-img.encher img{position:absolute;inset:0;width:100%;height:100%;object-fit:fill}
 .ficha{font-size:var(--t-campo)}
-.ficha .rot,.ficha .val{padding:.5mm .8mm;min-height:3.9mm}
+.ficha .rot,.ficha .val{padding-left:.8mm;padding-right:.8mm}
 /* a imagem ocupa o campo inteiro, sem corte: estica até as bordas, como a
    foto arrastada até o quadro no Excel (pedido do avaliador) */
 .quadro-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;display:block}
@@ -297,7 +308,8 @@ select.c option{color:var(--ink);background:var(--campo-bg)}
 textarea.c{resize:none;overflow:hidden;white-space:pre-wrap;display:block;line-height:1.35;min-height:12mm;tab-size:8}
 .val.dir .c,.val.dir input.c{text-align:right}
 .val.centro .c{text-align:center}
-td .c{text-align:center}
+/* na tabela, o campo não pesa na largura da coluna (a coluna fica como no papel) */
+td .c{text-align:center;width:0;min-width:100%}
 td.dir .c{text-align:right}
 .afixo{display:flex;align-items:center;width:100%;gap:.8mm}
 .afixo .pre{flex:none}

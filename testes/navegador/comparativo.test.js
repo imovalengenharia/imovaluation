@@ -101,3 +101,54 @@ test('reabre na aba onde parou, e o laudo impresso sai em páginas A4', async ()
   assert.equal(await fr.locator('.folha-previa.passa').count(), 0, 'o estudo em branco cabe em A4');
   assert.deepEqual(erros, []);
 });
+
+/* Toda linha de campo de uma linha de texto (rótulo, valor, ficha técnica,
+   célula de tabela) tem a mesma altura, --alt-linha, no papel e na tela; e
+   cada página da tela termina no mesmo ponto que a impressa. Pedido do
+   avaliador, repetido: "padronizar as alturas das linhas em todo o modelo". */
+test('todas as linhas de campo têm a mesma altura, na tela e no papel', async () => {
+  const { pg, erros, fr } = await abrirEstudoNovo('alturas@exemplo.com');
+  const quadro = pg.frame({ url: /\/m\/comparativo\// });
+  await fr.locator('.pagina').first().waitFor();
+  const medir = sel => quadro.evaluate(sel => {
+    const fora = [], fins = [];
+    document.querySelectorAll(sel).forEach((pag, ip) => {
+      if (!pag.querySelector('.corpo')) return;
+      const mm = pag.getBoundingClientRect().width / 270;
+      const alt = parseFloat(getComputedStyle(pag).getPropertyValue('--alt-linha')) || 4.6;
+      const umaLinha = el => { const r = document.createRange(); r.selectNodeContents(el);
+        return r.getBoundingClientRect().height <= parseFloat(getComputedStyle(el).lineHeight) * 1.6; };
+      pag.querySelectorAll('.rot, .val, td, th, .ficha-perg, .ficha-resp').forEach(el => {
+        if (el.closest('.ficha-tec.dupla') || el.style.height) return;
+        const irmaos = Array.from(el.parentElement.children);
+        if (!irmaos.every(umaLinha)) return;
+        let h = el.getBoundingClientRect().height;
+        const pai = el.parentElement;
+        if (pai.classList.contains('g')) { const c = getComputedStyle(pai); h += parseFloat(c.borderTopWidth) + parseFloat(c.borderBottomWidth); }
+        h /= mm;
+        if (Math.abs(h - alt) > .2) fora.push(`p${ip + 1} ${el.className || el.tagName} ${h.toFixed(2)} «${el.textContent.trim().slice(0, 20)}»`);
+      });
+      const corpo = pag.querySelector('.corpo');
+      fins.push(((corpo.lastElementChild.getBoundingClientRect().bottom - pag.getBoundingClientRect().top) / mm).toFixed(1));
+    });
+    return { fora, fins };
+  }, sel);
+
+  await fr.locator('#abas button', { hasText: 'Impressão' }).click();
+  await fr.locator('.previa .rotulo-pagina').first().waitFor();
+  const papel = await medir('.previa .pagina');
+  assert.deepEqual(papel.fora, [], 'no papel, toda linha de campo tem --alt-linha');
+
+  const tela = [];
+  for (const aba of ['Capa', 'Região + Imóvel', 'Restrições do imóvel', 'Fichas de pesquisa', 'Cálculo', 'Gráfico', 'Liquidação forçada']) {
+    await fr.locator('#abas button', { hasText: aba }).first().click();
+    await pg.waitForTimeout(150);
+    const m = await medir('#folha .pagina');
+    assert.deepEqual(m.fora, [], 'na tela (' + aba + '), toda linha de campo tem --alt-linha');
+    tela.push(...m.fins);
+  }
+  assert.equal(tela.length, papel.fins.length);
+  tela.forEach((t, i) => assert.ok(Math.abs(t - papel.fins[i]) <= .3,
+    `a página ${i + 1} da tela termina em ${t} mm, a impressa em ${papel.fins[i]} mm`));
+  assert.deepEqual(erros, []);
+});

@@ -114,6 +114,19 @@ de algo acima da tabela, remeça `AMB_MAX`.
 observações gerais da avaliação esticam até o fim da página e ficam com o
 que sobra (~94 mm). Crescer algo na Capa encolhe as observações.
 
+**Uma altura de linha só** (pedido do avaliador, repetido: "divergências nas
+alturas das linhas dos campos"). Token `--alt-linha` (4,6 mm) no `.pagina`:
+todo `.rot`, `.val`, `.ficha-perg/.ficha-resp`, `td` e `th` de uma linha de
+texto mede isso, fio incluído — linha com fio próprio no `.g` (caixas,
+`.linhas`, fichas das amostras) desconta o fio da altura mínima. Nada de
+`min-height`/`height` solto em campo; na tabela, o campo não pesa na
+largura da coluna (`td .c{width:0;min-width:100%}`), para o cabeçalho quebrar
+igual na tela e no papel. Única exceção: Zoneamento (`.ficha-tec.dupla`),
+campo de duas linhas esticado à altura dos quadros vizinhos. **Regressão
+travada** em `testes/navegador/comparativo.test.js` ("todas as linhas de
+campo têm a mesma altura"), que mede cada linha, no papel e em cada aba, e
+confere que cada página da tela termina onde termina a impressa.
+
 **A tela mede o mesmo que o papel** (pedido do avaliador: "o espaçamento da
 impressão representado fielmente nas abas de preenchimento"). Cada página da
 tela tem, bloco a bloco, a altura da página impressa. Por isso: o campo `.c`

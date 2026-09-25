@@ -558,7 +558,7 @@
      A pergunta numa célula sombreada, em maiúsculas na cor do laudo; a
      resposta numa célula branca, logo ao lado. A coluna de cada pergunta tem
      o tamanho da pergunta mais longa daquela coluna. */
-  function ficha(nPares, celulas, pesos) {
+  function ficha(nPares, celulas, pesos, cls) {
     var filhos = [];
     /* os fios são bordas das células (à direita e embaixo), nunca o fundo
        num vão: vão de fração de pixel sai ora fino, ora grosso */
@@ -569,7 +569,7 @@
       filhos.push(e('div', { cls: 'ficha-resp' + fim }, [c[1]]));
     });
     var cols = []; for (var k = 0; k < nPares; k++) cols.push('max-content minmax(0,' + ((pesos && pesos[k]) || 1) + 'fr)');
-    return e('div', { cls: 'ficha-tec', style: 'grid-template-columns:' + cols.join(' ') }, filhos);
+    return e('div', { cls: 'ficha-tec' + (cls ? ' ' + cls : ''), style: 'grid-template-columns:' + cols.join(' ') }, filhos);
   }
   /* célula branca de valor: no papel, termina pouco depois do texto */
   function celula(ctx, campo, cls) { return val(campo, 'cel' + (ctx.papel ? ' justo' : '') + (cls ? ' ' + cls : '')); }
@@ -721,7 +721,7 @@
   function folhaRegiao(ctx) {
     var r = 'regiao.', im = 'imovel.';
     function marcado(caminho, texto) {
-      return e('div', { cls: 'val', style: 'min-height:5.2mm' }, [ctx.chk(caminho), e('span', { txt: texto })]);
+      return e('div', { cls: 'val' }, [ctx.chk(caminho), e('span', { txt: texto })]);
     }
     /* os três quadros de cima têm quatro linhas cada e a mesma altura */
     var melh = e('div', { cls: 'coluna' }, [faixa('MELHORAMENTOS PÚBLICOS', 'fina'), e('div', { cls: 'caixa' },
@@ -735,14 +735,16 @@
       g('1fr 1fr', [marcado(r + 'peculiaridades.comunidade', 'Comunidade'), marcado(r + 'peculiaridades.inundacao', 'Risco a inundação')]),
       g('1fr 1fr', [marcado(r + 'peculiaridades.feira', 'Feira Livre'), marcado(r + 'peculiaridades.ambiental', 'Risco ambiental')]),
       g('1fr 1fr', [marcado(r + 'peculiaridades.outros', 'Outros'), e('div')]),
-      g('1fr 1fr', [e('div', { cls: 'val', style: 'min-height:5.2mm' }), e('div')])])]);
+      g('1fr 1fr', [e('div', { cls: 'val' }), e('div')])])]);
     /* na mesma ficha técnica, nas colunas dos quadros de cima */
     var regiaoLinha2 = [
       e('div', { cls: 'coluna' }, [ficha(1, [['Padrão da região', ctx.sel(r + 'padrao', LS.padraoRegiao)],
         ['Ocupação predominante', ctx.sel(r + 'ocupacao', LS.ocupacaoPredominante)]])]),
       e('div', { cls: 'coluna' }, [ficha(1, [['Tráfego na região', ctx.sel(r + 'trafego', LS.trafego)],
         ['Implantação', ctx.sel(r + 'implantacao', LS.implantacao)]])]),
-      e('div', { cls: 'coluna' }, [ficha(1, [['Zoneamento', ctx.txt(r + 'zoneamento')]])])];
+      /* uma linha só, esticada à altura dos quadros vizinhos (duas linhas):
+         campo de duas linhas de propósito */
+      e('div', { cls: 'coluna' }, [ficha(1, [['Zoneamento', ctx.txt(r + 'zoneamento')]], null, 'dupla')])];
 
     var terreno = ficha(3, [
       ['Topografia', ctx.sel(im + 'topografia', LS.topografia)],
@@ -777,7 +779,7 @@
         .concat(repetir(ate - de, function (k) {
           var base = im + 'ambientes.' + (de + k) + '.';
           return e('tr', {}, COLS_AMBIENTE.map(function (cc) {
-            return e('td', { style: 'height:4.3mm' }, [cc[0] === 'quantidade'
+            return e('td', {}, [cc[0] === 'quantidade'
               ? ctx.num(base + cc[0], { casas: 0, vazio: '' }) : ctx.txt(base + cc[0])]);
           }));
         })));
