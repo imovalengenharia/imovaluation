@@ -89,6 +89,13 @@ branco). No papel — impressão e aba Impressão — a cor cheia vai junto e os
 campos saem em branco, porque lá não há campo, só texto. Cor nova na folha
 deriva desses tokens; nada de azul fixo.
 
+**Ficha técnica** (`ficha(colunas, [[rótulo, campo], …])`): um quadro na
+largura toda, células iguais separadas por fio fino (o vão de .25 mm mostra
+o fundo), rótulo pequeno em maiúsculas em cima e o valor embaixo. É o formato
+que o avaliador escolheu para Terreno, Edificação (4 colunas, fachada e
+conservação no fim da linha) e Unidade privativa — preferido aos quadros
+soltos de pares rótulo → campo, que ficavam espalhados no papel.
+
 **Rótulo e campo, em todo o laudo** (pedido do avaliador): o campo começa
 logo depois do rótulo, e num mesmo quadro todos os campos alinham pelo
 rótulo mais longo — `pares(ctx, [[rótulo, campo], …])`, uma grade só com
