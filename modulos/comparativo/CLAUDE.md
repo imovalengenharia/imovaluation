@@ -128,6 +128,19 @@ das fichas das amostras com listas longas têm colunas próprias; "Idade
 estimada" virou "Idade". Travado no teste "a opção mais longa de cada lista
 cabe no campo".
 
+**Um formato de campo em todo o laudo** (pedido do avaliador: "input de capa
+igual input de restrição"). Todo par rótulo → valor está no formato da ficha
+técnica: `ficha()` (grade) ou `table.t.ficha-t` (tabela). Restrições
+(`tabelaPerguntas`: pergunta sombreada, resposta e observação brancas),
+fichas de pesquisa (paradigma 4 pares por linha; amostras 3 pares, listas
+longas na primeira coluna, foto ao lado), premissas e deduções da liquidação,
+níveis de mercado e o deságio seguem esse formato. Rótulo curto em
+maiúsculas; pergunta ou fórmula longa em letra de frase (`table.perguntas`).
+Títulos: de seção com `tit()` (10,5 pt, letra de título); de quadro de texto
+com `tit(…, 'menor')` em maiúsculas ("OBSERVAÇÕES GERAIS"). Rótulos marinho
+(capa e topo do Cálculo) sempre em negrito. Nenhuma página começa com
+`espaco()`: o conteúdo começa à mesma distância do cabeçalho.
+
 **Sem valor é "-", em todo campo** (pedido do avaliador). Texto, lista,
 data, número e cálculo vazios saem como traço no papel e mostram traço na
 tela (placeholder, opção vazia da lista). Valor em R$ vazio ou zero é só

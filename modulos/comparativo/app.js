@@ -859,22 +859,30 @@
     return paginas;
   }
 
+  /* Tabela de perguntas no formato da ficha técnica: cabeçalho e pergunta
+     sombreados, respostas brancas. cols: [[título, largura %], …]; cada
+     linha: [pergunta, campo, campo, …]. */
+  function tabelaPerguntas(cols, linhas) {
+    return e('table', { cls: 't ficha-t perguntas', style: 'table-layout:fixed' }, [
+      e('colgroup', {}, cols.map(function (c) { return e('col', { style: 'width:' + c[1] + '%' }); })),
+      e('tr', {}, cols.map(function (c) { return e('th', { txt: c[0] }); }))].concat(linhas.map(function (l) {
+        return e('tr', {}, [e('td', { cls: 'perg', txt: l[0] })].concat(l.slice(1).map(function (x) {
+          return e('td', { cls: x.cls || '' }, [x.el || x]); })));
+      })));
+  }
+
   /* as duas perguntas de divergência de área abrem a página seguinte */
   function divergencias(ctx) {
     var im = 'imovel.';
-    function divergencia(chave, pergunta, f) {
-      return e('div', {}, [
-        g('1fr auto 10mm', [rot(pergunta, 'semquebra'), rot('Percentual de divergência:'),
-          val(ctx.calc(function (rr) { var v = f(rr); return v === null ? TRACO : pc(v); }), 'centro')]),
-        g('15mm 28mm 16mm 1fr', [rot('Resposta:', 'claro'), val(ctx.sel(im + chave + '.resposta', LS.validacao)),
-          rot('Justifique:', 'claro'), val(ctx.txt(im + chave + '.justificativa'))])]);
+    function linha(chave, rotulo, f) {
+      return [rotulo, ctx.sel(im + chave + '.resposta', LS.validacao),
+        ctx.calc(function (rr) { var v = f(rr); return v === null ? TRACO : pc(v); }),
+        { el: ctx.txt(im + chave + '.justificativa', { quebra: true }), cls: 'esq' }];
     }
-    return [
-      divergencia('divTerreno', 'O imóvel possui divergência de área de terreno entre documentações e área estimada em vistoria?',
-        function (rr) { return rr.capa.divTerreno; }),
-      espaco(),
-      divergencia('divConstruida', 'O imóvel possui divergência de área construída entre documentações e área estimada em vistoria?',
-        function (rr) { return rr.capa.divConstruida; })];
+    return [faixa('DIVERGÊNCIA ENTRE DOCUMENTAÇÕES E ÁREA ESTIMADA EM VISTORIA', 'esq'),
+      tabelaPerguntas([['Área', 24], ['Resposta', 12], ['Divergência', 12], ['Justificativa', 52]], [
+        linha('divTerreno', 'Área de terreno', function (rr) { return rr.capa.divTerreno; }),
+        linha('divConstruida', 'Área construída', function (rr) { return rr.capa.divConstruida; })])];
   }
 
   /* ============================================================ RESTRIÇÕES */
@@ -882,96 +890,88 @@
     var r = 'restricoes.';
     var itens = PERGUNTAS.map(function (q, i) {
       var b = r + 'itens.' + i + '.';
-      return e('div', { style: 'margin-top:2.6mm' }, [rot(q),
-        g('15mm 20mm 8mm 1fr', [rot('Resposta:', 'claro'), val(ctx.sel(b + 'resposta', LS.validacao)),
-          rot('Obs:', 'claro dir'), val(ctx.txt(b + 'obs'), 'pontilhado')])]);
+      return [q, ctx.sel(b + 'resposta', LS.validacao), { el: ctx.txt(b + 'obs', { quebra: true }), cls: 'esq' }];
     });
     return [pagina(ctx, divergencias(ctx).concat([
       tit('Restrições do Imóvel'),
-      g('1fr 28mm', [rot('Considerando as diligências e aspectos técnicos analisados neste laudo, o imóvel é recomendado como garantia?'),
-        rot('Data Vistoria', 'centro')]),
-      g('15mm 20mm 1fr 28mm', [rot('Resposta:', 'claro'), val(ctx.sel(r + 'garantia', LS.validacao)), e('div'),
-        val(ctx.txt(r + 'dataVistoria', { vazio: TRACO, cls: 'centro' }), 'centro')]),
-      espaco(),
-      e('div', { txt: 'Em caso negativo, justifique:', style: 'margin-bottom:1mm' }),
+      faixa('RECOMENDAÇÃO COMO GARANTIA', 'esq'),
+      tabelaPerguntas([['Pergunta', 64], ['Resposta', 12], ['Data da vistoria', 24]], [
+        ['Considerando as diligências e aspectos técnicos analisados neste laudo, o imóvel é recomendado como garantia?',
+          ctx.sel(r + 'garantia', LS.validacao), ctx.txt(r + 'dataVistoria', { cls: 'centro' })]]),
+      tit('JUSTIFICATIVA (EM CASO NEGATIVO)', 'menor'),
       ctx.area(r + 'justificativa', { alt: '20mm' }),
-      espaco('g2')].concat(itens).concat([
-      e('div', { cls: 'subtit', txt: 'Observações Gerais:' }),
-      ctx.area(r + 'observacoes', { alt: '32mm' })])), { parte: 'restricoes' })];
+      espaco('g2'),
+      faixa('VERIFICAÇÕES', 'esq'),
+      tabelaPerguntas([['Pergunta', 50], ['Resposta', 10], ['Observação', 40]], itens),
+      tit('OBSERVAÇÕES GERAIS', 'menor'),
+      ctx.area(r + 'observacoes', { alt: '32mm' })]), { parte: 'restricoes' })];
   }
 
   /* ======================================================== FICHAS */
+  /* Fichas de pesquisa no formato da ficha técnica, como a Capa e a Região:
+     pergunta sombreada, resposta branca. As listas de texto longo
+     (topografia, padrão, conservação) ficam na primeira coluna, a mais larga. */
   function fichaParadigma(ctx) {
     var p = 'paradigma.';
     var calc = function (f) { return ctx.calc(function (r) { var v = f(r); return semValor(v) ? TRACO : String(v); }); };
     var n0 = function (cam) { return ctx.num(cam, { casas: 0 }); };
-    var cols = '12% 20% 12% 20% 11% 12% 8% 5%';
-    return e('div', {}, [faixa('PARADIGMA / AVALIANDO', 'fina'), e('div', { cls: 'caixa linhas' }, [
-      g('12% 88%', [rot('Endereço:', 'claro'), val(calc(function (r) { return r.paradigma.endereco; }))]),
-      g(cols, [rot('Área Terreno:', 'claro'), val(calc(function (r) { return fn(r.paradigma.areaTerreno); })),
-        rot('Área Privativa:', 'claro'), val(calc(function (r) { return fn(r.paradigma.areaPrivativa); })),
-        rot('Idade Aparente:', 'claro'), val(calc(function (r) { return r.paradigma.idade; })),
-        rot('Nº vagas de garagem:', 'claro dir'), val(calc(function (r) { return r.paradigma.vagas; }))]),
-      g(cols, [rot('Padrão:', 'claro'), val(calc(function (r) { return r.paradigma.padrao; })),
-        rot('Intervalo de Valor:', 'claro'), val(calc(function (r) { return r.paradigma.intervalo; })),
-        rot('Conservação:', 'claro'), val(calc(function (r) { return r.paradigma.conservacao; })), e('div'), e('div')]),
-      g(cols, [rot('Testada:', 'claro'), val(ctx.num(p + 'testada')),
-        rot('Topografia:', 'claro'), val(calc(function (r) { return r.paradigma.topografia; })),
-        rot('Frentes múltiplas:', 'claro'), val(calc(function (r) { return r.paradigma.multFrentes; })),
-        rot('Índ. Local:', 'claro dir'), val(ctx.num(p + 'indiceLocal'))]),
-      g(cols, [rot('Nº dormitórios:', 'claro'), val(n0(p + 'dormitorios')),
-        rot('Nº suítes:', 'claro'), val(n0(p + 'suites')),
-        rot('Nº banheiros:', 'claro'), val(n0(p + 'banheiros')),
-        rot('Andar:', 'claro dir'), val(ctx.num(p + 'andar', { casas: 0, suf: ' º' }))])])]);
+    var f = ficha(4, [
+      ['Endereço', calc(function (r) { return r.paradigma.endereco; }), null, 6],
+      ['Área terreno', calc(function (r) { return fn(r.paradigma.areaTerreno); })],
+      ['Área privativa', calc(function (r) { return fn(r.paradigma.areaPrivativa); })],
+      ['Idade aparente', calc(function (r) { return r.paradigma.idade; })],
+      ['Vagas de garagem', calc(function (r) { return r.paradigma.vagas; })],
+      ['Padrão', calc(function (r) { return r.paradigma.padrao; })],
+      ['Intervalo de valor', calc(function (r) { return r.paradigma.intervalo; })],
+      ['Conservação', calc(function (r) { return r.paradigma.conservacao; })],
+      ['Testada', ctx.num(p + 'testada')],
+      ['Topografia', calc(function (r) { return r.paradigma.topografia; })],
+      ['Frentes múltiplas', calc(function (r) { return r.paradigma.multFrentes; })],
+      ['Índ. local', ctx.num(p + 'indiceLocal')],
+      ['Andar', ctx.num(p + 'andar', { casas: 0, suf: ' º' })],
+      ['Dormitórios', n0(p + 'dormitorios')],
+      ['Suítes', n0(p + 'suites')],
+      ['Banheiros', n0(p + 'banheiros'), null, 2]], [1.7, 1, 1.1, .8]);
+    return e('div', {}, [faixa('PARADIGMA / AVALIANDO'), f]);
   }
 
   function fichaComparativo(ctx, i) {
     var b = 'amostra.' + i + '.';
-    var t = function (cam, o) { o = o || {}; o.quebra = true; return val(ctx.txt(b + cam, o)); };
-    var nn = function (cam, o) { return val(ctx.num(b + cam, o)); };
-    var cols = '1.3fr 2.4fr 1.45fr 1.35fr 1.35fr .75fr 1.35fr 1.25fr';
-    var R_ = function (x) { return rot(x, 'claro dir'); };
+    var t = function (cam, o) { o = o || {}; o.quebra = true; return ctx.txt(b + cam, o); };
+    var nn = function (cam, o) { return ctx.num(b + cam, o); };
+    var sel = function (cam, lista) { return ctx.sel(b + cam, lista); };
     var link = ctx.papel
       ? (pegar(b + 'link') ? e('a', { href: pegar(b + 'link'), txt: pegar(b + 'link'),
           style: 'word-break:break-all' }) : e('span', { txt: TRACO }))
-      : ctx.txt(b + 'link', { ph: 'https://' });
-    var campos = e('div', { style: 'border-left:.25mm solid var(--pg-borda)' }, [
-      g(cols, [R_('Endereço:'), val(ctx.txt(b + 'endereco', { cls: 'forte' })), R_('nº'), t('numero'),
-        R_('Compl.:'), t('complemento', { vazio: TRACO }), R_('CEP:'), t('cep', { vazio: TRACO })]),
-      g(cols, [R_('Bairro:'), t('bairro'), R_('Empreend.'), t('empreendimento'),
-        R_('Cidade:'), t('cidade'), R_('Estado:'), t('uf')], { cls: 'sep' }),
-      g(cols, [R_('Tipo Imóvel:'), val(ctx.sel(b + 'tipo', LS.tipologia)), R_('Valor:'),
-        nn('valor', { pre: 'R$' }), R_('Tipo Transação:'), val(ctx.sel(b + 'transacao', LS.transacao)),
-        R_('Data:'), val(ctx.data(b + 'data'))]),
-      g(cols, [R_('Área Terreno:'), nn('areaTerreno', { casas: 1 }), R_('Área Construída:'), nn('areaConstruida'),
-        R_('Idade Aparente:'), nn('idade', { casas: 0 }), R_('Andar:'), nn('andar', { casas: 0, suf: ' º' })]),
-      /* linhas com listas de texto longo têm colunas próprias: a opção mais
-         longa cabe inteira no campo (topografia, frentes, conservação) */
-      g('1.3fr .75fr 1.45fr 2.95fr 1.5fr 1.35fr 1.05fr .85fr', [R_('Testada:'), nn('testada'), R_('Topografia:'), val(ctx.sel(b + 'topografia', LS.topografia)),
-        R_('Frentes múltiplas:'), val(ctx.sel(b + 'multFrentes', LS.multFrentes)), R_('Índ. Local:'), nn('indiceLocal')]),
-      g(cols, [R_('Nº dormitórios:'), nn('dormitorios', { casas: 0 }), R_('Nº suítes:'), nn('suites', { casas: 0 }),
-        R_('Nº banheiros:'), nn('banheiros', { casas: 0 }), R_('Nº vagas de garagem:'), nn('vagas', { casas: 0 })],
-        { cls: 'sep' }),
-      g('1.3fr 5.2fr 1.35fr 2.6fr', [R_('Padrão:'), val(ctx.sel(b + 'padrao', LS.padrao)), R_('Intervalo de Valor:'),
-        val(ctx.sel(b + 'intervalo', LS.intervalo))]),
-      g('1.3fr 2.6fr 1.35fr 1.25fr 1.35fr .75fr 1.35fr 1.25fr', [R_('Conservação:'), val(ctx.sel(b + 'conservacao', LS.conservacao)), R_('Fonte:'), t('fonte'),
-        R_('Nome:'), t('contato'), R_('Telefone:'), t('telefone')]),
-      g('1.3fr 10.9fr', [R_('Link oferta:'), val(link)])]);
-    /* a última linha não leva fio: a borda do quadro já fecha embaixo */
-    campos.querySelectorAll(':scope > .g:not(:last-child)').forEach(function (x) { x.style.borderBottom = '.25mm solid var(--pg-fio)'; });
-    campos.querySelectorAll('.g.sep').forEach(function (x) { x.style.borderBottom = '.35mm solid var(--pg-tinta2)'; });
+      : ctx.txt(b + 'link', { ph: 'https://', quebra: true });
+    var campos = ficha(3, [
+      ['Endereço', t('endereco')], ['Nº', t('numero')], ['Complemento', t('complemento')],
+      ['Empreendimento', t('empreendimento')], ['Bairro', t('bairro')], ['CEP', t('cep')],
+      ['Tipo de imóvel', sel('tipo', LS.tipologia)], ['Cidade', t('cidade')], ['UF', t('uf')],
+      ['Valor', nn('valor', { pre: 'R$' })], ['Transação', sel('transacao', LS.transacao)], ['Data', ctx.data(b + 'data')],
+      ['Topografia', sel('topografia', LS.topografia)], ['Área terreno', nn('areaTerreno', { casas: 1 })],
+      ['Área construída', nn('areaConstruida')],
+      ['Padrão', sel('padrao', LS.padrao)], ['Testada', nn('testada')], ['Idade aparente', nn('idade', { casas: 0 })],
+      ['Conservação', sel('conservacao', LS.conservacao)], ['Frentes múltiplas', sel('multFrentes', LS.multFrentes)],
+      ['Andar', nn('andar', { casas: 0, suf: ' º' })],
+      ['Intervalo de valor', sel('intervalo', LS.intervalo)], ['Índ. local', nn('indiceLocal')],
+      ['Dormitórios', nn('dormitorios', { casas: 0 })],
+      ['Fonte', t('fonte')], ['Suítes', nn('suites', { casas: 0 })], ['Banheiros', nn('banheiros', { casas: 0 })],
+      ['Contato', t('contato')], ['Telefone', t('telefone')], ['Vagas de garagem', nn('vagas', { casas: 0 })],
+      ['Link da oferta', link, null, 4]], [1.5, .75, .75]);
     var foto = ctx.img(b + 'foto', { nu: true, alt: 'auto', vazio: 'Foto do comparativo' });
     foto.classList.add('encher');
     foto.style.minHeight = '40mm';
-    campos.classList.add('ficha');
-    return e('div', { style: 'margin-bottom:5mm' }, [faixa('ELEMENTO COMPARATIVO ' + (i + 1), 'fina'),
-      e('div', { cls: 'caixa' }, [g('19.5% 80.5%', [foto, campos])])]);
+    foto.style.height = 'auto';
+    foto.style.flex = '1 1 auto';
+    return e('div', { style: 'margin-bottom:5mm' }, [faixa('ELEMENTO COMPARATIVO ' + (i + 1)),
+      g('19.5% 1fr', [e('div', { cls: 'caixa', style: 'display:flex' }, [foto]), campos], { gap: '2mm' })]);
   }
 
   function folhaFichas(ctx) {
-    var p1 = [espaco(), fichaParadigma(ctx), tit('Amostra')];
+    var p1 = [fichaParadigma(ctx), tit('Amostra')];
     for (var i = 0; i < 4; i++) p1.push(fichaComparativo(ctx, i));
-    var p2 = [espaco(), fichaComparativo(ctx, 4),
+    var p2 = [fichaComparativo(ctx, 4),
       tit('Croqui de Situação do Imóvel Avaliando e Elementos Comparativos'),
       ctx.img('croquiSituacao', { nu: true, alt: '78mm', max: 2000, vazio: 'Clique para inserir o croqui de situação' })];
     return [pagina(ctx, p1, { parte: 'fichas' }), pagina(ctx, p2, { parte: 'fichas' })];
@@ -1021,15 +1021,14 @@
   function folhaCalculo(ctx) {
     var cal = 'calculo.';
     var topo = g('1.35fr 14mm 1fr 14mm 1fr', [
-      e('div', { cls: 'caixa' }, [g('38% 62%', [rot('METODOLOGIA', 'marinho claro-m'), val('Comparativo Direto de Dados de Mercado')]),
-        g('38% 62%', [rot('TRATAMENTO DE DADOS', 'marinho claro-m'), val('Fatores')])]), e('div'),
-      e('div', { cls: 'caixa' }, [g('60% 40%', [rot('FUNDAMENTAÇÃO', 'marinho claro-m'), val(ctx.sel(cal + 'fundamentacao', LS.fundamentacao), 'centro')]),
-        g('60% 40%', [rot('PRECISÃO', 'marinho claro-m'), val(ctx.calc(function (r) { return r.est.precisao || TRACO; }), 'centro')])]), e('div'),
-      e('div', { cls: 'caixa' }, [g('60% 40%', [rot('COTA-PARTE TERRENO', 'marinho claro-m'),
+      e('div', { cls: 'caixa' }, [g('38% 62%', [rot('METODOLOGIA', 'marinho'), val('Comparativo Direto de Dados de Mercado')]),
+        g('38% 62%', [rot('TRATAMENTO DE DADOS', 'marinho'), val('Fatores')])]), e('div'),
+      e('div', { cls: 'caixa' }, [g('60% 40%', [rot('FUNDAMENTAÇÃO', 'marinho'), val(ctx.sel(cal + 'fundamentacao', LS.fundamentacao), 'centro')]),
+        g('60% 40%', [rot('PRECISÃO', 'marinho'), val(ctx.calc(function (r) { return r.est.precisao || TRACO; }), 'centro')])]), e('div'),
+      e('div', { cls: 'caixa' }, [g('60% 40%', [rot('COTA-PARTE TERRENO', 'marinho'),
           val(ctx.num(cal + 'cotaTerreno', { pct: true, casas: 0, sug: function () { return M.USUAIS.cotaTerreno; } }), 'centro')]),
-        g('60% 40%', [rot('COTA-PARTE CONSTRUÇÃO', 'marinho claro-m'),
+        g('60% 40%', [rot('COTA-PARTE CONSTRUÇÃO', 'marinho'),
           val(ctx.num(cal + 'cotaConstrucao', { pct: true, casas: 0, sug: function (r) { return r.tabela.cotaConstrucao; } }), 'centro')])])]);
-    topo.querySelectorAll('.claro-m').forEach(function (x) { x.style.fontWeight = '400'; });
 
     var T = R.tabela;
     var cab = e('tr', {}, [e('th', { txt: 'EC' }), e('th', { txt: 'Valor Ofertado ou Negociado' }),
@@ -1094,9 +1093,9 @@
         ['Médio', function (r) { return fn(r.est.medio); }],
         ['Máximo', function (r) { return fn(r.est.maximo); }]])], { gap: '7mm' });
 
-    var filhos = [espaco(), topo, tit('Tabela de Homogeneização'), tabela, avaliando, estatistica,
+    var filhos = [topo, tit('Tabela de Homogeneização'), tabela, avaliando, estatistica,
       espaco('g2'), blocos,
-      tit('Observações Gerais'), ctx.area(cal + 'observacoes', { alt: '90mm' }), espaco(),
+      tit('OBSERVAÇÕES GERAIS', 'menor'), ctx.area(cal + 'observacoes', { alt: '90mm' }), espaco(),
       faixa('VALOR DE MERCADO'),
       e('div', { cls: 'caixa' }, [val(ctx.calc(function (r) { return rs(r.valor.mercado); }), 'centro')])];
     void nCol;
@@ -1159,8 +1158,8 @@
           e('td', {}, [ctx.calc(function (r) { return fn(r.tabela.linhas[i].unit); })]),
           e('td', {}, [ctx.calc(function (r) { return fn(r.tabela.linhas[i].homog); })])]);
       })));
-    return [pagina(ctx, [tit('Poder de Predição do Modelo', 'menor'), caixa, leg,
-      tit('Croqui de Localização', 'menor'),
+    return [pagina(ctx, [tit('Poder de Predição do Modelo'), caixa, leg,
+      tit('Croqui de Localização'),
       ctx.img('grafico.croqui', { nu: true, alt: '105mm', max: 2000, vazio: 'Clique para inserir o croqui de localização' })],
       { parte: 'grafico' })];
   }
@@ -1192,14 +1191,14 @@
 
   function folhaLiquidacao(ctx) {
     var l = 'liquidacao.';
-    function lin(rotulo, campo, forte) {
-      return e('tr', {}, [e('td', { cls: 'esq', style: 'border:none;background:transparent' + (forte ? ';font-weight:700' : '') }, [rotulo]),
-        e('td', { cls: 'dir', style: 'border:none;background:transparent;width:30%' + (forte ? ';font-weight:700' : '') }, [campo])]);
+    /* no formato da ficha técnica: rótulo sombreado, valor branco à direita */
+    function lin(rotulo, campo) {
+      return e('tr', {}, [e('td', { cls: 'perg' }, [rotulo]), e('td', { cls: 'dir', style: 'width:30%' }, [campo])]);
     }
     var cr = function (f) { return ctx.calc(function (r) { var L = r.liquidacao; return f(L); }); };
     var r0 = function (v) { return semValor(v) || +v === 0 ? TRACO : 'R$ ' + nz(v, 0); };
-    var premissas = e('div', {}, [faixa('PREMISSAS', 'esq'), e('table', { cls: 't' }, [
-      lin('Valor de mercado (VM)', cr(function (L) { return r0(L.vm); }), true),
+    var premissas = e('div', {}, [faixa('PREMISSAS', 'esq'), e('table', { cls: 't ficha-t perguntas', style: 'table-layout:fixed' }, [
+      lin('Valor de mercado (VM)', cr(function (L) { return r0(L.vm); })),
       lin('Prazo estimado até a venda (meses)', ctx.num(l + 'prazo', { casas: 0 })),
       lin(e('span', { cls: 'afixo', style: 'justify-content:flex-start' }, [ctx.txt(l + 'rotuloTaxa'), e('span', { cls: 'pre', txt: ' (% a.a.)' })]),
         ctx.num(l + 'taxa', { pct: true, casas: 2 })),
@@ -1212,12 +1211,12 @@
       lin('Condomínio (R$ / mês)', ctx.num(l + 'condominioMes', { pre: 'R$' })),
       lin('Fator de valor presente (anuidade, N meses)', cr(function (L) { return fn(L.fvp, 3); }))]),
       espaco(),
-      faixa('DEDUÇÕES NO PERÍODO ATÉ A VENDA', 'esq'), e('table', { cls: 't' }, [
+      faixa('DEDUÇÕES NO PERÍODO ATÉ A VENDA', 'esq'), e('table', { cls: 't ficha-t perguntas', style: 'table-layout:fixed' }, [
       lin('(a) Custo de oportunidade (desconto à taxa real)', cr(function (L) { return r0(L.custoOportunidade); })),
       lin('(b) Perda inflacionária no período', cr(function (L) { return r0(L.perdaInflacao); })),
       lin('(c) IPTU acumulado (a valor presente)', cr(function (L) { return r0(L.iptu); })),
       lin('(d) Condomínio acumulado (a valor presente)', cr(function (L) { return r0(L.condominio); })),
-      lin('Total das deduções (a+b+c+d)', cr(function (L) { return r0(L.deducoes); }), true)])]);
+      lin('Total das deduções (a+b+c+d)', cr(function (L) { return r0(L.deducoes); }))])]);
     premissas.querySelectorAll('.afixo .c').forEach(function (x) { x.style.width = '38mm'; x.style.flex = 'none'; });
 
     var ponte = e('div', { cls: 'caixa', style: 'padding:1.5mm' });
@@ -1226,8 +1225,8 @@
     desenhar(R);
 
     /* o "X" do mercado: um por linha, escolhido com um clique */
-    var mercado = e('table', { cls: 't' }, MERCADO.map(function (m) {
-      var tds = [e('td', { cls: 'dir', style: 'font-weight:700;width:19%', txt: m[1] })];
+    var mercado = e('table', { cls: 't ficha-t' }, MERCADO.map(function (m) {
+      var tds = [e('td', { cls: 'perg', style: 'width:19%', txt: m[1].replace(/:$/, '') })];
       LS[m[0]].forEach(function (op) {
         var marcado = pegar(l + m[0]) === op;
         tds.push(e('td', { cls: 'dir', style: 'width:9%', txt: op }));
@@ -1275,8 +1274,9 @@
       faixa('VALOR DE LIQUIDAÇÃO FORÇADA'),
       e('div', { cls: 'caixa' }, [val(ctx.calc(function (r) {
         return rs(r.liquidacao.vlf); }), 'centro')]),
-      g('48mm 1fr', [rot('Deságio sobre o valor de mercado:', 'tinta'),
-        val(ctx.calc(function (r) { return pc(r.liquidacao.desagio); }), '')]),
+      espaco(),
+      g('1fr 1fr', [ficha(1, [['Deságio sobre o valor de mercado', ctx.calc(function (r) { return pc(r.liquidacao.desagio); })]]),
+        e('div')]),
       espaco(), mercado, espaco('g2'), espaco('g2'),
       faixa('SENSIBILIDADE DO MODELO'),
       e('div', { style: 'background:var(--pg-cel);padding:3mm 0 3mm' }, [
@@ -1299,7 +1299,7 @@
       }
       var grade = g('1fr 1fr', celulas, { gap: '6mm', estilo: 'row-gap:4mm' });
       var ultima = pg === nPag - 1 && !ctx.papel;
-      return pagina(ctx, [tit('Relatório Fotográfico', 'menor'),
+      return pagina(ctx, [tit('Relatório Fotográfico'),
         ultima ? e('div', { cls: 'com-botoes' }, [grade, e('div', { cls: 'linha-botoes', style: 'margin-top:4mm' },
           [botaoAdicionar('Adicionar fotos', 'fotos', { alt: 'auto', cls: 'botao-linha' })])]) : grade], { parte: 'fotos' });
     });
