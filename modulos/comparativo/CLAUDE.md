@@ -101,6 +101,15 @@ sobravam espalhados no papel, e rótulo pequeno sobre o valor em células
 largas ("muito espaço para pouco preenchimento; não dá para saber o que é
 pergunta e o que é resposta").
 
+**Uma escala de letra só** (pedido do avaliador: "mesma fonte e tamanho para
+campos de mesma função"). Tokens no `.pagina`: `--t-campo` 6,6 pt para todo
+rótulo, valor, resposta de ficha, texto corrido, legenda e tabela comum;
+`--t-denso` 6,2 pt só nas tabelas largas do cálculo e da liquidação
+(`table.t.denso`, `.homog`); `--t-faixa` 7 pt para faixas (todas em negrito,
+centradas ou à esquerda) e títulos de bloco. Nenhum `font-size` solto em
+elemento do laudo: tamanho novo vira token. A pergunta da ficha técnica usa o
+mesmo tamanho do rótulo, sem espaçamento entre letras.
+
 **Fios de uma espessura só** (pedido do avaliador: "essas linhas estão mais
 grossas"). Duas armadilhas que engrossam fio: (1) fio feito de fundo
 aparecendo num vão (`gap` de .25 mm) — vão de fração de pixel sai ora com 1,

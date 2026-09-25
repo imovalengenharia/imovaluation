@@ -802,7 +802,7 @@
       g('15mm 20mm 1fr 28mm', [rot('Resposta:', 'claro'), val(ctx.sel(r + 'garantia', LS.validacao)), e('div'),
         val(ctx.txt(r + 'dataVistoria', { vazio: TRACO, cls: 'centro' }), 'centro')]),
       espaco(),
-      e('div', { txt: 'Em caso negativo, justifique:', style: 'font-size:7pt;margin-bottom:1mm' }),
+      e('div', { txt: 'Em caso negativo, justifique:', style: 'margin-bottom:1mm' }),
       ctx.area(r + 'justificativa', { alt: '20mm' }),
       espaco('g2')].concat(itens).concat([
       espaco('g2'),
@@ -978,8 +978,8 @@
       estat('Coef. de Variação (%)', function (r) { return pc(r.est.cv); }, function (r) { return pc(r.est.cvH); })]);
 
     function bloco(titulo, linhas2) {
-      return e('div', {}, [e('div', { txt: titulo, style: 'text-align:center;font-weight:700;color:var(--pg-rot);font-size:7pt;border-bottom:.25mm solid var(--pg-fio);padding-bottom:.6mm' }),
-        e('table', { cls: 't', style: 'font-size:6.2pt' }, linhas2.map(function (l) {
+      return e('div', {}, [e('div', { txt: titulo, style: 'text-align:center;font-weight:700;color:var(--pg-rot);font-size:var(--t-faixa);border-bottom:.25mm solid var(--pg-fio);padding-bottom:.6mm' }),
+        e('table', { cls: 't denso' }, linhas2.map(function (l) {
           return e('tr', {}, [e('td', { cls: 'dir', txt: l[0], style: 'border:none;background:transparent' }),
             e('td', { style: 'border:none;border-bottom:.25mm solid var(--pg-fio);border-left:.25mm solid var(--pg-fio)' }, [ctx.calc(l[1])])]);
         }))]);
@@ -1060,7 +1060,7 @@
     function desenhar(r) { caixa.textContent = ''; caixa.appendChild(graficoDispersao(r)); }
     if (!ctx.papel) atualizadores.push(desenhar);
     desenhar(R);
-    var leg = e('table', { cls: 't', style: 'width:38%;font-size:6.2pt;margin-top:3mm' }, [
+    var leg = e('table', { cls: 't denso', style: 'width:38%;margin-top:3mm' }, [
       e('tr', {}, [e('th', { txt: 'EC' }), e('th', { txt: 'Unit. Observado (R$/m²)' }), e('th', { txt: 'Unit. Estimado (R$/m²)' })])]
       .concat(repetir(N, function (i) {
         return e('tr', {}, [e('td', {}, [e('span', { cls: 'legenda-ec ec' + (i + 1), style: 'vertical-align:middle;margin-right:1.5mm' }), String(i + 1)]),
@@ -1106,7 +1106,7 @@
     }
     var cr = function (f) { return ctx.calc(function (r) { var L = r.liquidacao; return f(L); }); };
     var r0 = function (v) { return semValor(v) ? 'R$ ' + TRACO : 'R$ ' + nz(v, 0); };
-    var premissas = e('div', {}, [faixa('PREMISSAS', 'esq'), e('table', { cls: 't', style: 'font-size:6.4pt' }, [
+    var premissas = e('div', {}, [faixa('PREMISSAS', 'esq'), e('table', { cls: 't' }, [
       lin('Valor de mercado (VM)', cr(function (L) { return r0(L.vm); }), true),
       lin('Prazo estimado até a venda (meses)', ctx.num(l + 'prazo', { casas: 0 })),
       lin(e('span', { cls: 'afixo', style: 'justify-content:flex-start' }, [ctx.txt(l + 'rotuloTaxa'), e('span', { cls: 'pre', txt: ' (% a.a.)' })]),
@@ -1120,7 +1120,7 @@
       lin('Condomínio (R$ / mês)', ctx.num(l + 'condominioMes', { pre: 'R$' })),
       lin('Fator de valor presente (anuidade, N meses)', cr(function (L) { return fn(L.fvp, 3); }))]),
       espaco(),
-      faixa('DEDUÇÕES NO PERÍODO ATÉ A VENDA', 'esq'), e('table', { cls: 't', style: 'font-size:6.4pt' }, [
+      faixa('DEDUÇÕES NO PERÍODO ATÉ A VENDA', 'esq'), e('table', { cls: 't' }, [
       lin('(a) Custo de oportunidade (desconto à taxa real)', cr(function (L) { return r0(L.custoOportunidade); })),
       lin('(b) Perda inflacionária no período', cr(function (L) { return r0(L.perdaInflacao); })),
       lin('(c) IPTU acumulado (a valor presente)', cr(function (L) { return r0(L.iptu); })),
@@ -1134,7 +1134,7 @@
     desenhar(R);
 
     /* o "X" do mercado: um por linha, escolhido com um clique */
-    var mercado = e('table', { cls: 't', style: 'font-size:6.4pt' }, MERCADO.map(function (m) {
+    var mercado = e('table', { cls: 't' }, MERCADO.map(function (m) {
       var tds = [e('td', { cls: 'dir', style: 'font-weight:700;width:19%', txt: m[1] })];
       LS[m[0]].forEach(function (op) {
         var marcado = pegar(l + m[0]) === op;
@@ -1154,7 +1154,7 @@
       return e('tr', {}, tds);
     }));
 
-    var tDesagio = e('table', { cls: 't marinho', style: 'font-size:6.2pt' }, [
+    var tDesagio = e('table', { cls: 't marinho denso' }, [
       e('tr', {}, [e('th', { txt: 'Deságio' }), e('th', { txt: 'Valor de Liquidação Forçada' })])]
       .concat(repetir(7, function (i) {
         var tr = e('tr', { cls: i === 3 ? 'atual' : null });
@@ -1162,7 +1162,7 @@
         tr.appendChild(e('td', {}, [cr(function (L) { return L.porDesagio ? r0(L.porDesagio[i].vlf) : TRACO; })]));
         return tr;
       })));
-    var tVar = e('table', { cls: 't marinho', style: 'font-size:6.2pt' }, [
+    var tVar = e('table', { cls: 't marinho denso' }, [
       e('tr', {}, ['Variação', 'Valor de Mercado', 'VLF', 'VLF / VM', 'Desconto', 'Deságio'].map(function (t) {
         return e('th', { txt: t }); }))]
       .concat(repetir(7, function (i) {
@@ -1173,7 +1173,7 @@
           e('td', {}, [q(function (x) { return r0(x.desconto); })]), e('td', {}, [q(function (x) { return pc(x.desagio, 1); })])]);
       })));
     var subt = function (t) {
-      return e('div', { txt: t, style: 'text-align:center;font-weight:700;color:var(--pg-rot);font-size:6.4pt;border-top:.25mm solid var(--pg-borda);padding:.8mm 0' });
+      return e('div', { txt: t, style: 'text-align:center;font-weight:700;color:var(--pg-rot);font-size:var(--t-faixa);border-top:.25mm solid var(--pg-borda);padding:.8mm 0' });
     };
 
     return [pagina(ctx, [

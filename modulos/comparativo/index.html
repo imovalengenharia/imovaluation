@@ -128,7 +128,9 @@ button{font:inherit;color:inherit}
 /* ============================================================ A FOLHA */
 .pagina{zoom:var(--zoom);width:var(--pg-w);min-height:var(--pg-h);background:var(--pg-papel);color:var(--pg-tinta);
   box-shadow:var(--pg-sombra);padding:7mm 6mm 8mm;font-family:Arial,'Liberation Sans',Helvetica,sans-serif;
-  font-size:6.6pt;line-height:1.3;position:relative;display:flex;flex-direction:column}
+  font-size:var(--t-campo);line-height:1.3;position:relative;display:flex;flex-direction:column;
+  /* escala única de letra do laudo: campo de mesma função, mesmo tamanho */
+  --t-campo:6.6pt;--t-denso:6.2pt;--t-faixa:7pt}
 .pagina.anexo{padding:0;align-items:center;justify-content:center}
 .pagina.anexo img{max-width:100%;max-height:var(--pg-h);display:block}
 .pagina .corpo{background:var(--pg-area);flex:1;padding:3mm 2.4mm 3mm}
@@ -156,10 +158,9 @@ button{font:inherit;color:inherit}
 .coluna > .caixa > *{flex:1 1 auto}
 .coluna > .ficha-tec{flex:1 1 auto}
 /* a faixa de título não encosta no que vem embaixo */
-.faixa{margin-bottom:1.3mm;background:var(--pg-marinho);color:var(--pg-marinho-ink);text-align:center;font-weight:700;font-size:7pt;
+.faixa{margin-bottom:1.3mm;background:var(--pg-marinho);color:var(--pg-marinho-ink);text-align:center;font-weight:700;font-size:var(--t-faixa);
   padding:1.1mm 1.5mm;text-transform:uppercase}
-.faixa.esq{text-align:left;font-weight:400;font-size:7.4pt}
-.faixa.fina{font-weight:400}
+.faixa.esq{text-align:left}
 .faixa .info{float:right;font-weight:400}
 
 /* grades de rótulo e valor */
@@ -194,9 +195,9 @@ button{font:inherit;color:inherit}
 .ficha-tec > *{border-right:.25mm solid var(--pg-fio);border-bottom:.25mm solid var(--pg-fio)}
 .ficha-tec > .ult-col{border-right:0}
 .ficha-tec > .ult-lin{border-bottom:0}
-.ficha-perg{background:var(--pg-pergunta);color:var(--pg-rot);font-size:5.8pt;font-weight:700;letter-spacing:.04em;
+.ficha-perg{background:var(--pg-pergunta);color:var(--pg-rot);font-weight:700;
   text-transform:uppercase;padding:.9mm 2mm;display:flex;align-items:center;white-space:nowrap}
-.ficha-resp{background:var(--pg-cel);color:var(--pg-tinta);font-size:6.8pt;padding:.7mm 2mm;min-width:0;
+.ficha-resp{background:var(--pg-cel);color:var(--pg-tinta);padding:.7mm 2mm;min-width:0;
   display:flex;align-items:center;min-height:4.6mm}
 .ficha-resp .c{width:100%}
 /* no papel, o quadro termina pouco depois do texto */
@@ -213,7 +214,8 @@ button{font:inherit;color:inherit}
 .espaco.g2{height:4mm}
 
 /* tabelas da folha */
-table.t{width:100%;border-collapse:collapse;font-size:6.4pt}
+table.t{width:100%;border-collapse:collapse;font-size:var(--t-campo)}
+table.t.denso{font-size:var(--t-denso)}
 table.t th{font-weight:700;color:var(--pg-tinta);padding:.9mm .8mm;text-align:center;vertical-align:middle;
   border:.25mm solid var(--pg-fio);background:var(--pg-cel)}
 table.t td{padding:.5mm .8mm;text-align:center;border:.25mm solid var(--pg-fio);background:var(--pg-cel);
@@ -222,13 +224,13 @@ table.t.marinho th{background:var(--pg-marinho);color:var(--pg-marinho-ink);bord
 table.t td.esq{text-align:left} table.t td.dir{text-align:right}
 table.t tr.atual td{background:var(--pg-destaque);font-weight:700}
 table.t.pontos td{border-top:none;border-bottom:.25mm dotted var(--pg-borda)}
-table.t.homog th{font-weight:400;font-size:6.2pt;line-height:1.2}
-table.t.homog td{font-size:6.2pt}
+table.t.homog th{font-weight:400;font-size:var(--t-denso);line-height:1.2}
+table.t.homog td{font-size:var(--t-denso)}
 
 /* texto corrido dentro de caixa */
 .texto{border:.25mm solid var(--pg-borda);background:var(--pg-cel);padding:1.8mm 1.4mm;white-space:pre-wrap;
-  text-align:justify;tab-size:8;min-height:12mm;font-size:6.4pt;line-height:1.35}
-.texto .sub,.texto h4{color:var(--pg-rot);font-weight:700;font-size:7pt;margin:0}
+  text-align:justify;tab-size:8;min-height:12mm;font-size:var(--t-campo);line-height:1.35}
+.texto .sub,.texto h4{color:var(--pg-rot);font-weight:700;font-size:var(--t-faixa);margin:0}
 .texto b{font-weight:700}
 .texto ul,.texto ol{margin:0;padding-left:5mm;white-space:normal}
 .texto li{white-space:pre-wrap}
@@ -259,12 +261,12 @@ button.marca{padding:0;background:var(--pg-edita);cursor:pointer;font:inherit;fo
 .quadro-img{flex:none;display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--pg-vazio);
   position:relative}
 .quadro-img.encher img{position:absolute;inset:0;width:100%;height:100%;object-fit:fill}
-.ficha{font-size:6.1pt}
+.ficha{font-size:var(--t-campo)}
 .ficha .rot,.ficha .val{padding:.5mm .8mm;min-height:3.9mm}
 /* a imagem ocupa o campo inteiro, sem corte: estica até as bordas, como a
    foto arrastada até o quadro no Excel (pedido do avaliador) */
 .quadro-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;display:block}
-.foto .legenda{text-align:center;padding:.8mm;font-size:6.4pt;border-top:.25mm solid var(--pg-fio);min-height:4mm}
+.foto .legenda{text-align:center;padding:.8mm;font-size:var(--t-campo);border-top:.25mm solid var(--pg-fio);min-height:4mm}
 .foto .legenda.forte{font-weight:700;color:var(--pg-tinta)}
 .vazia{color:var(--pg-sugerido);font-size:6.4pt;text-align:center;padding:2mm}
 .acoes-img{position:absolute;right:1mm;top:1mm;display:flex;gap:1mm}
