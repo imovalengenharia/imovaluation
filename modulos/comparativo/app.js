@@ -562,11 +562,20 @@
     var filhos = [];
     /* os fios são bordas das células (à direita e embaixo), nunca o fundo
        num vão: vão de fração de pixel sai ora fino, ora grosso */
-    var nLin = Math.ceil(celulas.length / nPares);
+    /* posição de cada par na grade, contando os pares que uma resposta
+       estendida (c[3]) ocupa */
+    var pos = [], p = 0;
+    celulas.forEach(function (c) { pos.push(p); p += 1 + (c[3] ? c[3] / 2 : 0); });
+    var nLin = Math.ceil(p / nPares);
+    /* c[2]: classe da resposta ('dir' para valores em R$) */
     celulas.forEach(function (c, i) {
-      var fim = (i % nPares === nPares - 1 ? ' ult-col' : '') + (Math.floor(i / nPares) === nLin - 1 ? ' ult-lin' : '');
-      filhos.push(e('div', { cls: 'ficha-perg' + (Math.floor(i / nPares) === nLin - 1 ? ' ult-lin' : ''), txt: c[0] }));
-      filhos.push(e('div', { cls: 'ficha-resp' + fim }, [c[1]]));
+      var lin = Math.floor(pos[i] / nPares), fimPar = pos[i] + (c[3] ? c[3] / 2 : 0);
+      var fim = (fimPar % nPares === nPares - 1 ? ' ult-col' : '') + (lin === nLin - 1 ? ' ult-lin' : '');
+      filhos.push(e('div', { cls: 'ficha-perg' + (lin === nLin - 1 ? ' ult-lin' : ''), txt: c[0] }));
+      /* c[3]: a resposta se estende por mais c[3] colunas da grade (ocupa o
+         lugar de um par que não existe naquela linha) */
+      filhos.push(e('div', { cls: 'ficha-resp' + fim + (c[2] ? ' ' + c[2] : ''),
+        style: c[3] ? 'grid-column:span ' + (1 + c[3]) : null }, [c[1]]));
     });
     var cols = []; for (var k = 0; k < nPares; k++) cols.push('max-content minmax(0,' + ((pesos && pesos[k]) || 1) + 'fr)');
     return e('div', { cls: 'ficha-tec' + (cls ? ' ' + cls : ''), style: 'grid-template-columns:' + cols.join(' ') }, filhos);
@@ -623,50 +632,61 @@
       ctx.img(c + 'fotoFachada', { alt: '80mm', legenda: 'Fachada', forte: true }),
       ctx.img(c + 'fotoLogradouro', { alt: '80mm', legenda: 'Logradouro', forte: true })], { gap: '5mm' });
 
-    var imovel = e('div', {}, [faixa('IMÓVEL'), pares(ctx, [
-      ['TIPOLOGIA', ctx.sel(c + 'tipologia', LS.tipologia)],
-      ['USO', ctx.sel(c + 'uso', LS.uso)],
-      ['OCUPAÇÃO', ctx.sel(c + 'ocupacao', LS.ocupacao)]]),
+    /* Imóvel, Dimensões e Resultado no formato da ficha técnica: pergunta
+       sombreada, resposta branca (pedido do avaliador) */
+    var imovel = e('div', {}, [faixa('IMÓVEL'), ficha(1, [
+      ['Tipologia', ctx.sel(c + 'tipologia', LS.tipologia)],
+      ['Uso', ctx.sel(c + 'uso', LS.uso)],
+      ['Ocupação', ctx.sel(c + 'ocupacao', LS.ocupacao)]]),
       espaco(),
-      pares(ctx, [
-        ['VAGA(s) DE GARAGEM', ctx.sel(c + 'vaga', LS.vagas)],
-        ['Nº TOTAL VAGA (s)', ctx.num(c + 'vagasTotal', { casas: 0 })]])]);
+      ficha(1, [
+        ['Vaga(s) de garagem', ctx.sel(c + 'vaga', LS.vagas)],
+        ['Nº total de vagas', ctx.num(c + 'vagasTotal', { casas: 0 })]])]);
+    /* os dois quadros com a mesma coluna de pergunta: as respostas alinham */
+    Array.prototype.forEach.call(imovel.querySelectorAll('.ficha-tec'), function (f) {
+      f.style.gridTemplateColumns = '32mm minmax(0,1fr)'; });
 
     var a = c + 'areas.';
     function celArea(caminho) { return e('td', {}, [ctx.num(caminho, { casas: 2 })]); }
     function celCalc(f) { return e('td', {}, [ctx.calc(f)]); }
     var FONTES = ['matricula', 'iptu', 'estimada', 'doc'];
     function linhaArea(rotulo, chave) {
-      return e('tr', {}, [e('td', { txt: rotulo })].concat(FONTES.map(function (k) {
+      return e('tr', {}, [e('td', { cls: 'perg', txt: rotulo })].concat(FONTES.map(function (k) {
         return celArea(a + chave + '.' + k); })));
     }
-    var cabDim = e('tr', {}, ['ÁREA', 'MATRÍCULA', 'IPTU', 'ESTIMADA', 'DOC. COMPLEMENTAR'].map(function (t) {
-      return e('th', { txt: t, style: 'color:var(--pg-rot)' }); }));
-    var dim = e('div', {}, [faixa('DIMENSÕES (m²)'), e('table', { cls: 't' }, [
-      cabDim,
+    var cabDim = function () {
+      return e('tr', {}, ['Área', 'Matrícula', 'IPTU', 'Estimada', 'Doc. complementar'].map(function (t) {
+        return e('th', { txt: t }); }));
+    };
+    /* dois quadros, alinhados com os dois do Imóvel ao lado */
+    var LARG_DIM = [26, 18.5, 18.5, 18.5, 18.5];
+    var larguras = function () {
+      return e('colgroup', {}, LARG_DIM.map(function (w) { return e('col', { style: 'width:' + w + '%' }); }));
+    };
+    var dim = e('div', {}, [faixa('DIMENSÕES (m²)'), e('table', { cls: 't ficha-t', style: 'table-layout:fixed' }, [
+      larguras(),
+      cabDim(),
       /* as quatro fontes com a mesma lógica: terreno, privativa e comum se
          digitam; a construção total é a soma das duas últimas */
       linhaArea('Terreno', 'terreno'),
-      e('tr', {}, [e('td', { txt: 'Construção Total' })].concat(FONTES.map(function (k) {
-        return celCalc(function (r) { return fn(r.capa.construcao[k]); }); }))),
-      e('tr', {}, [e('td', { colspan: '5', style: 'border:none;background:transparent;height:2.5mm;padding:0' })]),
-      linhaArea('Privativa/Útil', 'privativa'),
-      linhaArea('Comum', 'comum')])]);
-
-    var res = e('div', { cls: 'pilha' }, [faixa('RESULTADO DA AVALIAÇÃO'),
-      g('18% 13.5% 5% 14% 13.5% 5% 13% 18%', [
-        rot('ÁREA TERRENO'), val(ctx.calc(function (r) { return fn(r.paradigma.areaTerreno); }), 'cel'), e('div'),
-        rot('VALOR (R$/m²)'), val(ctx.calc(function (r) { return r.valor.m2Terreno ? fn(r.valor.m2Terreno) : ''; }), 'cel'), e('div'),
-        rot('VALOR (R$)'), val(ctx.calc(function (r) { return rs(r.valor.terreno || null); }), 'cel dir')]),
-      g('18% 13.5% 5% 14% 13.5% 5% 13% 18%', [
-        rot('ÁREA PRIVATIVA/CONSTRUÍDA'), val(ctx.calc(function () { return fn(pegar('capa.areas.privativa.matricula')); }), 'cel'), e('div'),
-        rot('VALOR (R$/m²)'), val(ctx.calc(function (r) { return fn(r.valor.m2Privativa); }), 'cel'), e('div'),
-        rot('VALOR (R$)'), val(ctx.calc(function (r) { return rs(r.valor.benfeitoria); }), 'cel dir')]),
+      e('tr', {}, [e('td', { cls: 'perg', txt: 'Construção total' })].concat(FONTES.map(function (k) {
+        return celCalc(function (r) { return fn(r.capa.construcao[k]); }); })))]),
       espaco(),
-      g('18% 13.5% 5% 14% 13.5% 5% 13% 18%', [
-        rot('VALOR VAGA(s) AUTÔNOMA(s)'), val(ctx.num(c + 'valorVagaAutonoma', { pre: 'R$', separado: true }), 'cel dir'),
-        e('div'), e('div'), e('div'), e('div'),
-        rot('VALOR TOTAL (R$)'), val(ctx.calc(function (r) { return rs(r.valor.mercado); }), 'cel dir')])]);
+      e('table', { cls: 't ficha-t', style: 'table-layout:fixed' }, [
+        larguras(),
+        linhaArea('Privativa/Útil', 'privativa'),
+        linhaArea('Comum', 'comum')])]);
+
+    var res = e('div', {}, [faixa('RESULTADO DA AVALIAÇÃO'), ficha(3, [
+      ['Área terreno', ctx.calc(function (r) { return fn(r.paradigma.areaTerreno); })],
+      ['Valor (R$/m²)', ctx.calc(function (r) { return r.valor.m2Terreno ? fn(r.valor.m2Terreno) : ''; })],
+      ['Valor (R$)', ctx.calc(function (r) { return rs(r.valor.terreno || null); }), 'dir'],
+      ['Área privativa/construída', ctx.calc(function () { return fn(pegar('capa.areas.privativa.matricula')); })],
+      ['Valor (R$/m²)', ctx.calc(function (r) { return fn(r.valor.m2Privativa); })],
+      ['Valor (R$)', ctx.calc(function (r) { return rs(r.valor.benfeitoria); }), 'dir'],
+      ['Valor vaga(s) autônoma(s)', e('span', { style: 'display:block;width:34mm' },
+        [ctx.num(c + 'valorVagaAutonoma', { pre: 'R$', separado: true })]), null, 2],
+      ['Valor total (R$)', ctx.calc(function (r) { return rs(r.valor.mercado); }), 'dir']], [1, 1, 1.3])]);
 
     var valores = e('div', {}, [
       faixa('VALOR DE MERCADO'),
