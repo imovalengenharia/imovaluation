@@ -85,7 +85,7 @@
     ['piso', 'PISO', 12.8], ['teto', 'TETO', 12.8], ['porta', 'PORTA', 12.8], ['esquadrias', 'ESQUADRIAS', 12.8]];
   /* 13 linhas de ambiente no mínimo; o botão acrescenta até AMB_MAX, o que
      cabe na página da Região (sem página de continuação) */
-  var N_AMBIENTES = 13, AMB_MAX = 21, FOTOS_POR_PAGINA = 8;
+  var N_AMBIENTES = 13, AMB_MAX = 18, FOTOS_POR_PAGINA = 8;
   function ambienteVazio() {
     return { ambiente: '', quantidade: null, parede: '', piso: '', teto: '', porta: '', esquadrias: '',
              bancadas: '', metais: '' };

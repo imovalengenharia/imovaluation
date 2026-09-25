@@ -111,7 +111,7 @@ têm altura fixa de 78 mm (2/3 do que ocupavam esticadas); a faixa é
 "Infraestrutura do empreendimento"; as duas perguntas de divergência de área
 abrem a página de Restrições. Ambientes: 13 linhas no mínimo (não precisam
 acabar no fim da página); o botão "+ Linha de ambiente" (e "Remover última
-linha", só vazia) acrescenta até `AMB_MAX` (21), o que cabe na página — sem
+linha", só vazia) acrescenta até `AMB_MAX` (18), o que cabe na página — sem
 página de continuação, pedido do avaliador. Mudou a altura das observações ou
 de algo acima da tabela, remeça `AMB_MAX`.
 
@@ -129,7 +129,7 @@ estimada" virou "Idade". Travado no teste "a opção mais longa de cada lista
 cabe no campo".
 
 **Uma altura de linha só** (pedido do avaliador, repetido: "divergências nas
-alturas das linhas dos campos"). Token `--alt-linha` (4,6 mm) no `.pagina`:
+alturas das linhas dos campos"). Token `--alt-linha` (4,95 mm = 4,6 mm + 1 pt, pedido do avaliador) no `.pagina`:
 todo `.rot`, `.val`, `.ficha-perg/.ficha-resp`, `td` e `th` de uma linha de
 texto mede isso, fio incluído — linha com fio próprio no `.g` (caixas,
 `.linhas`, fichas das amostras) desconta o fio da altura mínima. Nada de
