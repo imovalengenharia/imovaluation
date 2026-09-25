@@ -97,8 +97,9 @@ numa célula branca ao lado. É o formato que o avaliador aprovou para Terreno
 linha) e Unidade privativa; na Capa, Imóvel (dois quadros com a mesma coluna
 de pergunta), Dimensões (`table.t.ficha-t`: cabeçalho e primeira coluna
 sombreados; duas tabelas de colunas fixas, alinhadas com os quadros do
-Imóvel) e Resultado (a vaga autônoma estende a resposta com `c[3]` no lugar
-do par que falta); e depois estendido à Região: Serviços públicos
+Imóvel) e Resultado (seis colunas fixas; vaga autônoma e valor total em
+quadros próprios abaixo, nas mesmas colunas — resposta esticada e recorte
+vazio na grade foram recusados); e depois estendido à Região: Serviços públicos
 (2 pares por linha) e os três quadros de baixo (padrão/ocupação,
 tráfego/implantação, zoneamento), cada ficha esticada à altura da coluna. Recusados antes: quadros soltos de pares, que
 sobravam espalhados no papel, e rótulo pequeno sobre o valor em células
@@ -117,6 +118,15 @@ de algo acima da tabela, remeça `AMB_MAX`.
 **Capa**: fachada e logradouro com 80 mm de altura (pedido do avaliador); as
 observações gerais da avaliação esticam até o fim da página e ficam com o
 que sobra (~94 mm). Crescer algo na Capa encolhe as observações.
+
+**Células da mesma cor encostadas** (sombreada sobre sombreada, marinho ao
+lado de marinho) se separam por fio branco (`--pg-cel`), só por dentro — a
+borda de fora do quadro fica. Pedido do avaliador: "parecem grudadas".
+
+**Nenhuma lista corta o texto**: a opção mais longa cabe no campo; as linhas
+das fichas das amostras com listas longas têm colunas próprias; "Idade
+estimada" virou "Idade". Travado no teste "a opção mais longa de cada lista
+cabe no campo".
 
 **Uma altura de linha só** (pedido do avaliador, repetido: "divergências nas
 alturas das linhas dos campos"). Token `--alt-linha` (4,6 mm) no `.pagina`:

@@ -152,3 +152,30 @@ test('todas as linhas de campo têm a mesma altura, na tela e no papel', async (
     `a página ${i + 1} da tela termina em ${t} mm, a impressa em ${papel.fins[i]} mm`));
   assert.deepEqual(erros, []);
 });
+
+/* Nenhuma lista corta o texto: a opção mais longa de cada campo de escolha
+   cabe inteira nele, em todas as abas (pedido do avaliador). */
+test('a opção mais longa de cada lista cabe no campo', async () => {
+  const { pg, erros, fr } = await abrirEstudoNovo('listas@exemplo.com');
+  const quadro = pg.frame({ url: /\/m\/comparativo\// });
+  await fr.locator('.pagina').first().waitFor();
+  const cortados = [];
+  for (const aba of ['Capa', 'Região + Imóvel', 'Restrições do imóvel', 'Fichas de pesquisa', 'Cálculo', 'Liquidação forçada']) {
+    await fr.locator('#abas button', { hasText: aba }).first().click();
+    await pg.waitForTimeout(150);
+    cortados.push(...await quadro.evaluate(() => {
+      const cv = document.createElement('canvas').getContext('2d'), out = [];
+      document.querySelectorAll('#folha select.c').forEach(s => {
+        const cs = getComputedStyle(s);
+        cv.font = cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
+        const livre = s.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+        Array.from(s.options).forEach(o => {
+          if (cv.measureText(o.text).width > livre + .5) out.push(s.getAttribute('aria-label') + ' «' + o.text + '»');
+        });
+      });
+      return out;
+    }));
+  }
+  assert.deepEqual([...new Set(cortados)], []);
+  assert.deepEqual(erros, []);
+});

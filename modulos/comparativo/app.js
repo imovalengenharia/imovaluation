@@ -677,16 +677,24 @@
         linhaArea('Privativa/Útil', 'privativa'),
         linhaArea('Comum', 'comum')])]);
 
-    var res = e('div', {}, [faixa('RESULTADO DA AVALIAÇÃO'), ficha(3, [
+    /* Resultado: seis colunas fixas; a vaga autônoma e o valor total ficam
+       em quadros próprios logo abaixo, nas mesmas colunas (como no Imóvel) */
+    var COLS_RES = '43mm minmax(0,1fr) 27mm minmax(0,1fr) 31mm minmax(0,1.3fr)';
+    var resCima = ficha(3, [
       ['Área terreno', ctx.calc(function (r) { return fn(r.paradigma.areaTerreno); })],
       ['Valor (R$/m²)', ctx.calc(function (r) { return r.valor.m2Terreno ? fn(r.valor.m2Terreno) : ''; })],
       ['Valor (R$)', ctx.calc(function (r) { return rs(r.valor.terreno || null); }), 'dir'],
       ['Área privativa/construída', ctx.calc(function () { return fn(pegar('capa.areas.privativa.matricula')); })],
       ['Valor (R$/m²)', ctx.calc(function (r) { return fn(r.valor.m2Privativa); })],
-      ['Valor (R$)', ctx.calc(function (r) { return rs(r.valor.benfeitoria); }), 'dir'],
-      ['Valor vaga(s) autônoma(s)', e('span', { style: 'display:block;width:34mm' },
-        [ctx.num(c + 'valorVagaAutonoma', { pre: 'R$', separado: true })]), null, 2],
-      ['Valor total (R$)', ctx.calc(function (r) { return rs(r.valor.mercado); }), 'dir']], [1, 1, 1.3])]);
+      ['Valor (R$)', ctx.calc(function (r) { return rs(r.valor.benfeitoria); }), 'dir']]);
+    resCima.style.gridTemplateColumns = COLS_RES;
+    var vaga = ficha(1, [['Valor vaga(s) autônoma(s)', ctx.num(c + 'valorVagaAutonoma', { pre: 'R$', separado: true }), 'dir']]);
+    vaga.style.cssText = 'grid-column:1 / 3;grid-template-columns:43mm minmax(0,1fr);margin:0 -.25mm';
+    var total = ficha(1, [['Valor total (R$)', ctx.calc(function (r) { return rs(r.valor.mercado); }), 'dir']]);
+    total.style.cssText = 'grid-column:5 / 7;grid-template-columns:31mm minmax(0,1fr);margin:0 -.25mm';
+    var res = e('div', {}, [faixa('RESULTADO DA AVALIAÇÃO'), resCima, espaco(),
+      e('div', { style: 'display:grid;grid-template-columns:' + COLS_RES + ';border:.25mm solid transparent;border-top:0;border-bottom:0' },
+        [vaga, total])]);
 
     var valores = e('div', {}, [
       faixa('VALOR DE MERCADO'),
@@ -786,9 +794,9 @@
     var unidade = ficha(4, [
       ['Padrão construtivo', ctx.sel(im + 'padrao', LS.padrao)],
       ['Intervalo de valor', ctx.sel(im + 'intervalo', LS.intervalo)],
-      ['Idade estimada', e('span', { cls: 'afixo junto' },
+      ['Idade', e('span', { cls: 'afixo junto' },
         [ctx.num(im + 'idade', { casas: 0 }), e('span', { cls: 'pre', txt: ' ano(s)' })])],
-      ['Estado de conservação', ctx.sel(im + 'conservacao', LS.conservacao)]], [1.7, 1, .6, 1.1]);
+      ['Estado de conservação', ctx.sel(im + 'conservacao', LS.conservacao)]], [1.3, .75, .35, 1.2]);
 
     /* ambientes: 13 linhas no mínimo, mais pelo botão até encher a página */
     var amb = P.imovel.ambientes;
@@ -826,8 +834,8 @@
     }
     var paginas = [pagina(ctx, [
       tit('Dados da Região'),
-      g('1fr 1fr 1fr', [melh, serv, pec], { gap: '9mm', cls: 'colunas' }), espaco('g2'),
-      g('1fr 1fr 1fr', regiaoLinha2, { gap: '9mm', cls: 'colunas' }),
+      g('1fr 1fr 1fr', [melh, serv, pec], { gap: '6mm', cls: 'colunas' }), espaco('g2'),
+      g('1fr 1fr 1fr', regiaoLinha2, { gap: '6mm', cls: 'colunas' }),
       tit('OBSERVAÇÕES GERAIS SOBRE A REGIÃO', 'menor'),
       ctx.area(r + 'observacoes', { alt: '78mm' }),
       tit('Dados do Imóvel'),
@@ -926,14 +934,16 @@
         R_('Data:'), val(ctx.data(b + 'data'))]),
       g(cols, [R_('Área Terreno:'), nn('areaTerreno', { casas: 1 }), R_('Área Construída:'), nn('areaConstruida'),
         R_('Idade Aparente:'), nn('idade', { casas: 0 }), R_('Andar:'), nn('andar', { casas: 0, suf: ' º' })]),
-      g(cols, [R_('Testada:'), nn('testada'), R_('Topografia:'), val(ctx.sel(b + 'topografia', LS.topografia)),
+      /* linhas com listas de texto longo têm colunas próprias: a opção mais
+         longa cabe inteira no campo (topografia, frentes, conservação) */
+      g('1.3fr .75fr 1.45fr 2.95fr 1.5fr 1.35fr 1.05fr .85fr', [R_('Testada:'), nn('testada'), R_('Topografia:'), val(ctx.sel(b + 'topografia', LS.topografia)),
         R_('Frentes múltiplas:'), val(ctx.sel(b + 'multFrentes', LS.multFrentes)), R_('Índ. Local:'), nn('indiceLocal')]),
       g(cols, [R_('Nº dormitórios:'), nn('dormitorios', { casas: 0 }), R_('Nº suítes:'), nn('suites', { casas: 0 }),
         R_('Nº banheiros:'), nn('banheiros', { casas: 0 }), R_('Nº vagas de garagem:'), nn('vagas', { casas: 0 })],
         { cls: 'sep' }),
       g('1.3fr 5.2fr 1.35fr 2.6fr', [R_('Padrão:'), val(ctx.sel(b + 'padrao', LS.padrao)), R_('Intervalo de Valor:'),
         val(ctx.sel(b + 'intervalo', LS.intervalo))]),
-      g(cols, [R_('Conservação:'), val(ctx.sel(b + 'conservacao', LS.conservacao)), R_('Fonte:'), t('fonte'),
+      g('1.3fr 2.6fr 1.35fr 1.25fr 1.35fr .75fr 1.35fr 1.25fr', [R_('Conservação:'), val(ctx.sel(b + 'conservacao', LS.conservacao)), R_('Fonte:'), t('fonte'),
         R_('Nome:'), t('contato'), R_('Telefone:'), t('telefone')]),
       g('1.3fr 10.9fr', [R_('Link oferta:'), val(link)])]);
     /* a última linha não leva fio: a borda do quadro já fecha embaixo */

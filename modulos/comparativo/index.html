@@ -201,9 +201,12 @@ button{font:inherit;color:inherit}
 .ficha-tec > *{border-right:.25mm solid var(--pg-fio);border-bottom:.25mm solid var(--pg-fio)}
 .ficha-tec > .ult-col{border-right:0}
 .ficha-tec > .ult-lin{border-bottom:0}
+/* célula sombreada sobre outra igual: separadas por fio branco, para não
+   parecerem grudadas (pedido do avaliador) */
+.ficha-tec > .ficha-perg:not(.ult-lin){border-bottom-color:var(--pg-cel)}
 .ficha-perg{background:var(--pg-pergunta);color:var(--pg-rot);font-weight:700;
-  text-transform:uppercase;padding:var(--resp-linha) 2mm;min-height:var(--alt-linha);display:flex;align-items:center;white-space:nowrap}
-.ficha-resp{background:var(--pg-cel);color:var(--pg-tinta);padding:var(--resp-linha) 2mm;min-width:0;
+  text-transform:uppercase;padding:var(--resp-linha) 1.5mm;min-height:var(--alt-linha);display:flex;align-items:center;white-space:nowrap}
+.ficha-resp{background:var(--pg-cel);color:var(--pg-tinta);padding:var(--resp-linha) 1.5mm;min-width:0;
   display:flex;align-items:center;min-height:var(--alt-linha)}
 .ficha-resp .c{width:100%}
 .ficha-resp.dir{justify-content:flex-end;text-align:right}
@@ -211,6 +214,11 @@ button{font:inherit;color:inherit}
 .ficha-resp > .afixo{width:100%}
 /* tabela no formato da ficha: cabeçalho e primeira coluna sombreados */
 table.t.ficha-t{border:.25mm solid var(--pg-borda)}
+/* sombreadas lado a lado ou empilhadas: fio branco entre elas (só por
+   dentro; a borda de fora continua a do quadro) */
+table.t.ficha-t th:not(:last-child){border-right-color:var(--pg-cel)}
+table.t.ficha-t th{border-bottom-color:var(--pg-cel)}
+table.t.ficha-t tr:not(:last-child) td.perg{border-bottom-color:var(--pg-cel)}
 table.t.ficha-t th, table.t.ficha-t td.perg{background:var(--pg-pergunta);color:var(--pg-rot);font-weight:700;
   text-transform:uppercase;text-align:left;padding-left:2mm;padding-right:2mm}
 table.t.ficha-t th:not(:first-child){text-align:center}
@@ -242,7 +250,7 @@ table.t th{font-weight:700;color:var(--pg-tinta);padding:var(--resp-linha) .8mm;
   border:.25mm solid var(--pg-fio);background:var(--pg-cel)}
 table.t td{padding:var(--resp-linha) .8mm;height:var(--alt-linha);text-align:center;border:.25mm solid var(--pg-fio);background:var(--pg-cel);
   font-variant-numeric:tabular-nums;white-space:nowrap}
-table.t.marinho th{background:var(--pg-marinho);color:var(--pg-marinho-ink);border-color:var(--pg-marinho)}
+table.t.marinho th{background:var(--pg-marinho);color:var(--pg-marinho-ink);border-color:var(--pg-cel)}
 table.t td.esq{text-align:left} table.t td.dir{text-align:right}
 table.t tr.atual td{background:var(--pg-destaque);font-weight:700}
 table.t.pontos td{border-top:none;border-bottom:.25mm dotted var(--pg-borda)}
@@ -306,7 +314,7 @@ button.marca{padding:0;background:var(--pg-edita);cursor:pointer;font:inherit;fo
   line-height:1.3;height:1.3em;display:block;
   width:100%;min-width:0;padding:0 .6mm;border-radius:0;outline:none}
 .c:focus{background:var(--pg-cel);box-shadow:0 0 0 .35mm var(--campo-foco)}
-textarea.c.quebra{resize:none;overflow:hidden;white-space:pre-wrap;min-height:0;line-height:1.3;height:1.3em;overflow-wrap:anywhere}
+textarea.c.quebra{padding-left:0;padding-right:0;resize:none;overflow:hidden;white-space:pre-wrap;min-height:0;line-height:1.3;height:1.3em;overflow-wrap:anywhere}
 .c.num{text-align:inherit;font-variant-numeric:tabular-nums}
 .c.sugerido{color:var(--pg-sugerido)}
 select.c{appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:3mm;
