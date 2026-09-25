@@ -83,9 +83,9 @@
   /* larguras fixas: a tabela e a sua continuação alinham coluna por coluna */
   var COLS_AMBIENTE = [['ambiente', 'AMBIENTE', 24], ['quantidade', 'QUANTIDADE', 12], ['parede', 'PAREDE', 12.8],
     ['piso', 'PISO', 12.8], ['teto', 'TETO', 12.8], ['porta', 'PORTA', 12.8], ['esquadrias', 'ESQUADRIAS', 12.8]];
-  /* 13 linhas de ambiente no mínimo; na página da Região cabem AMB_PRIMEIRA,
-     numa página de continuação AMB_CONTINUACAO */
-  var N_AMBIENTES = 13, AMB_PRIMEIRA = 30, AMB_CONTINUACAO = 60, FOTOS_POR_PAGINA = 8;
+  /* 13 linhas de ambiente no mínimo; o botão acrescenta até AMB_MAX, o que
+     cabe na página da Região (sem página de continuação) */
+  var N_AMBIENTES = 13, AMB_MAX = 22, FOTOS_POR_PAGINA = 8;
   function ambienteVazio() {
     return { ambiente: '', quantidade: null, parede: '', piso: '', teto: '', porta: '', esquadrias: '',
              bancadas: '', metais: '' };
@@ -754,8 +754,7 @@
         [ctx.num(im + 'idade', { casas: 0 }), e('span', { cls: 'pre', txt: ' ano(s)' })])],
       ['Estado de conservação', ctx.sel(im + 'conservacao', LS.conservacao)]], [1.7, 1, .6, 1.1]);
 
-    /* ambientes: 13 linhas no mínimo, mais pelo botão; o que não cabe na
-       página da Região segue em páginas de continuação */
+    /* ambientes: 13 linhas no mínimo, mais pelo botão até encher a página */
     var amb = P.imovel.ambientes;
     var nAmb = Math.max(N_AMBIENTES, amb.length);
     function tabelaAmb(de, ate) {
@@ -772,8 +771,10 @@
     function botoesAmb() {
       if (ctx.papel) return e('div');
       var mais = e('button', { type: 'button', cls: 'botao-linha', txt: '+ Linha de ambiente' });
+      if (nAmb >= AMB_MAX) { mais.disabled = true; mais.title = 'A página está cheia'; }
       mais.addEventListener('click', function () {
         while (amb.length < nAmb) amb.push(ambienteVazio());
+        if (amb.length >= AMB_MAX) return;
         amb.push(ambienteVazio()); mudou(); remontar();
       });
       var filhos = [mais];
@@ -787,30 +788,19 @@
       }
       return e('div', { cls: 'linha-botoes' }, filhos);
     }
-    var nPrim = Math.min(nAmb, AMB_PRIMEIRA);
-    var faixaAmb = function (cont) {
-      return faixa(e('span', {}, ['DIVISÃO INTERNA POR AMBIENTE' + (cont ? ' (CONTINUAÇÃO)' : ''),
-        e('span', { cls: 'info', txt: 'ⓘ' })]), 'esq');
-    };
-
     var paginas = [pagina(ctx, [
       tit('Dados da Região'),
       g('1fr 1fr 1fr', [melh, serv, pec], { gap: '9mm', cls: 'colunas' }), espaco('g2'),
       g('1fr 1fr 1fr', regiaoLinha2, { gap: '9mm', cls: 'colunas' }),
       tit('OBSERVAÇÕES GERAIS SOBRE A REGIÃO', 'menor'),
-      ctx.area(r + 'observacoes', { alt: '30mm', estica: true }),
+      ctx.area(r + 'observacoes', { alt: '78mm' }),
       tit('Dados do Imóvel'),
       faixa('TERRENO', 'esq'), terreno, espaco(),
       faixa('EDIFICAÇÃO (QUANDO EMPREENDIMENTO VERTICALIZADO)', 'esq'), edif, espaco(),
       faixa('INFRAESTRUTURA DO EMPREENDIMENTO', 'esq'), infra, espaco(),
       faixa('UNIDADE PRIVATIVA', 'esq'), unidade, espaco(),
-      faixaAmb(false), tabelaAmb(0, nPrim)].concat(nPrim === nAmb ? [botoesAmb()] : []),
-      { parte: 'regiao', estica: true })];
-    for (var de = nPrim; de < nAmb; de += AMB_CONTINUACAO) {
-      var ate = Math.min(nAmb, de + AMB_CONTINUACAO);
-      paginas.push(pagina(ctx, [faixaAmb(true), tabelaAmb(de, ate)].concat(ate === nAmb ? [botoesAmb()] : []),
-        { parte: 'regiao' }));
-    }
+      faixa(e('span', {}, ['DIVISÃO INTERNA POR AMBIENTE', e('span', { cls: 'info', txt: 'ⓘ' })]), 'esq'),
+      tabelaAmb(0, nAmb), botoesAmb()], { parte: 'regiao' })];
     return paginas;
   }
 

@@ -102,12 +102,13 @@ largas ("muito espaço para pouco preenchimento; não dá para saber o que é
 pergunta e o que é resposta").
 
 **Página da Região + Imóvel** (pedido do avaliador): as observações da região
-esticam até o fim da página (mínimo 30 mm); a faixa é "Infraestrutura do
-empreendimento"; as duas perguntas de divergência de área abrem a página de
-Restrições. Ambientes: 13 linhas no mínimo, botão "+ Linha de ambiente" (e
-"Remover última linha", só vazia) na tela; cabem `AMB_PRIMEIRA` (30) linhas
-na página, o resto segue em páginas "(continuação)", com as colunas em
-larguras fixas para alinhar com a primeira tabela.
+têm altura fixa de 78 mm (2/3 do que ocupavam esticadas); a faixa é
+"Infraestrutura do empreendimento"; as duas perguntas de divergência de área
+abrem a página de Restrições. Ambientes: 13 linhas no mínimo (não precisam
+acabar no fim da página); o botão "+ Linha de ambiente" (e "Remover última
+linha", só vazia) acrescenta até `AMB_MAX` (22), o que cabe na página — sem
+página de continuação, pedido do avaliador. Mudou a altura das observações ou
+de algo acima da tabela, remeça `AMB_MAX`.
 
 **Uma escala de letra só** (pedido do avaliador: "mesma fonte e tamanho para
 campos de mesma função"). Tokens no `.pagina`: `--t-campo` 6,6 pt para todo
