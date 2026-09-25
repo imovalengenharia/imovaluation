@@ -1,0 +1,1378 @@
+/* ============================================================================
+   COMPARATIVO DIRETO DE DADOS DE MERCADO — interface
+   Uma aba por aba impressa da planilha, na mesma ordem e com os mesmos
+   campos nas mesmas posições: a tela É a folha do laudo. Cada página é
+   montada por uma função que recebe um contexto: na tela ('tela') os campos
+   são digitáveis; na impressão ('papel') viram texto. É a mesma função nos
+   dois casos, e por isso o que se vê é o que sai impresso.
+   As abas de cálculo ocultas da planilha (Cálculo_apoio, Inf. Auxiliar,
+   Listas Suspensas) não aparecem: moram no motor, e as poucas escolhas que
+   tinham — tabela, fatores em uso, expoente — ficam num painel de tela sobre
+   a página do Cálculo, que não sai no laudo.
+   ========================================================================== */
+(function () {
+  'use strict';
+  var M = window.Motor, LS = M.LISTAS, N = M.N_AMOSTRA;
+
+  /* ------------------------------------------------------ textos padrão
+     O que é método e vale para qualquer laudo; o que é do caso fica vazio. */
+  var TEXTO_CAPA = [
+    '# DOCUMENTAÇÕES FORNECIDAS', '',
+    '**- Matrícula nº :** ', '',
+    '**- Extrato do IPTU de inscrição :** ', '', '',
+    '# PRESSUPOSTOS, RESSALVAS E CONDIÇÕES LIMITANTES', '',
+    'Este Laudo fundamenta-se no que estabelecem as normas técnicas da ABNT, Avaliação de Bens, registradas no INMETRO como NBR 14653 – Parte 1 (Procedimentos Gerais) e Parte 2 (Imóveis Urbanos), estudos técnicos do IBAPE e baseia-se:', '',
+    '- Na documentação fornecida: RGI do imóvel;',
+    '- Em informações constatadas por meio de vistoria remota, não sendo possível aferir características sobre a área, padrão da construção e seu estado de conservação. Para fins de cálculo, foram adotadas situações paradigmas, conforme foi possível constatar externamente com auxílio de imagens via satélite;',
+    '- Em informações obtidas junto a agentes do mercado imobiliário local (vendedores, compradores, intermediários etc.).', '',
+    'Na presente avaliação considerou-se que toda a documentação pertinente se encontrava correta e devidamente regularizada, e que o(s) imóvel(eis) objeto estariam livres e desembaraçados de quaisquer ônus, em condições de serem imediatamente comercializadas ou locados.', '',
+    'Não foram efetuadas investigações quanto a correção dos documentos fornecidos; as observações “in loco” foram feitas sem instrumentos de medição; as informações obtidas foram tomadas como de boa fé.', '',
+    'O presente trabalho não expressa a opinião do avaliador em relação aos investimentos ou transações, e sim, apenas a determinação do valor do imóvel, de acordo com a finalidade para qual o trabalho foi contratado.', '',
+    'O presente trabalho não pode ser utilizado para outros fins, a não ser pelo qual foi contratado, nem pode ser incluído em outros documentos e publicações de qualquer forma sem autorização prévia por escrito.'
+  ].join('\n');
+
+  var TEXTO_CALCULO = [
+    '# Diagnóstico de mercado:', '', '', '',
+    '# Fatores de homogeneização utilizados no tratamento dos fatores:', '',
+    'Fator oferta — Corrige a margem de negociação embutida nos preços anunciados, aproximando-os do valor provável de fechamento. Transações efetivas recebem fator unitário.', '',
+    'Fator área — Ajusta a relação inversa entre dimensão e preço unitário, conforme critério de Abunahman (Curso Básico de Engenharia Legal e de Avaliações, 2008), um dos fatores área mais utilizados pelos profissionais da Engenharia de Avaliações: Fa = (Área do comparativo ÷ Área do avaliando)^1/4, quando a diferença entre as áreas for inferior a 30%; e expoente 1/8 quando superior a 30%.', '',
+    'Fator localização — Obtido pela razão entre os índices fiscais dos logradouros (valores unitários de terreno constantes da Planta Genérica de Valores do município), na forma Fl = índice fiscal do logradouro do avaliando ÷ índice fiscal do logradouro do comparativo, refletindo a hierarquia de valorização territorial reconhecida pelo cadastro municipal.', '',
+    'Fator padrão construtivo — Aferido com base nos estudos de valores de edificações do IBAPE (classificação das tipologias por classe e padrão construtivo), pela razão entre os valores unitários correspondentes aos padrões do avaliando e do comparativo.', '',
+    'Fator idade/conservação — Reflete a depreciação física e funcional em função da idade aparente e do estado de conservação, comumente aferida pelo critério de Ross-Heidecke.', '',
+    'Fator andar — Ajusta a posição vertical da unidade, com valorização crescente nos pavimentos mais altos; ajuste percentual modesto por andar de diferença.', '',
+    'Fator vagas — Ajusta a dotação de vagas de garagem pela relação entre área privativa e quantidade de vagas (m²/vaga) do avaliando em comparação à mesma relação do comparativo, de modo que unidades com maior densidade de vagas por área recebam o correspondente ajuste relativo.'
+  ].join('\n');
+
+  var TEXTO_LIQUIDACAO = [
+    'O valor de liquidação forçada (venda compulsória) representa o montante provável de venda do imóvel em prazo inferior ao normalmente requerido pelo mercado — situação típica de alienações compulsórias (execuções judiciais, leilões ou necessidade de liquidez imediata). Parte-se do valor de mercado apurado e aplicam-se os ajustes decorrentes da venda em prazo abreviado:', '',
+    '**1. Prazo de venda**: estima-se o período necessário para a alienação forçada, inferior ao prazo de exposição típico do segmento.', '',
+    '**2. Desconto financeiro (custo de oportunidade):** o valor de mercado é trazido a valor presente por uma taxa de atratividade de baixo risco (ativo livre de risco, como o Tesouro Selic), remunerando o capital que o vendedor deixaria de auferir ao antecipar a realização do ativo.', '',
+    '**3. Custos de carregamento no período**:  deduzem-se as despesas incorridas com a manutenção do imóvel até a efetivação da venda, notadamente IPTU e taxa condominial, proporcionalmente ao prazo estimado de exposição.', '',
+    '**4. Perda inflacionária:** considera-se a corrosão do poder de compra ao longo do período, ajustando-se o valor pela inflação projetada para o intervalo até a venda.', '',
+    '**O valor de liquidação forçada resulta, portanto, do valor de mercado deduzido do desconto financeiro (à taxa livre de risco), dos custos de carregamento (IPTU e condomínio) e da perda inflacionária estimada para o prazo de venda compulsória.**'
+  ].join('\n');
+
+  var PERGUNTAS = [
+    '1. Para avaliação foi fornecido o IPTU do imóvel?',
+    '2. As áreas documentadas correspondem às verificadas em vistoria?',
+    '3. Em caso de existência de vagas de garagem verificadas, elas estão documentadas?',
+    '4. Imóvel concluído, sem sinais de reforma ou obras? (se negativo, justificar)',
+    '5. O imóvel encontra-se em bom estado de conservação, sem vícios construtivos? (se negativo, justificar)',
+    '6. Imóvel inserido em perímetro urbano?',
+    '7. Se de uso residencial, o imóvel apresenta características unifamiliares?',
+    '8. O imóvel possui um único uso? (Residencial/Comercial)',
+    '9. O imóvel possui identificação numérica? Em caso positivo, está de acordo com a documentação?',
+    '10. Imóvel não localizado em área de risco pela defesa civil?',
+    '11. Imóvel sem suspeita de contaminação ou risco ambiental?',
+    '12. O imóvel apresenta condições de habitabilidade?',
+    '13. O imóvel apresenta boa garantia, dentro das condições de mercado atuais?'
+  ];
+  /* em pares por linha, como na planilha */
+  var MELHORAMENTOS = [['agua', 'Abastecimento de água'], ['guias', 'Guias e Sarjetas'],
+    ['esgoto', 'Rede de Esgoto'], ['gas', 'Rede de Gás'], ['eletrica', 'Rede Elétrica'],
+    ['telefonica', 'Rede Telefônica'], ['pavimentacao', 'Pavimentação'], ['iluminacao', 'Iluminação Pública']];
+  var SERVICOS = [['metro', 'Metrô'], ['igreja', 'Igreja'], ['onibus', 'Ônibus'], ['lazer', 'Lazer'],
+    ['hospital', 'Hospital'], ['shopping', 'Shopping'], ['escola', 'Escola'], ['seguranca', 'Segurança']];
+  var PECULIARIDADES = [['comunidade', 'Comunidade'], ['inundacao', 'Risco a inundação'],
+    ['feira', 'Feira Livre'], ['ambiental', 'Risco ambiental'], ['outros', 'Outros']];
+  /* cinco colunas de quatro, lidas linha a linha */
+  var INFRA = [['piscina', 'Piscina'], ['festas', 'Salão de Festas'], ['tvCabo', 'TV a Cabo'], ['playground', 'Playground'], ['churrasqueira', 'Churrasqueira'],
+    ['quadra', 'Quadra'], ['jardins', 'Jardins'], ['gerador', 'Gerador'], ['sauna', 'Sauna'], ['jogos', 'Salão de Jogos'],
+    ['academia', 'Academia'], ['antena', 'Antena Coletiva'], ['brinquedoteca', 'Brinquedoteca'], ['deposito', 'Depósito Individual'], ['cooper', 'Pista de Cooper'],
+    ['vigilancia', 'Vigilância Eletrônica'], ['lavanderia', 'Lavanderia Coletiva'], ['telefonia', 'Sistema de Telefonia'], ['conveniencia', 'Loja de Conveniência'], ['heliponto', 'Heliponto']];
+  var COLS_AMBIENTE = [['ambiente', 'AMBIENTE'], ['quantidade', 'QUANTIDADE'], ['parede', 'PAREDE'], ['piso', 'PISO'],
+    ['teto', 'TETO'], ['porta', 'PORTA'], ['esquadrias', 'ESQUADRIAS'], ['bancadas', 'BANCADAS'], ['metais', 'METAIS']];
+  var N_AMBIENTES = 13, FOTOS_POR_PAGINA = 8;
+  var MERCADO = [['oferta', 'Nível de Oferta:'], ['demanda', 'Nível de Demanda:'],
+    ['absorcao', 'Absorção:'], ['desempenho', 'Desempenho do Mercado Atual:']];
+
+  function repetir(n, f) { var a = []; for (var i = 0; i < n; i++) a.push(f(i)); return a; }
+  function amostraVazia() {
+    return { foto: null, endereco: '', numero: '', complemento: '', cep: '', bairro: '', empreendimento: '',
+      cidade: '', uf: '', tipo: '', valor: null, transacao: '', data: '', areaTerreno: null, areaConstruida: null,
+      idade: null, andar: null, testada: null, topografia: '', multFrentes: '', indiceLocal: null,
+      dormitorios: null, suites: null, banheiros: null, vagas: null, padrao: '', intervalo: '',
+      conservacao: '', fonte: '', contato: '', telefone: '', link: '' };
+  }
+  /* Estudo novo: tudo por informar. Nenhum dado de caso vem de fábrica —
+     um laudo impresso com o endereço de outro seria o pior erro possível. */
+  function premissasVazias() {
+    var area = function () { return { matricula: null, iptu: null, estimada: null, doc: '' }; };
+    return {
+      versao: 1,
+      logos: { cliente: null, empresa: null },
+      capa: { proponente: '', tipoLaudo: '', proposta: '', matricula: '', logradouro: '', numero: '',
+        complemento: '', empreendimento: '', bairro: '', cidade: '', uf: '', cep: '',
+        fotoFachada: null, fotoLogradouro: null, tipologia: '', uso: '', ocupacao: '', vaga: '', vagasTotal: null,
+        areas: { terreno: area(), total: { doc: '' }, privativa: area(), comum: area() },
+        valorVagaAutonoma: null, empresa: '', responsavel: '', creaEmpresa: '', dataEntrega: '',
+        assinatura: null, assinaturaCrea: '', observacoes: TEXTO_CAPA },
+      regiao: { melhoramentos: {}, servicos: {}, peculiaridades: {}, padrao: '', ocupacao: '', trafego: '',
+        implantacao: '', zoneamento: '', observacoes: '' },
+      imovel: { topografia: '', formato: '', multFrentes: '', pavimentos: null, unidades: null, vagas: null,
+        unidadesAndar: null, elevadores: null, subsolos: null, fachada: '', conservacaoCondominio: '', infra: {},
+        padrao: '', idade: null, intervalo: '', conservacao: '',
+        ambientes: repetir(N_AMBIENTES, function () {
+          return { ambiente: '', quantidade: null, parede: '', piso: '', teto: '', porta: '', esquadrias: '',
+                   bancadas: '', metais: '' }; }),
+        divTerreno: { resposta: '', justificativa: '' }, divConstruida: { resposta: '', justificativa: '' } },
+      restricoes: { garantia: '', dataVistoria: '', justificativa: '',
+        itens: repetir(PERGUNTAS.length, function () { return { resposta: '', obs: '' }; }), observacoes: '' },
+      paradigma: { testada: null, dormitorios: null, suites: null, banheiros: null, indiceLocal: null, andar: null },
+      amostra: repetir(N, amostraVazia),
+      croquiSituacao: null,
+      calculo: { tabela: 'C', fundamentacao: '', cotaTerreno: null, cotaConstrucao: null,
+        oferta: repetir(N, function () { return null; }), fatores: {}, expoenteAuVg: null, fam: null,
+        observacoes: TEXTO_CALCULO },
+      grafico: { croqui: null },
+      liquidacao: { texto: TEXTO_LIQUIDACAO, prazo: null, rotuloTaxa: 'Tesouro Prefixado 2029', taxa: null,
+        ipca: null, iptuAno: null, condominioMes: null, oferta: '', demanda: '', absorcao: '', desempenho: '' },
+      fotos: [], anexos: [],
+      impressao: {}
+    };
+  }
+
+  /* ------------------------------------------------------------- formatos
+     O laudo segue o modelo impresso do avaliador: áreas e fatores com duas
+     casas, dinheiro com R$, e o traço onde não há valor. */
+  var TRACO = '-';
+  function semValor(v) { return v === null || v === undefined || v === '' || (typeof v === 'number' && !isFinite(v)); }
+  function nz(v, d) { return v.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d }); }
+  function fn(v, d) { return semValor(v) ? TRACO : nz(+v, d === undefined ? 2 : d); }
+  function rs(v, d) { return semValor(v) ? 'R$ ' + TRACO : 'R$ ' + nz(+v, d === undefined ? 2 : d); }
+  function pc(v, d) { return semValor(v) ? TRACO : nz(v * 100, d === undefined ? 2 : d) + '%'; }
+  function dataBR(s) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s || ''));
+    return m ? m[3] + '/' + m[2] + '/' + m[1] : (s || '');
+  }
+  function andarTxt(v) { return semValor(v) ? TRACO : nz(+v, 0) + ' º'; }
+
+  /* número no padrão brasileiro: ponto de milhar, vírgula decimal */
+  function lerNum(txt) {
+    var s = String(txt == null ? '' : txt).trim().replace(/\s/g, '').replace(/^R\$/, '').replace(/[%º°]$/, '');
+    if (!s || s === TRACO) return null;
+    var neg = /^-/.test(s);
+    s = s.replace(/[+-]/g, '');
+    if (s.indexOf(',') >= 0) s = s.replace(/\./g, '').replace(',', '.');
+    else if (s.indexOf('.') >= 0) {
+      var g = s.split('.');
+      if (g.length > 2 || g[1].length === 3) s = g.join('');
+    }
+    var v = parseFloat(s);
+    if (!isFinite(v)) return null;
+    return neg ? -v : v;
+  }
+
+  function e(tag, attrs, filhos) {
+    var el = document.createElement(tag);
+    if (attrs) for (var k in attrs) {
+      if (attrs[k] === null || attrs[k] === undefined || attrs[k] === false) continue;
+      if (k === 'txt') el.textContent = attrs[k];
+      else if (k === 'cls') el.className = attrs[k];
+      else if (k === 'style') el.setAttribute('style', attrs[k]);
+      else el.setAttribute(k, attrs[k]);
+    }
+    (filhos || []).forEach(function (f) {
+      if (f === null || f === undefined || f === false) return;
+      el.appendChild(typeof f === 'string' ? document.createTextNode(f) : f);
+    });
+    return el;
+  }
+
+  /* ---------------------------------------------------------- premissas */
+  var P = premissasVazias(), R = null, abaAtiva = 'capa', atualizadores = [];
+
+  function pegar(c, base) {
+    return c.split('.').reduce(function (o, k) { return o == null ? undefined : o[k]; }, base || P);
+  }
+  function guardar(c, v) {
+    var ks = c.split('.'), o = P;
+    for (var i = 0; i < ks.length - 1; i++) {
+      if (o[ks[i]] === null || typeof o[ks[i]] !== 'object') o[ks[i]] = /^\d+$/.test(ks[i + 1]) ? [] : {};
+      o = o[ks[i]];
+    }
+    o[ks[ks.length - 1]] = v;
+  }
+
+  /* Texto com duas marcas, para os quadros de observação ficarem como no
+     laudo: linha começando por "# " é subtítulo; **trecho** é negrito. */
+  function textoRico(s) {
+    var frag = document.createDocumentFragment();
+    String(s || '').split('\n').forEach(function (linha, i) {
+      if (i) frag.appendChild(document.createTextNode('\n'));
+      if (/^# /.test(linha)) { frag.appendChild(e('span', { cls: 'sub', txt: linha.slice(2) })); return; }
+      linha.split(/(\*\*[^*]+\*\*)/).forEach(function (p) {
+        if (/^\*\*[^*]+\*\*$/.test(p)) frag.appendChild(e('b', { txt: p.slice(2, -2) }));
+        else if (p) frag.appendChild(document.createTextNode(p));
+      });
+    });
+    return frag;
+  }
+
+  /* ------------------------------------------------------------ imagens
+     A foto entra no estudo reduzida no próprio navegador: o laudo não pede
+     mais que isso, e o estudo inteiro viaja a cada gravação. */
+  function lerImagem(arquivo, o) {
+    o = o || {};
+    return new Promise(function (ok, erro) {
+      var leitor = new FileReader();
+      leitor.onerror = erro;
+      leitor.onload = function () {
+        var img = new Image();
+        img.onerror = function () { erro(new Error('imagem inválida')); };
+        img.onload = function () {
+          var max = o.max || 1600, k = Math.min(1, max / Math.max(img.width, img.height));
+          var cv = document.createElement('canvas');
+          cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k);
+          var cx = cv.getContext('2d');
+          if (!o.png) { cx.fillStyle = '#FFFFFF'; cx.fillRect(0, 0, cv.width, cv.height); }
+          cx.drawImage(img, 0, 0, cv.width, cv.height);
+          ok(o.png ? cv.toDataURL('image/png') : cv.toDataURL('image/jpeg', o.qualidade || 0.82));
+        };
+        img.src = leitor.result;
+      };
+      leitor.readAsDataURL(arquivo);
+    });
+  }
+  function escolherArquivos(multiplo, aoEscolher) {
+    var inp = e('input', { type: 'file', accept: 'image/*', multiple: multiplo ? 'multiple' : null });
+    inp.addEventListener('change', function () { aoEscolher(Array.prototype.slice.call(inp.files || [])); });
+    inp.click();
+  }
+
+  /* ===================================================== o contexto
+     Cria os campos. Na tela, cada campo lê e grava em P e, quando depende do
+     cálculo, se inscreve para ser atualizado a cada recálculo — sem sair do
+     documento, para não perder o foco. No papel, é só o texto. */
+  function contexto(papel) {
+    var ctx = { papel: papel };
+
+    ctx.txt = function (caminho, o) {
+      o = o || {};
+      var v = pegar(caminho);
+      if (papel) return e('span', { cls: o.cls, txt: semValor(v) ? (o.vazio || '') : String(v) });
+      var el = e('input', { cls: 'c ' + (o.cls || ''), type: 'text', value: semValor(v) ? '' : String(v),
+        placeholder: o.ph || '', 'aria-label': o.rot || caminho, spellcheck: 'false' });
+      el.addEventListener('input', function () { guardar(caminho, el.value); mudou(); });
+      return el;
+    };
+
+    ctx.num = function (caminho, o) {
+      o = o || {};
+      var casas = o.casas === undefined ? 2 : o.casas;
+      var fator = o.pct ? 100 : 1;
+      function mostrar(v) {
+        if (semValor(v)) return '';
+        return nz(v * fator, casas) + (o.pct ? '%' : '') + (o.suf || '');
+      }
+      function atual() {
+        var v = pegar(caminho);
+        if (semValor(v) && o.sug && R) { var s = o.sug(R); return { v: s, sug: !semValor(s) }; }
+        return { v: v, sug: false };
+      }
+      var pre = o.pre ? e('span', { cls: 'pre', txt: o.pre }) : null;
+      if (papel) {
+        var a = atual(), txt = semValor(a.v) ? (o.vazio !== undefined ? o.vazio : TRACO) : mostrar(a.v);
+        if (!o.separado) return e('span', { txt: (o.pre ? o.pre + ' ' : '') + txt });
+        return e('span', { cls: 'afixo' }, [pre, e('span', { txt: txt })]);
+      }
+      var el = e('input', { cls: 'c num', type: 'text', inputmode: 'decimal', 'aria-label': o.rot || caminho,
+        placeholder: o.ph !== undefined ? o.ph : TRACO });
+      function pintar() {
+        if (document.activeElement === el) return;
+        var a = atual();
+        el.value = mostrar(a.v);
+        el.classList.toggle('sugerido', a.sug);
+      }
+      el.addEventListener('input', function () {
+        var v = lerNum(el.value);
+        guardar(caminho, v === null ? null : v / fator);
+        el.classList.remove('sugerido');
+        mudou();
+      });
+      el.addEventListener('blur', pintar);
+      atualizadores.push(pintar);
+      pintar();
+      return pre ? e('span', { cls: 'afixo' }, [pre, el]) : el;
+    };
+
+    ctx.sel = function (caminho, lista, o) {
+      o = o || {};
+      var v = pegar(caminho) || '';
+      if (papel) return e('span', { txt: v || (o.vazio || '') });
+      var opcoes = lista.slice();
+      if (v && opcoes.indexOf(v) < 0) opcoes.unshift(v);
+      var el = e('select', { cls: 'c', 'aria-label': o.rot || caminho },
+        [e('option', { value: '', txt: '' })].concat(opcoes.map(function (x) {
+          return e('option', { value: x, txt: x, selected: x === v ? 'selected' : null }); })));
+      el.addEventListener('change', function () {
+        guardar(caminho, el.value); mudou();
+        if (o.remonta) remontar();
+      });
+      return el;
+    };
+
+    ctx.data = function (caminho, o) {
+      o = o || {};
+      var v = pegar(caminho) || '';
+      if (papel) return e('span', { txt: v ? dataBR(v) : (o.vazio || '') });
+      var el = e('input', { cls: 'c', type: 'date', value: v, 'aria-label': o.rot || caminho });
+      el.addEventListener('input', function () { guardar(caminho, el.value); mudou(); });
+      return el;
+    };
+
+    /* texto corrido: na tela cresce com o que se digita, nunca rola */
+    ctx.area = function (caminho, o) {
+      o = o || {};
+      var v = pegar(caminho) || '';
+      var caixa = e('div', { cls: 'texto', style: o.alt ? 'min-height:' + o.alt : null });
+      if (papel) { caixa.appendChild(textoRico(v)); return caixa; }
+      caixa.style.padding = '0';
+      var el = e('textarea', { cls: 'c', 'aria-label': o.rot || caminho, spellcheck: 'true',
+        style: o.alt ? 'min-height:' + o.alt : null });
+      el.value = v;
+      function crescer() { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
+      el.addEventListener('input', function () { guardar(caminho, el.value); crescer(); mudou(); });
+      requestAnimationFrame(crescer);
+      atualizadores.push(crescer);
+      caixa.appendChild(el);
+      if (o.marcas !== false) caixa.appendChild(e('div', { cls: 'nota-tela', style: 'padding:0 1mm 1mm',
+        txt: 'Na impressão: linha iniciada por "# " vira subtítulo; **trecho** sai em negrito.' }));
+      return caixa;
+    };
+
+    ctx.chk = function (caminho) {
+      var v = !!pegar(caminho);
+      if (papel) return e('span', { cls: 'marca', txt: v ? '✓' : '' });
+      var b = e('button', { cls: 'marca', type: 'button', role: 'checkbox', 'aria-checked': v ? 'true' : 'false',
+        'aria-label': caminho, txt: v ? '✓' : '' });
+      b.addEventListener('click', function () {
+        var n = !pegar(caminho);
+        guardar(caminho, n); b.textContent = n ? '✓' : ''; b.setAttribute('aria-checked', n ? 'true' : 'false');
+        mudou();
+      });
+      return b;
+    };
+
+    /* valor calculado: texto que o recálculo reescreve */
+    ctx.calc = function (f, o) {
+      o = o || {};
+      var el = e('span', { cls: o.cls });
+      function pintar() { var t = R ? f(R) : ''; el.textContent = t === null || t === undefined ? '' : t; }
+      if (!papel) atualizadores.push(pintar);
+      pintar();
+      return el;
+    };
+
+    /* imagem: clicar escolhe (ou troca) o arquivo; o botão tira */
+    ctx.img = function (caminho, o) {
+      o = o || {};
+      var src = pegar(caminho);
+      var quadro = e('div', { cls: 'quadro-img', style: 'height:' + (o.alt || '50mm') });
+      if (src) quadro.appendChild(e('img', { src: src, alt: o.legenda || '' }));
+      else quadro.appendChild(e('div', { cls: 'vazia', txt: papel ? '' : (o.vazio || 'Clique para inserir a imagem') }));
+      if (!papel) {
+        quadro.classList.add('escolher');
+        quadro.title = src ? 'Clique para trocar a imagem' : 'Clique para inserir a imagem';
+        quadro.addEventListener('click', function (ev) {
+          if (ev.target.closest('.acoes-img')) return;
+          escolherArquivos(false, function (arqs) {
+            if (!arqs[0]) return;
+            lerImagem(arqs[0], o).then(function (url) { guardar(caminho, url); mudou(); remontar(); })
+              .catch(function () { avisar('Imagem não lida', 'O arquivo escolhido não é uma imagem que o navegador abra.'); });
+          });
+        });
+        if (src) {
+          var tirar = e('button', { type: 'button', txt: 'Remover' });
+          tirar.addEventListener('click', function () { guardar(caminho, null); mudou(); remontar(); });
+          quadro.appendChild(e('div', { cls: 'acoes-img' }, [tirar]));
+        }
+      }
+      if (o.nu) return quadro;
+      var fig = e('div', { cls: 'foto' + (o.conter ? ' conter' : '') }, [quadro]);
+      if (o.legenda !== undefined) {
+        fig.appendChild(e('div', { cls: 'legenda' + (o.forte ? ' forte' : '') },
+          [typeof o.legenda === 'string' ? o.legenda : o.legenda]));
+      }
+      return fig;
+    };
+    return ctx;
+  }
+
+  /* ------------------------------------------------ peças da folha */
+  function g(cols, filhos, o) {
+    o = o || {};
+    return e('div', { cls: 'g ' + (o.cls || ''), style: 'grid-template-columns:' + cols +
+      (o.gap ? ';column-gap:' + o.gap : '') + (o.estilo ? ';' + o.estilo : '') }, filhos);
+  }
+  function rot(t, cls) { return e('div', { cls: 'rot ' + (cls || '') }, [t]); }
+  function val(filho, cls) { return e('div', { cls: 'val ' + (cls || '') }, [filho]); }
+  function faixa(t, cls) { return e('div', { cls: 'faixa ' + (cls || '') }, [t]); }
+  function tit(t, cls) { return e('div', { cls: 'tit ' + (cls || ''), txt: t }); }
+  function espaco(cls) { return e('div', { cls: 'espaco ' + (cls || '') }); }
+
+  /* O cabeçalho repete em toda página; os logos se escolhem só na Capa. */
+  function cabecalho(ctx, editavel) {
+    function logo(chave, lado) {
+      var box = e('div', { cls: 'logo ' + lado });
+      if (editavel && !ctx.papel) {
+        box.appendChild(ctx.img('logos.' + chave, { nu: true, alt: '100%', png: true, max: 700, conter: true,
+          vazio: chave === 'cliente' ? 'Logo do cliente' : 'Logo da empresa' }));
+        box.querySelector('.quadro-img').style.width = '100%';
+        var im = box.querySelector('img'); if (im) im.style.objectFit = 'contain';
+      } else if (P.logos && P.logos[chave]) box.appendChild(e('img', { src: P.logos[chave], alt: '' }));
+      return box;
+    }
+    return [e('div', { cls: 'cab' }, [logo('cliente', 'esquerda'),
+      e('div', { cls: 'titulo', txt: 'Laudo de Avaliação de Imóvel Urbano' }), logo('empresa', 'direita')]),
+      e('div', { cls: 'fio' })];
+  }
+  function pagina(ctx, filhos, o) {
+    o = o || {};
+    return e('section', { cls: 'pagina', 'data-parte': o.parte || '' },
+      cabecalho(ctx, o.logos).concat([e('div', { cls: 'corpo' }, filhos)]));
+  }
+
+  /* =============================================================== CAPA */
+  function folhaCapa(ctx) {
+    var c = 'capa.';
+    var topo = g('auto 1.5fr auto 1.25fr auto .55fr auto .7fr', [
+      rot('PROPONENTE', 'marinho'), val(ctx.txt(c + 'proponente'), 'cel'),
+      rot('TIPO LAUDO', 'marinho'), val(ctx.sel(c + 'tipoLaudo', LS.tipoLaudo), 'cel'),
+      rot('PROPOSTA Nº', 'marinho'), val(ctx.txt(c + 'proposta'), 'cel'),
+      rot('MATRÍCULA DO IMÓVEL', 'marinho'), val(ctx.txt(c + 'matricula'), 'cel')], { gap: '2.2mm' });
+
+    var dados = e('div', {}, [
+      g('auto 1.4fr auto .35fr auto .7fr auto 1.4fr', [
+        rot('LOGRADOURO', 'tinta'), val(ctx.txt(c + 'logradouro'), 'cel'),
+        rot('IDENTIFICAÇÃO NUMÉRICA', 'tinta'), val(ctx.txt(c + 'numero'), 'cel'),
+        rot('COMPLEMENTO', 'tinta'), val(ctx.txt(c + 'complemento'), 'cel'),
+        rot('NOME DO EMPREENDIMENTO', 'tinta'), val(ctx.txt(c + 'empreendimento'), 'cel')], { gap: '1mm' }),
+      g('auto 1fr auto .9fr auto .3fr auto .8fr 1.6fr', [
+        rot('BAIRRO', 'tinta'), val(ctx.txt(c + 'bairro'), 'cel'),
+        rot('CIDADE', 'tinta'), val(ctx.txt(c + 'cidade'), 'cel'),
+        rot('UF', 'tinta'), val(ctx.txt(c + 'uf'), 'cel'),
+        rot('CEP', 'tinta'), val(ctx.txt(c + 'cep'), 'cel'), e('div')], { gap: '1mm' })]);
+
+    var fotos = g('1fr 1fr', [
+      ctx.img(c + 'fotoFachada', { alt: '57mm', legenda: 'Fachada', forte: true }),
+      ctx.img(c + 'fotoLogradouro', { alt: '57mm', legenda: 'Logradouro', forte: true })], { gap: '5mm' });
+
+    var linhaImovel = function (r, campo) { return g('46% 54%', [rot(r), val(campo, 'cel')]); };
+    var imovel = e('div', {}, [faixa('IMÓVEL'), e('div', { cls: 'caixa linhas' }, [
+      linhaImovel('TIPOLOGIA', ctx.sel(c + 'tipologia', LS.tipologia)),
+      linhaImovel('USO', ctx.sel(c + 'uso', LS.uso)),
+      linhaImovel(e('span', { style: 'display:flex;width:100%;justify-content:space-between' },
+        ['OCUPAÇÃO', e('span', { txt: 'ⓘ', title: 'Situação de ocupação na data da vistoria' })]),
+        ctx.sel(c + 'ocupacao', LS.ocupacao))]),
+      espaco(),
+      e('div', { cls: 'caixa linhas' }, [
+        linhaImovel('VAGA(s) DE GARAGEM', ctx.sel(c + 'vaga', LS.vagas)),
+        linhaImovel('Nº TOTAL VAGA (s)', ctx.num(c + 'vagasTotal', { casas: 0 }))])]);
+
+    var a = c + 'areas.';
+    function celArea(caminho) { return e('td', {}, [ctx.num(caminho, { casas: 2 })]); }
+    function celCalc(f) { return e('td', {}, [ctx.calc(f)]); }
+    var cabDim = e('tr', {}, ['ÁREA', 'MATRÍCULA', 'IPTU', 'ESTIMADA', 'DOC. COMPLEMENTAR'].map(function (t) {
+      return e('th', { txt: t, style: 'color:var(--pg-rot)' }); }));
+    var dim = e('div', {}, [faixa('DIMENSÕES (m²)'), e('table', { cls: 't' }, [
+      cabDim,
+      e('tr', {}, [e('td', { txt: 'Terreno' }), celArea(a + 'terreno.matricula'), celArea(a + 'terreno.iptu'),
+        celArea(a + 'terreno.estimada'), e('td', {}, [ctx.txt(a + 'terreno.doc', { vazio: TRACO })])]),
+      e('tr', {}, [e('td', { txt: 'Construção Total' }),
+        celCalc(function (r) { return fn(r.capa.construcao.matricula); }),
+        celCalc(function (r) { return fn(r.capa.construcao.iptu); }),
+        celCalc(function (r) { return fn(r.capa.construcao.estimada); }),
+        e('td', {}, [ctx.txt(a + 'total.doc', { vazio: TRACO })])]),
+      e('tr', {}, [e('td', { colspan: '5', style: 'border:none;background:transparent;height:2.5mm;padding:0' })]),
+      e('tr', {}, [e('td', { txt: 'Privativa/Útil' }), celArea(a + 'privativa.matricula'), celArea(a + 'privativa.iptu'),
+        celArea(a + 'privativa.estimada'), e('td', {}, [ctx.txt(a + 'privativa.doc', { vazio: TRACO })])]),
+      e('tr', {}, [e('td', { txt: 'Comum' }), celArea(a + 'comum.matricula'), celArea(a + 'comum.iptu'),
+        celCalc(function (r) { return fn(r.capa.comumEstimada); }),
+        e('td', {}, [ctx.txt(a + 'comum.doc', { vazio: TRACO })])])])]);
+
+    var res = e('div', {}, [faixa('RESULTADO DA AVALIAÇÃO'),
+      g('18% 13.5% 5% 14% 13.5% 5% 13% 18%', [
+        rot('ÁREA TERRENO'), val(ctx.calc(function (r) { return fn(r.paradigma.areaTerreno); }), 'cel'), e('div'),
+        rot('VALOR (R$/m²)'), val(ctx.calc(function (r) { return r.valor.m2Terreno ? fn(r.valor.m2Terreno) : ''; }), 'cel'), e('div'),
+        rot('VALOR (R$)'), val(ctx.calc(function (r) { return rs(r.valor.terreno || null); }), 'cel dir')]),
+      g('18% 13.5% 5% 14% 13.5% 5% 13% 18%', [
+        rot('ÁREA PRIVATIVA/CONSTRUÍDA'), val(ctx.calc(function () { return fn(pegar('capa.areas.privativa.matricula')); }), 'cel'), e('div'),
+        rot('VALOR (R$/m²)'), val(ctx.calc(function (r) { return fn(r.valor.m2Privativa); }), 'cel'), e('div'),
+        rot('VALOR (R$)'), val(ctx.calc(function (r) { return rs(r.valor.benfeitoria); }), 'cel dir')]),
+      espaco(),
+      g('18% 13.5% 5% 14% 13.5% 5% 13% 18%', [
+        rot('VALOR VAGA(s) AUTÔNOMA(s)'), val(ctx.num(c + 'valorVagaAutonoma', { pre: 'R$', separado: true }), 'cel dir'),
+        e('div'), e('div'), e('div'), e('div'),
+        rot('VALOR TOTAL (R$)'), val(ctx.calc(function (r) { return rs(r.valor.mercado); }), 'cel dir')])]);
+
+    var valores = e('div', {}, [
+      faixa('VALOR DE MERCADO'),
+      e('div', { cls: 'caixa' }, [val(ctx.calc(function (r) { return rs(r.valor.mercadoArredondado); }), 'centro')]),
+      espaco(),
+      faixa('VALOR DE LIQUIDAÇÃO FORÇADA'),
+      e('div', { cls: 'caixa' }, [val(ctx.calc(function (r) { return rs(r.liquidacao.vlfArredondado); }), 'centro')])]);
+
+    var linhaEmp = function (r, campo) { return g('27% 73%', [rot(r, 'marinho'), val(campo, 'cel')]); };
+    var empresa = g('1fr 32%', [
+      e('div', {}, [linhaEmp('EMPRESA', ctx.txt(c + 'empresa')),
+        linhaEmp('RESPONSÁVEL TÉCNICO', ctx.txt(c + 'responsavel')),
+        linhaEmp('CREA/SP - EMPRESA', ctx.txt(c + 'creaEmpresa')),
+        linhaEmp('DATA DE ENTREGA', ctx.data(c + 'dataEntrega'))]),
+      e('div', { style: 'display:flex;flex-direction:column;justify-content:flex-end;text-align:center' }, [
+        ctx.img(c + 'assinatura', { nu: true, alt: '11mm', png: true, max: 800, vazio: 'Assinatura (opcional)' }),
+        e('div', { style: 'border-top:.25mm solid var(--pg-borda);margin-top:1mm;padding-top:1.2mm;color:var(--pg-rot)' },
+          [ctx.calc(function () { return pegar('capa.responsavel') || ''; })]),
+        e('div', { style: 'color:var(--pg-rot);padding-top:.8mm' }, [ctx.txt(c + 'assinaturaCrea', { ph: 'CREA/SP nº', cls: 'centro' })])])],
+      { gap: '8mm' });
+    var assin = empresa.querySelector('.quadro-img');
+    if (assin) { assin.style.background = 'transparent'; var ai = assin.querySelector('img'); if (ai) ai.style.objectFit = 'contain'; }
+
+    return [pagina(ctx, [topo, espaco(), faixa('DADOS DO IMÓVEL'), dados, espaco(), fotos, espaco('g2'),
+      g('32% 1fr', [imovel, dim], { gap: '5mm' }), espaco(), res, espaco(), valores, espaco('g2'), empresa,
+      tit('OBSERVAÇÕES GERAIS DA AVALIAÇÃO', 'menor'), ctx.area(c + 'observacoes', { alt: '70mm' })],
+      { logos: true, parte: 'capa' })];
+  }
+
+  /* ==================================================== REGIÃO + IMÓVEL */
+  function folhaRegiao(ctx) {
+    var r = 'regiao.', im = 'imovel.';
+    function marcado(caminho, texto) {
+      return e('div', { cls: 'val', style: 'min-height:5.2mm' }, [ctx.chk(caminho), e('span', { txt: texto })]);
+    }
+    var melh = e('div', {}, [faixa('MELHORAMENTOS PÚBLICOS', 'fina'), e('div', { cls: 'caixa' },
+      repetir(4, function (i) {
+        return g('1fr 1fr', [marcado(r + 'melhoramentos.' + MELHORAMENTOS[2 * i][0], MELHORAMENTOS[2 * i][1]),
+          marcado(r + 'melhoramentos.' + MELHORAMENTOS[2 * i + 1][0], MELHORAMENTOS[2 * i + 1][1])]);
+      }))]);
+    var serv = e('div', {}, [faixa('SERVIÇOS PÚBLICOS E COMUNITÁRIOS', 'fina'), e('div', { cls: 'caixa' },
+      repetir(4, function (i) {
+        var a = SERVICOS[2 * i], b = SERVICOS[2 * i + 1];
+        return g('20% 30% 20% 30%', [rot(a[1], 'claro'), val(ctx.sel(r + 'servicos.' + a[0], LS.distancias)),
+          rot(b[1], 'claro'), val(ctx.sel(r + 'servicos.' + b[0], LS.distancias))]);
+      }))]);
+    var pec = e('div', {}, [faixa('PECULIARIDADES / FATORES RESTRITIVOS', 'fina'), e('div', { cls: 'caixa' }, [
+      g('1fr 1fr', [marcado(r + 'peculiaridades.comunidade', 'Comunidade'), marcado(r + 'peculiaridades.inundacao', 'Risco a inundação')]),
+      g('1fr 1fr', [marcado(r + 'peculiaridades.feira', 'Feira Livre'), marcado(r + 'peculiaridades.ambiental', 'Risco ambiental')]),
+      g('1fr 1fr', [marcado(r + 'peculiaridades.outros', 'Outros'), e('div')])])]);
+    var par2 = function (a, b, cols) {
+      cols = cols || '50% 50%';
+      return e('div', { cls: 'caixa' }, [g(cols, [rot(a[0]), val(a[1])]), g(cols, [rot(b[0]), val(b[1])])]);
+    };
+    var regiaoLinha2 = g('1fr 1fr 1fr', [
+      par2(['PADRÃO DA REGIÃO', ctx.sel(r + 'padrao', LS.padraoRegiao)],
+           ['OCUPAÇÃO PREDOMINANTE', ctx.sel(r + 'ocupacao', LS.ocupacaoPredominante)], '58% 42%'),
+      par2(['TRÁFEGO NA REGIÃO', ctx.sel(r + 'trafego', LS.trafego)],
+           ['IMPLANTAÇÃO', ctx.sel(r + 'implantacao', LS.implantacao)]),
+      e('div', {}, [faixa('ZONEAMENTO', 'fina'), e('div', { cls: 'caixa' }, [val(ctx.txt(r + 'zoneamento'), 'centro')])])],
+      { gap: '9mm' });
+
+    var terreno = g('1fr 1fr 1fr', [
+      e('div', { cls: 'caixa' }, [g('45% 55%', [rot('TOPOGRAFIA'), val(ctx.sel(im + 'topografia', LS.topografia))])]),
+      e('div', { cls: 'caixa' }, [g('45% 55%', [rot('FORMATO'), val(ctx.sel(im + 'formato', LS.formato))])]),
+      e('div', { cls: 'caixa' }, [g('45% 55%', [rot('MULT. FRENTES'), val(ctx.sel(im + 'multFrentes', LS.multFrentes))])])],
+      { gap: '9mm' });
+    var n0 = function (cam) { return ctx.num(cam, { casas: 0 }); };
+    var edif = e('div', {}, [
+      g('1fr 1fr 1fr', [
+        par2(['Nº DE PAVIMENTOS', n0(im + 'pavimentos')], ['Nº UNIDADES POR ANDAR', n0(im + 'unidadesAndar')], '58% 42%'),
+        par2(['Nº TOTAL DE UNIDADES', n0(im + 'unidades')], ['Nº DE ELEVADORES', n0(im + 'elevadores')], '58% 42%'),
+        par2(['Nº VAGAS DE GARAGEM', n0(im + 'vagas')], ['Nº DE SUBSOLOS', n0(im + 'subsolos')], '58% 42%')], { gap: '9mm' }),
+      espaco(),
+      g('1fr 1.2fr .8fr', [
+        e('div', { cls: 'caixa' }, [g('45% 55%', [rot('Fachada'), val(ctx.sel(im + 'fachada', LS.padraoRegiao))])]),
+        e('div', { cls: 'caixa' }, [g('70% 30%', [rot('ESTADO DE CONSERVAÇÃO CONDOMÍNIO'),
+          val(ctx.sel(im + 'conservacaoCondominio', LS.conservacaoCondominio))])]), e('div')], { gap: '9mm' })]);
+    var infra = g('repeat(5,1fr)', INFRA.map(function (x) { return marcado(im + 'infra.' + x[0], x[1]); }));
+
+    var unidade = e('div', {}, [
+      g('16% 32% 17% 35%', [rot('PADRÃO CONSTRUTIVO:'), val(ctx.sel(im + 'padrao', LS.padrao)),
+        rot('IDADE ESTIMADA:'), val(e('span', { cls: 'afixo junto' },
+          [ctx.num(im + 'idade', { casas: 0 }), e('span', { cls: 'pre', txt: ' ano(s)' })]))], { gap: '1mm' }),
+      g('16% 32% 17% 35%', [rot('INTERVALO DE VALOR:'), val(ctx.sel(im + 'intervalo', LS.intervalo)),
+        rot('ESTADO DE CONSERVAÇÃO:'), val(ctx.sel(im + 'conservacao', LS.conservacao))], { gap: '1mm' })]);
+
+    var tab = e('table', { cls: 't pontos' }, [e('tr', {}, COLS_AMBIENTE.map(function (cc) { return e('th', { txt: cc[1] }); }))]
+      .concat(repetir(N_AMBIENTES, function (i) {
+        var base = im + 'ambientes.' + i + '.';
+        return e('tr', {}, COLS_AMBIENTE.map(function (cc) {
+          return e('td', { style: 'height:4.3mm' }, [cc[0] === 'quantidade'
+            ? ctx.num(base + cc[0], { casas: 0, vazio: '' }) : ctx.txt(base + cc[0])]);
+        }));
+      })));
+
+    function divergencia(chave, pergunta, f) {
+      return e('div', {}, [
+        g('1fr auto 10mm', [rot(pergunta, 'semquebra'), rot('Percentual de divergência:'),
+          val(ctx.calc(function (rr) { var v = f(rr); return v === null ? TRACO : pc(v); }), 'centro')]),
+        g('15mm 28mm 16mm 1fr', [rot('Resposta:', 'claro'), val(ctx.sel(im + chave + '.resposta', LS.validacao)),
+          rot('Justifique:', 'claro'), val(ctx.txt(im + chave + '.justificativa'))])]);
+    }
+
+    return [pagina(ctx, [
+      tit('Dados da Região'),
+      g('1fr 1fr 1fr', [melh, serv, pec], { gap: '9mm' }), espaco(),
+      regiaoLinha2, espaco(),
+      e('div', { cls: 'subtit', txt: 'OBSERVAÇÕES GERAIS SOBRE A REGIÃO' }),
+      ctx.area(r + 'observacoes', { alt: '20mm' }),
+      tit('Dados do Imóvel'),
+      faixa('TERRENO', 'esq'), espaco(), terreno, espaco(),
+      faixa('EDIFICAÇÃO', 'esq'), espaco(), edif, espaco(),
+      faixa('INFRAESTRUTURA', 'esq'), infra,
+      faixa('UNIDADE PRIVATIVA', 'esq'), unidade, espaco(),
+      faixa(e('span', {}, ['DIVISÃO INTERNA POR AMBIENTE', e('span', { cls: 'info', txt: 'ⓘ' })]), 'esq'),
+      espaco(), tab, espaco('g2'),
+      divergencia('divTerreno', 'O imóvel possui divergência de área de terreno entre documentações e área estimada em vistoria?',
+        function (rr) { return rr.capa.divTerreno; }),
+      espaco(),
+      divergencia('divConstruida', 'O imóvel possui divergência de área construída entre documentações e área estimada em vistoria?',
+        function (rr) { return rr.capa.divConstruida; })], { parte: 'regiao' })];
+  }
+
+  /* ============================================================ RESTRIÇÕES */
+  function folhaRestricoes(ctx) {
+    var r = 'restricoes.';
+    var itens = PERGUNTAS.map(function (q, i) {
+      var b = r + 'itens.' + i + '.';
+      return e('div', { style: 'margin-top:2.6mm' }, [rot(q),
+        g('15mm 20mm 8mm 1fr', [rot('Resposta:', 'claro'), val(ctx.sel(b + 'resposta', LS.validacao)),
+          rot('Obs:', 'claro dir'), val(ctx.txt(b + 'obs'), 'pontilhado')])]);
+    });
+    return [pagina(ctx, [
+      tit('Restrições do Imóvel'),
+      g('1fr 28mm', [rot('Considerando as diligências e aspectos técnicos analisados neste laudo, o imóvel é recomendado como garantia?'),
+        rot('Data Vistoria', 'centro')]),
+      g('15mm 20mm 1fr 28mm', [rot('Resposta:', 'claro'), val(ctx.sel(r + 'garantia', LS.validacao)), e('div'),
+        val(ctx.txt(r + 'dataVistoria', { vazio: TRACO, cls: 'centro' }), 'centro')]),
+      espaco(),
+      e('div', { txt: 'Em caso negativo, justifique:', style: 'font-size:7pt;margin-bottom:1mm' }),
+      ctx.area(r + 'justificativa', { alt: '20mm', marcas: false }),
+      espaco('g2')].concat(itens).concat([
+      espaco('g2'),
+      e('div', { cls: 'subtit', txt: 'Observações Gerais:' }),
+      ctx.area(r + 'observacoes', { alt: '32mm' })]), { parte: 'restricoes' })];
+  }
+
+  /* ======================================================== FICHAS */
+  function fichaParadigma(ctx) {
+    var p = 'paradigma.';
+    var calc = function (f) { return ctx.calc(function (r) { var v = f(r); return semValor(v) ? TRACO : String(v); }); };
+    var n0 = function (cam) { return ctx.num(cam, { casas: 0 }); };
+    var cols = '12% 20% 12% 20% 11% 12% 8% 5%';
+    return e('div', {}, [faixa('PARADIGMA / AVALIANDO', 'fina'), e('div', { cls: 'caixa linhas' }, [
+      g('12% 88%', [rot('Endereço:', 'claro'), val(calc(function (r) { return r.paradigma.endereco; }))]),
+      g(cols, [rot('Área Terreno:', 'claro'), val(calc(function (r) { return fn(r.paradigma.areaTerreno); })),
+        rot('Área Privativa:', 'claro'), val(calc(function (r) { return fn(r.paradigma.areaPrivativa); })),
+        rot('Idade Aparente:', 'claro'), val(calc(function (r) { return r.paradigma.idade; })),
+        rot('Nº vagas de garagem:', 'claro dir'), val(calc(function (r) { return r.paradigma.vagas; }))]),
+      g(cols, [rot('Padrão:', 'claro'), val(calc(function (r) { return r.paradigma.padrao; })),
+        rot('Intervalo de Valor:', 'claro'), val(calc(function (r) { return r.paradigma.intervalo; })),
+        rot('Conservação:', 'claro'), val(calc(function (r) { return r.paradigma.conservacao; })), e('div'), e('div')]),
+      g(cols, [rot('Testada:', 'claro'), val(ctx.num(p + 'testada')),
+        rot('Topografia:', 'claro'), val(calc(function (r) { return r.paradigma.topografia; })),
+        rot('Mult. Frentes:', 'claro'), val(calc(function (r) { return r.paradigma.multFrentes; })),
+        rot('Índ. Local:', 'claro dir'), val(ctx.num(p + 'indiceLocal'))]),
+      g(cols, [rot('Nº dormitórios:', 'claro'), val(n0(p + 'dormitorios')),
+        rot('Nº suítes:', 'claro'), val(n0(p + 'suites')),
+        rot('Nº banheiros:', 'claro'), val(n0(p + 'banheiros')),
+        rot('Andar:', 'claro dir'), val(ctx.num(p + 'andar', { casas: 0, suf: ' º' }))])])]);
+  }
+
+  function fichaComparativo(ctx, i) {
+    var b = 'amostra.' + i + '.';
+    var t = function (cam, o) { return val(ctx.txt(b + cam, o)); };
+    var nn = function (cam, o) { return val(ctx.num(b + cam, o)); };
+    var cols = '1.3fr 2.4fr 1.45fr 1.35fr 1.35fr .75fr 1.35fr 1.25fr';
+    var R_ = function (x) { return rot(x, 'claro dir'); };
+    var link = ctx.papel
+      ? (pegar(b + 'link') ? e('a', { href: pegar(b + 'link'), txt: pegar(b + 'link'),
+          style: 'word-break:break-all' }) : e('span'))
+      : ctx.txt(b + 'link', { ph: 'https://' });
+    var campos = e('div', { style: 'border-left:.25mm solid var(--pg-borda)' }, [
+      g(cols, [R_('Endereço:'), val(ctx.txt(b + 'endereco', { cls: 'forte' })), R_('nº'), t('numero'),
+        R_('Compl.:'), t('complemento', { vazio: TRACO }), R_('CEP:'), t('cep', { vazio: TRACO })]),
+      g(cols, [R_('Bairro:'), t('bairro'), R_('Empreend.'), t('empreendimento'),
+        R_('Cidade:'), t('cidade'), R_('Estado:'), t('uf')], { cls: 'sep' }),
+      g(cols, [R_('Tipo Imóvel:'), val(ctx.sel(b + 'tipo', LS.tipologia)), R_('Valor:'),
+        nn('valor', { pre: 'R$' }), R_('Tipo Transação:'), val(ctx.sel(b + 'transacao', LS.transacao)),
+        R_('Data:'), val(ctx.data(b + 'data'))]),
+      g(cols, [R_('Área Terreno:'), nn('areaTerreno', { casas: 1 }), R_('Área Construída:'), nn('areaConstruida'),
+        R_('Idade Aparente:'), nn('idade', { casas: 0 }), R_('Andar:'), nn('andar', { casas: 0, suf: ' º' })]),
+      g(cols, [R_('Testada:'), nn('testada'), R_('Topografia:'), val(ctx.sel(b + 'topografia', LS.topografia)),
+        R_('Mult. Frentes:'), val(ctx.sel(b + 'multFrentes', LS.multFrentes)), R_('Índ. Local:'), nn('indiceLocal')]),
+      g(cols, [R_('Nº dormitórios:'), nn('dormitorios', { casas: 0 }), R_('Nº suítes:'), nn('suites', { casas: 0 }),
+        R_('Nº banheiros:'), nn('banheiros', { casas: 0 }), R_('Nº vagas de garagem:'), nn('vagas', { casas: 0 })],
+        { cls: 'sep' }),
+      g('1.3fr 5.2fr 1.35fr 2.6fr', [R_('Padrão:'), val(ctx.sel(b + 'padrao', LS.padrao)), R_('Intervalo de Valor:'),
+        val(ctx.sel(b + 'intervalo', LS.intervalo))]),
+      g(cols, [R_('Conservação:'), val(ctx.sel(b + 'conservacao', LS.conservacao)), R_('Fonte:'), t('fonte'),
+        R_('Nome:'), t('contato'), R_('Telefone:'), t('telefone')]),
+      g('1.3fr 10.9fr', [R_('Link oferta:'), val(link)])]);
+    campos.querySelectorAll('.g').forEach(function (x) { x.style.borderBottom = '.25mm solid var(--pg-fio)'; });
+    campos.querySelectorAll('.g.sep').forEach(function (x) { x.style.borderBottom = '.35mm solid var(--pg-tinta2)'; });
+    var foto = ctx.img(b + 'foto', { nu: true, alt: 'auto', vazio: 'Foto do comparativo' });
+    foto.classList.add('encher');
+    foto.style.minHeight = '40mm';
+    campos.classList.add('ficha');
+    return e('div', { style: 'margin-bottom:5mm' }, [faixa('ELEMENTO COMPARATIVO ' + (i + 1), 'fina'),
+      e('div', { cls: 'caixa' }, [g('19.5% 80.5%', [foto, campos])])]);
+  }
+
+  function folhaFichas(ctx) {
+    var p1 = [espaco(), fichaParadigma(ctx), espaco('g2'), tit('Amostra')];
+    for (var i = 0; i < 4; i++) p1.push(fichaComparativo(ctx, i));
+    var p2 = [espaco(), fichaComparativo(ctx, 4),
+      tit('Croqui de Situação do Imóvel Avaliando e Elementos Comparativos'),
+      ctx.img('croquiSituacao', { nu: true, alt: '78mm', max: 2000, vazio: 'Clique para inserir o croqui de situação' })];
+    return [pagina(ctx, p1, { parte: 'fichas' }), pagina(ctx, p2, { parte: 'fichas' })];
+  }
+
+  /* ======================================================== CÁLCULO */
+  function painelTratamento() {
+    var cal = P.calculo, letra = M.TABELAS[cal.tabela] ? cal.tabela : M.USUAIS.tabela;
+    var T = M.TABELAS[letra];
+    var sel = e('select', { 'aria-label': 'Tabela de homogeneização' }, ['A', 'B', 'C'].map(function (x) {
+      return e('option', { value: x, selected: x === letra ? 'selected' : null,
+        txt: 'Tabela ' + x + ' — ' + M.TABELAS[x].nome + ' (' + M.TABELAS[x].uso + ')' }); }));
+    sel.addEventListener('change', function () { guardar('calculo.tabela', sel.value); mudou(); remontar(); });
+    var usos = T.colunas.map(function (cc) {
+      var ch = cc[0], f = (cal.fatores || {})[ch] || {};
+      var cx = e('input', { type: 'checkbox', checked: f.usar !== false ? 'checked' : null });
+      cx.addEventListener('change', function () { guardar('calculo.fatores.' + ch + '.usar', cx.checked); mudou(); remontar(); });
+      return e('label', {}, [cx, M.FATORES[ch].rot]);
+    });
+    function campoNum(caminho, sugestao, rotulo, casas) {
+      var el = e('input', { type: 'text', inputmode: 'decimal', 'aria-label': rotulo });
+      function pintar() {
+        if (document.activeElement === el) return;
+        var v = pegar(caminho), s = semValor(v);
+        el.value = nz(s ? sugestao() : v, casas);
+        el.classList.toggle('sugerido', s);
+      }
+      el.addEventListener('input', function () { guardar(caminho, lerNum(el.value)); el.classList.remove('sugerido'); mudou(); });
+      el.addEventListener('blur', pintar);
+      atualizadores.push(pintar);
+      pintar();
+      return e('label', {}, [e('span', { cls: 'k', txt: rotulo }), el]);
+    }
+    var extras = [campoNum('calculo.fam', function () { return M.USUAIS.fam; }, 'FAM / FC adotado', 2)];
+    if (letra === 'C') extras.unshift(campoNum('calculo.expoenteAuVg', function () { return M.USUAIS.expoenteAuVg; },
+      'Expoente do fator Au/Vg', 4));
+    return e('section', { cls: 'painel' }, [
+      e('h2', { txt: 'Tratamento dos dados' }),
+      e('p', { txt: 'Não sai no laudo. É o que a aba oculta Cálculo_apoio da planilha decidia: qual tabela de ' +
+        'homogeneização usar e quais fatores entram. Os fatores e o fator oferta se digitam na própria tabela ' +
+        'abaixo — em letra clara está o valor calculado; digitar substitui (é o Quadro Auxiliar), apagar devolve o cálculo.' }),
+      e('div', { cls: 'linha' }, [e('span', { cls: 'k', txt: 'Tabela' }), sel]),
+      e('div', { cls: 'linha' }, [e('span', { cls: 'k', txt: 'Fatores em uso' })].concat(usos)),
+      e('div', { cls: 'linha' }, extras)]);
+  }
+
+  function folhaCalculo(ctx) {
+    var cal = 'calculo.';
+    var topo = g('1.35fr 14mm 1fr 14mm 1fr', [
+      e('div', { cls: 'caixa' }, [g('38% 62%', [rot('METODOLOGIA', 'marinho claro-m'), val('Comparativo Direto de Dados de Mercado')]),
+        g('38% 62%', [rot('TRATAMENTO DE DADOS', 'marinho claro-m'), val('Fatores')])]), e('div'),
+      e('div', { cls: 'caixa' }, [g('60% 40%', [rot('FUNDAMENTAÇÃO', 'marinho claro-m'), val(ctx.sel(cal + 'fundamentacao', LS.fundamentacao), 'centro')]),
+        g('60% 40%', [rot('PRECISÃO', 'marinho claro-m'), val(ctx.calc(function (r) { return r.est.precisao || TRACO; }), 'centro')])]), e('div'),
+      e('div', { cls: 'caixa' }, [g('60% 40%', [rot('COTA-PARTE TERRENO', 'marinho claro-m'),
+          val(ctx.num(cal + 'cotaTerreno', { pct: true, casas: 0, sug: function () { return M.USUAIS.cotaTerreno; } }), 'centro')]),
+        g('60% 40%', [rot('COTA-PARTE CONSTRUÇÃO', 'marinho claro-m'),
+          val(ctx.num(cal + 'cotaConstrucao', { pct: true, casas: 0, sug: function (r) { return r.tabela.cotaConstrucao; } }), 'centro')])])]);
+    topo.querySelectorAll('.claro-m').forEach(function (x) { x.style.fontWeight = '400'; });
+
+    var T = R.tabela;
+    var cab = e('tr', {}, [e('th', { txt: 'EC' }), e('th', { txt: 'Valor Ofertado ou Negociado' }),
+      e('th', { txt: 'Fator Oferta' }), e('th', { txt: 'Área (m²)' }), e('th', { txt: 'Unit. deduzido F. oferta (R$/m²)' })]
+      .concat(T.colunas.map(function (c) { return e('th', { txt: c.rot }); }))
+      .concat([e('th', { txt: 'Fator Resultante ∑' }), e('th', { txt: 'Valor unit. Homog. (R$/m²)' })]));
+    var linhas = repetir(N, function (i) {
+      var linha = function (r) { return r.tabela.linhas[i]; };
+      var tds = [e('td', { txt: String(i + 1) }),
+        e('td', {}, [ctx.calc(function (r) { return semValor(linha(r).valor) ? TRACO : rs(linha(r).valor); })]),
+        e('td', {}, [ctx.num(cal + 'oferta.' + i, { sug: function (r) { return linha(r).oferta; } })]),
+        e('td', {}, [ctx.calc(function (r) { return fn(linha(r).area); })]),
+        e('td', {}, [ctx.calc(function (r) { return fn(linha(r).unit); })])];
+      T.colunas.forEach(function (c) {
+        if (!c.usar) { tds.push(e('td', { txt: TRACO })); return; }
+        tds.push(e('td', {}, [ctx.num(cal + 'fatores.' + c.chave + '.valores.' + i, {
+          sug: function (r) { return linha(r).sugeridos[c.chave]; } })]));
+      });
+      tds.push(e('td', {}, [ctx.calc(function (r) { return fn(linha(r).resultante); })]));
+      tds.push(e('td', {}, [ctx.calc(function (r) { return semValor(linha(r).homog) ? TRACO : rs(linha(r).homog); })]));
+      return e('tr', {}, tds);
+    });
+    var nCol = 7 + T.colunas.length;
+    var tabela = e('table', { cls: 't homog' }, [cab].concat(linhas));
+    var avaliando = e('table', { cls: 't homog', style: 'margin-top:2mm' }, [e('tr', {}, [
+      e('td', { txt: 'Avaliando', style: 'width:14%' }), e('td', { style: 'width:6%;border:none;background:transparent' }),
+      e('td', { style: 'width:8%' }, [ctx.calc(function (r) { return fn(r.est.areaAvaliando); })]),
+      e('td', { style: 'border:none;background:transparent' })])]);
+
+    function estat(rotulo, f1, f2) {
+      return e('tr', {}, [e('td', { txt: rotulo, cls: 'dir', style: 'border:none;background:transparent;width:30%' }),
+        e('td', { style: 'width:12%' }, [ctx.calc(f1)]), e('td', { style: 'border:none;background:transparent' }),
+        e('td', { style: 'width:12%' }, [ctx.calc(f2)])]);
+    }
+    var estatistica = e('table', { cls: 't homog', style: 'margin-top:2mm' }, [
+      estat('Média (R$/m²)', function (r) { return fn(r.est.media); }, function (r) { return fn(r.est.mediaH); }),
+      estat('Desvio Padrão (R$/m²)', function (r) { return fn(r.est.desvio); }, function (r) { return fn(r.est.desvioH); }),
+      estat('Coef. de Variação (%)', function (r) { return pc(r.est.cv); }, function (r) { return pc(r.est.cvH); })]);
+
+    function bloco(titulo, linhas2) {
+      return e('div', {}, [e('div', { txt: titulo, style: 'text-align:center;font-weight:700;color:var(--pg-rot);font-size:7pt;border-bottom:.25mm solid var(--pg-fio);padding-bottom:.6mm' }),
+        e('table', { cls: 't', style: 'font-size:6.2pt' }, linhas2.map(function (l) {
+          return e('tr', {}, [e('td', { cls: 'dir', txt: l[0], style: 'border:none;background:transparent' }),
+            e('td', { style: 'border:none;border-bottom:.25mm solid var(--pg-fio);border-left:.25mm solid var(--pg-fio)' }, [ctx.calc(l[1])])]);
+        }))]);
+    }
+    var blocos = g('1fr 1fr 1.35fr 1.1fr', [
+      bloco('Validação Inicial', [
+        ['0,5 x Área do Avaliando', function (r) { return r.est.validacao ? fn(r.est.validacao.metade) : TRACO; }],
+        ['Área do Avaliando', function (r) { return r.est.validacao ? fn(r.est.validacao.area) : TRACO; }],
+        ['2 x Área do Avaliando', function (r) { return r.est.validacao ? fn(r.est.validacao.dobro) : TRACO; }]]),
+      bloco('Limites Inf. e Sup.', [
+        ['0,7 x Média', function (r) { return r.est.limites ? fn(r.est.limites.inferior) : TRACO; }],
+        ['Média', function (r) { return r.est.limites ? fn(r.est.limites.media) : TRACO; }],
+        ['1,3 x Média', function (r) { return r.est.limites ? fn(r.est.limites.superior) : TRACO; }]]),
+      bloco('Intervalo de Confiança', [
+        ['Grau de Liberdade (N-1)', function (r) { return semValor(r.est.gl) ? TRACO : String(r.est.gl); }],
+        ['T', function (r) { return fn(r.est.t); }],
+        ['Amplitude do Interv. de Confiança (%)', function (r) { return pc(r.est.amplitude); }]]),
+      bloco('Valor do Imóvel / Paradigma', [
+        ['Mínimo', function (r) { return fn(r.est.minimo); }],
+        ['Médio', function (r) { return fn(r.est.medio); }],
+        ['Máximo', function (r) { return fn(r.est.maximo); }]])], { gap: '7mm' });
+
+    var filhos = [espaco(), topo, espaco('g2'), tit('Tabela de Homogeneização'), tabela, avaliando, estatistica,
+      espaco('g2'), blocos, espaco('g2'),
+      tit('Observações Gerais'), ctx.area(cal + 'observacoes', { alt: '90mm' }), espaco(),
+      faixa('VALOR DE MERCADO'),
+      e('div', { cls: 'caixa' }, [val(ctx.calc(function (r) { return rs(r.valor.mercado); }), 'centro')])];
+    void nCol;
+    return [pagina(ctx, filhos, { parte: 'calculo' })];
+  }
+
+  /* ======================================================== GRÁFICO */
+  function SVG(tag, attrs, filhos) {
+    var el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    for (var k in attrs || {}) if (attrs[k] !== null && attrs[k] !== undefined) {
+      if (k === 'txt') el.textContent = attrs[k]; else el.setAttribute(k, attrs[k]);
+    }
+    (filhos || []).forEach(function (f) { if (f) el.appendChild(f); });
+    return el;
+  }
+  /* escala "redonda" como a do Excel: passo 1, 2 ou 5 × 10ⁿ e folga no topo */
+  function escala(max, marcas) {
+    if (!(max > 0)) return { max: 1, passo: 0.2 };
+    var bruto = max / (marcas || 5), p = Math.pow(10, Math.floor(Math.log10(bruto)));
+    var passo = [1, 2, 2.5, 5, 10].map(function (m) { return m * p; }).filter(function (s) { return s >= bruto; })[0];
+    return { max: Math.ceil(max * 1.05 / passo) * passo, passo: passo };
+  }
+
+  function graficoDispersao(r) {
+    var W = 720, H = 400, x0 = 70, x1 = 700, y0 = 360, y1 = 40;
+    var vals = [r.grafico.bissetriz];
+    r.grafico.pontos.forEach(function (p) { if (p.x !== null) vals.push(p.x); if (p.y !== null) vals.push(p.y); });
+    var s = escala(Math.max.apply(null, vals));
+    var X = function (v) { return x0 + (x1 - x0) * v / s.max; }, Y = function (v) { return y0 - (y0 - y1) * v / s.max; };
+    var fil = [SVG('text', { x: (x0 + x1) / 2, y: 22, 'text-anchor': 'middle', cls: 'tit-g', 'class': 'tit-g',
+      txt: 'Preços Observados x Valores Estimados' })];
+    for (var v = 0; v <= s.max + 1e-9; v += s.passo) {
+      fil.push(SVG('line', { x1: X(v), x2: X(v), y1: y0, y2: y1, 'class': 'grade' }));
+      fil.push(SVG('line', { x1: x0, x2: x1, y1: Y(v), y2: Y(v), 'class': 'grade' }));
+      fil.push(SVG('text', { x: X(v), y: y0 + 13, 'text-anchor': 'middle', 'font-size': 8, txt: nz(v, 2) }));
+      fil.push(SVG('text', { x: x0 - 5, y: Y(v) + 3, 'text-anchor': 'end', 'font-size': 8, txt: nz(v, 2) }));
+    }
+    fil.push(SVG('line', { x1: X(0), y1: Y(0), x2: X(r.grafico.bissetriz), y2: Y(r.grafico.bissetriz), 'class': 'bissetriz' }));
+    r.grafico.pontos.forEach(function (p, i) {
+      if (p.x === null || p.y === null) return;
+      fil.push(SVG('circle', { cx: X(p.x), cy: Y(p.y), r: 5, 'class': 'ec' + (i + 1) }));
+    });
+    fil.push(SVG('text', { x: (x0 + x1) / 2, y: H - 12, 'text-anchor': 'middle', 'font-size': 9,
+      txt: 'Valor Unitário Observado (R$/m²)' }));
+    fil.push(SVG('text', { x: 14, y: (y0 + y1) / 2, 'text-anchor': 'middle', 'font-size': 9,
+      transform: 'rotate(-90 14 ' + (y0 + y1) / 2 + ')', txt: 'Valor Unitário Estimado (R$/m²)' }));
+    return SVG('svg', { viewBox: '0 0 ' + W + ' ' + H, 'class': 'grafico', role: 'img',
+      'aria-label': 'Preços observados versus valores estimados' }, fil);
+  }
+
+  function folhaGrafico(ctx) {
+    var caixa = e('div', { cls: 'caixa', style: 'padding:2mm' });
+    function desenhar(r) { caixa.textContent = ''; caixa.appendChild(graficoDispersao(r)); }
+    if (!ctx.papel) atualizadores.push(desenhar);
+    desenhar(R);
+    var leg = e('table', { cls: 't', style: 'width:38%;font-size:6.2pt;margin-top:3mm' }, [
+      e('tr', {}, [e('th', { txt: 'EC' }), e('th', { txt: 'Unit. Observado (R$/m²)' }), e('th', { txt: 'Unit. Estimado (R$/m²)' })])]
+      .concat(repetir(N, function (i) {
+        return e('tr', {}, [e('td', {}, [e('span', { cls: 'legenda-ec ec' + (i + 1), style: 'vertical-align:middle;margin-right:1.5mm' }), String(i + 1)]),
+          e('td', {}, [ctx.calc(function (r) { return fn(r.tabela.linhas[i].unit); })]),
+          e('td', {}, [ctx.calc(function (r) { return fn(r.tabela.linhas[i].homog); })])]);
+      })));
+    return [pagina(ctx, [tit('Poder de Predição do Modelo', 'menor'), caixa, leg, espaco(),
+      tit('Croqui de Localização', 'menor'),
+      ctx.img('grafico.croqui', { nu: true, alt: '105mm', max: 2000, vazio: 'Clique para inserir o croqui de localização' })],
+      { parte: 'grafico' })];
+  }
+
+  /* ================================================= LIQUIDAÇÃO FORÇADA */
+  function graficoPonte(r) {
+    var L = r.liquidacao, W = 520, H = 360, x0 = 78, x1 = 510, y0 = 318, y1 = 36;
+    var fil = [SVG('text', { x: (x0 + x1) / 2, y: 18, 'text-anchor': 'middle', 'class': 'tit-g', 'font-size': 10,
+      txt: 'Ponte — Valor de Mercado até a Liquidação Forçada' })];
+    if (!L.ponte) return SVG('svg', { viewBox: '0 0 ' + W + ' ' + H, 'class': 'grafico' }, fil);
+    var s = escala(L.vm, 10);
+    var Y = function (v) { return y0 - (y0 - y1) * v / s.max; };
+    for (var v = 0; v <= s.max + 1e-6; v += s.passo) {
+      fil.push(SVG('line', { x1: x0, x2: x1, y1: Y(v), y2: Y(v), 'class': 'grade' }));
+      fil.push(SVG('text', { x: x0 - 5, y: Y(v) + 3, 'text-anchor': 'end', 'font-size': 7, txt: 'R$ ' + nz(v, 0) }));
+    }
+    var larg = (x1 - x0) / L.ponte.length;
+    L.ponte.forEach(function (b, i) {
+      var cx = x0 + larg * (i + 0.5), w = larg * 0.42;
+      fil.push(SVG('rect', { x: cx - w / 2, y: Y(b.base + b.valor), width: w,
+        height: Math.max(0.5, Y(b.base) - Y(b.base + b.valor)), 'class': b.tipo }));
+      fil.push(SVG('text', { x: cx, y: Y(b.base + b.valor / 2) + 3, 'text-anchor': 'middle', 'font-size': 7.5,
+        txt: 'R$ ' + nz(b.valor, 0) }));
+      fil.push(SVG('text', { x: cx, y: y0 + 12, 'text-anchor': 'middle', 'font-size': 6.5, txt: b.rot }));
+    });
+    return SVG('svg', { viewBox: '0 0 ' + W + ' ' + H, 'class': 'grafico', role: 'img',
+      'aria-label': 'Ponte do valor de mercado até a liquidação forçada' }, fil);
+  }
+
+  function folhaLiquidacao(ctx) {
+    var l = 'liquidacao.';
+    function lin(rotulo, campo, forte) {
+      return e('tr', {}, [e('td', { cls: 'esq', style: 'border:none;background:transparent' + (forte ? ';font-weight:700' : '') }, [rotulo]),
+        e('td', { cls: 'dir', style: 'border:none;background:transparent;width:30%' + (forte ? ';font-weight:700' : '') }, [campo])]);
+    }
+    var cr = function (f) { return ctx.calc(function (r) { var L = r.liquidacao; return f(L); }); };
+    var r0 = function (v) { return semValor(v) ? 'R$ ' + TRACO : 'R$ ' + nz(v, 0); };
+    var premissas = e('div', {}, [faixa('PREMISSAS', 'esq'), e('table', { cls: 't', style: 'font-size:6.4pt' }, [
+      lin('Valor de mercado (VM)', cr(function (L) { return r0(L.vm); }), true),
+      lin('Prazo estimado até a venda (meses)', ctx.num(l + 'prazo', { casas: 0 })),
+      lin(e('span', { cls: 'afixo', style: 'justify-content:flex-start' }, [ctx.txt(l + 'rotuloTaxa'), e('span', { cls: 'pre', txt: ' (% a.a.)' })]),
+        ctx.num(l + 'taxa', { pct: true, casas: 2 })),
+      lin('Inflação acumulada — IPCA (% a.a.)', ctx.num(l + 'ipca', { pct: true, casas: 2 })),
+      lin('IR sobre rendimento (regressivo)', cr(function (L) { return pc(L.ir, 1); })),
+      lin('Tesouro Prefixado líquido de IR (% a.a.)', cr(function (L) { return pc(L.taxaLiquida); })),
+      lin('Taxa real de juros (líq. IR) = (1+Selic_líq)/(1+IPCA)−1', cr(function (L) { return pc(L.taxaReal); })),
+      lin('Taxa de desconto mensal = (1+Selic_líq IR)^(1/12)−1', cr(function (L) { return pc(L.taxaMensal, 3); })),
+      lin('IPTU (R$ / ano)', ctx.num(l + 'iptuAno', { pre: 'R$' })),
+      lin('Condomínio (R$ / mês)', ctx.num(l + 'condominioMes', { pre: 'R$' })),
+      lin('Fator de valor presente (anuidade, N meses)', cr(function (L) { return fn(L.fvp, 3); }))]),
+      espaco(),
+      faixa('DEDUÇÕES NO PERÍODO ATÉ A VENDA', 'esq'), e('table', { cls: 't', style: 'font-size:6.4pt' }, [
+      lin('(a) Custo de oportunidade (desconto à taxa real)', cr(function (L) { return r0(L.custoOportunidade); })),
+      lin('(b) Perda inflacionária no período', cr(function (L) { return r0(L.perdaInflacao); })),
+      lin('(c) IPTU acumulado (a valor presente)', cr(function (L) { return r0(L.iptu); })),
+      lin('(d) Condomínio acumulado (a valor presente)', cr(function (L) { return r0(L.condominio); })),
+      lin('Total das deduções (a+b+c+d)', cr(function (L) { return r0(L.deducoes); }), true)])]);
+    premissas.querySelectorAll('.afixo .c').forEach(function (x) { x.style.width = '38mm'; x.style.flex = 'none'; });
+
+    var ponte = e('div', { cls: 'caixa', style: 'padding:1.5mm' });
+    function desenhar(r) { ponte.textContent = ''; ponte.appendChild(graficoPonte(r)); }
+    if (!ctx.papel) atualizadores.push(desenhar);
+    desenhar(R);
+
+    /* o "X" do mercado: um por linha, escolhido com um clique */
+    var mercado = e('table', { cls: 't', style: 'font-size:6.4pt' }, MERCADO.map(function (m) {
+      var tds = [e('td', { cls: 'dir', style: 'font-weight:700;width:19%', txt: m[1] })];
+      LS[m[0]].forEach(function (op) {
+        var marcado = pegar(l + m[0]) === op;
+        tds.push(e('td', { cls: 'dir', style: 'width:9%', txt: op }));
+        var x = e('td', { style: 'width:7.2%;font-weight:700' });
+        if (ctx.papel) x.textContent = marcado ? 'X' : '';
+        else {
+          var b = e('button', { type: 'button', cls: 'marca', 'aria-label': m[1] + ' ' + op, txt: marcado ? 'X' : '',
+            style: 'margin:0 auto;width:4mm;height:3.4mm;font-weight:700' });
+          b.addEventListener('click', function () {
+            guardar(l + m[0], pegar(l + m[0]) === op ? '' : op); mudou(); remontar();
+          });
+          x.appendChild(b);
+        }
+        tds.push(x);
+      });
+      return e('tr', {}, tds);
+    }));
+
+    var tDesagio = e('table', { cls: 't marinho', style: 'font-size:6.2pt' }, [
+      e('tr', {}, [e('th', { txt: 'Deságio' }), e('th', { txt: 'Valor de Liquidação Forçada' })])]
+      .concat(repetir(7, function (i) {
+        var tr = e('tr', { cls: i === 3 ? 'atual' : null });
+        tr.appendChild(e('td', {}, [cr(function (L) { return L.porDesagio ? pc(L.porDesagio[i].desagio) : TRACO; })]));
+        tr.appendChild(e('td', {}, [cr(function (L) { return L.porDesagio ? r0(L.porDesagio[i].vlf) : TRACO; })]));
+        return tr;
+      })));
+    var tVar = e('table', { cls: 't marinho', style: 'font-size:6.2pt' }, [
+      e('tr', {}, ['Variação', 'Valor de Mercado', 'VLF', 'VLF / VM', 'Desconto', 'Deságio'].map(function (t) {
+        return e('th', { txt: t }); }))]
+      .concat(repetir(7, function (i) {
+        var q = function (f) { return cr(function (L) { return L.porVariacao ? f(L.porVariacao[i]) : TRACO; }); };
+        return e('tr', { cls: i === 3 ? 'atual' : null }, [
+          e('td', {}, [q(function (x) { return pc(x.variacao, 0); })]), e('td', {}, [q(function (x) { return r0(x.vm); })]),
+          e('td', {}, [q(function (x) { return r0(x.vlf); })]), e('td', {}, [q(function (x) { return pc(x.razao, 1); })]),
+          e('td', {}, [q(function (x) { return r0(x.desconto); })]), e('td', {}, [q(function (x) { return pc(x.desagio, 1); })])]);
+      })));
+    var subt = function (t) {
+      return e('div', { txt: t, style: 'text-align:center;font-weight:700;color:var(--pg-rot);font-size:6.4pt;border-top:.25mm solid var(--pg-borda);padding:.8mm 0' });
+    };
+
+    return [pagina(ctx, [
+      tit('Cálculo de Liquidação Forçada - Venda Compulsória'),
+      ctx.area(l + 'texto', { alt: '40mm' }), espaco('g2'),
+      g('40% 1fr', [premissas, ponte], { gap: '8mm' }), espaco('g2'),
+      faixa('VALOR DE LIQUIDAÇÃO FORÇADA'),
+      e('div', { cls: 'caixa' }, [val(ctx.calc(function (r) {
+        return semValor(r.liquidacao.vlf) ? 'R$ ' + TRACO : rs(r.liquidacao.vlf); }), 'centro')]),
+      g('48mm 1fr', [rot('Deságio sobre o valor de mercado:', 'tinta'),
+        val(ctx.calc(function (r) { return pc(r.liquidacao.desagio); }), '')]),
+      espaco(), mercado, espaco('g2'), espaco('g2'),
+      faixa('SENSIBILIDADE DO MODELO'),
+      e('div', { style: 'background:var(--pg-cel);padding:3mm 0 3mm' }, [
+        g('9% 27% 8% 42% 14%', [e('div'), e('div', {}, [subt('VLF por nível de Deságio (sobre o Valor de Mercado)'), tDesagio]),
+          e('div'), e('div', {}, [subt('VLF e Deságio por variação do Valor de Mercado (±15%)'), tVar]), e('div')])])],
+      { parte: 'liquidacao' })];
+  }
+
+  /* ============================================================= FOTOS */
+  function folhaFotos(ctx) {
+    var fotos = P.fotos || [];
+    var total = ctx.papel ? fotos.length : fotos.length + 1;
+    var nPag = Math.max(1, Math.ceil(total / FOTOS_POR_PAGINA));
+    if (ctx.papel && !fotos.length) return [];
+    return repetir(nPag, function (pg) {
+      var celulas = [];
+      for (var k = pg * FOTOS_POR_PAGINA; k < Math.min(total, (pg + 1) * FOTOS_POR_PAGINA); k++) {
+        if (k < fotos.length) celulas.push(celulaFoto(ctx, k));
+        else celulas.push(botaoAdicionar('Adicionar fotos', 'fotos', { alt: '56mm' }));
+      }
+      return pagina(ctx, [tit('Relatório Fotográfico', 'menor'),
+        g('1fr 1fr', celulas, { gap: '6mm', estilo: 'row-gap:4mm' })], { parte: 'fotos' });
+    });
+  }
+  function celulaFoto(ctx, k) {
+    var b = 'fotos.' + k + '.';
+    var fig = ctx.img(b + 'img', { alt: '56mm', legenda: ctx.txt(b + 'legenda', { cls: 'centro', ph: 'Legenda' }) });
+    if (!ctx.papel) {
+      var acoes = fig.querySelector('.acoes-img') || e('div', { cls: 'acoes-img' });
+      if (!acoes.parentNode) fig.querySelector('.quadro-img').appendChild(acoes);
+      acoes.textContent = '';
+      [['←', -1], ['→', 1]].forEach(function (m) {
+        var bt = e('button', { type: 'button', txt: m[0], title: 'Mover' });
+        bt.addEventListener('click', function () {
+          var j = k + m[1]; if (j < 0 || j >= P.fotos.length) return;
+          var t = P.fotos[k]; P.fotos[k] = P.fotos[j]; P.fotos[j] = t; mudou(); remontar();
+        });
+        acoes.appendChild(bt);
+      });
+      var tira = e('button', { type: 'button', txt: 'Remover' });
+      tira.addEventListener('click', function () { P.fotos.splice(k, 1); mudou(); remontar(); });
+      acoes.appendChild(tira);
+    }
+    return fig;
+  }
+  /* inserir várias imagens de uma vez, na ordem em que foram escolhidas */
+  function botaoAdicionar(texto, lista, o) {
+    var b = e('button', { type: 'button', cls: 'adicionar', txt: '+ ' + texto, style: 'height:' + o.alt });
+    b.addEventListener('click', function () {
+      escolherArquivos(true, function (arqs) {
+        if (!arqs.length) return;
+        Promise.all(arqs.map(function (a) { return lerImagem(a, o.imagem || {}); })).then(function (urls) {
+          urls.forEach(function (u) { P[lista].push(lista === 'fotos' ? { img: u, legenda: '' } : { img: u }); });
+          mudou(); remontar();
+        }).catch(function () { avisar('Imagem não lida', 'Algum dos arquivos não é uma imagem que o navegador abra.'); });
+      });
+    });
+    return b;
+  }
+
+  /* ============================================================ ANEXOS
+     Documentos (matrícula, IPTU) como imagem, uma por página, sem cabeçalho
+     — como as páginas finais do laudo impresso. */
+  function folhaAnexos(ctx) {
+    var anexos = P.anexos || [];
+    var paginas = anexos.map(function (a, k) {
+      var pg = e('section', { cls: 'pagina anexo', 'data-parte': 'anexos' }, [e('img', { src: a.img, alt: 'Anexo ' + (k + 1) })]);
+      if (!ctx.papel) {
+        var acoes = e('div', { cls: 'acoes-img', style: 'top:4mm;right:4mm' });
+        [['←', -1], ['→', 1]].forEach(function (m) {
+          var bt = e('button', { type: 'button', txt: m[0] === '←' ? '↑' : '↓', title: 'Mover' });
+          bt.addEventListener('click', function () {
+            var j = k + m[1]; if (j < 0 || j >= P.anexos.length) return;
+            var t = P.anexos[k]; P.anexos[k] = P.anexos[j]; P.anexos[j] = t; mudou(); remontar();
+          });
+          acoes.appendChild(bt);
+        });
+        var tira = e('button', { type: 'button', txt: 'Remover' });
+        tira.addEventListener('click', function () { P.anexos.splice(k, 1); mudou(); remontar(); });
+        acoes.appendChild(tira);
+        pg.appendChild(acoes);
+      }
+      return pg;
+    });
+    if (!ctx.papel) {
+      paginas.unshift(e('section', { cls: 'painel' }, [e('h2', { txt: 'Anexos' }),
+        e('p', { txt: 'Matrícula, extrato do IPTU e outros documentos entram no fim do laudo, uma imagem por página. ' +
+          'Documento em PDF: exporte cada página como imagem (JPG ou PNG) antes de inserir.' }),
+        botaoAdicionar('Adicionar páginas de anexo', 'anexos', { alt: 'auto', imagem: { max: 2400, qualidade: 0.85 } })]));
+    }
+    return paginas;
+  }
+
+  /* ================================================================ abas */
+  var ABAS = [
+    { id: 'capa', rot: 'Capa', render: folhaCapa },
+    { id: 'regiao', rot: 'Região + Imóvel', render: folhaRegiao },
+    { id: 'restricoes', rot: 'Restrições do imóvel', render: folhaRestricoes },
+    { id: 'fichas', rot: 'Fichas de pesquisa', render: folhaFichas },
+    { id: 'calculo', rot: 'Cálculo', render: folhaCalculo, painel: painelTratamento },
+    { id: 'grafico', rot: 'Gráfico', render: folhaGrafico },
+    { id: 'liquidacao', rot: 'Liquidação forçada', render: folhaLiquidacao },
+    { id: 'fotos', rot: 'Relatório fotográfico', render: folhaFotos },
+    { id: 'anexos', rot: 'Anexos', render: folhaAnexos }
+  ];
+  function abaDe(id) { return ABAS.filter(function (a) { return a.id === id; })[0]; }
+
+  function montarAbas() {
+    var nav = document.getElementById('abas');
+    nav.textContent = '';
+    if (!abaDe(abaAtiva)) abaAtiva = 'capa';
+    ABAS.forEach(function (a) {
+      var b = e('button', { cls: 'aba', role: 'tab', 'aria-selected': a.id === abaAtiva ? 'true' : 'false', txt: a.rot });
+      b.addEventListener('click', function () {
+        if (a.id === abaAtiva) return;
+        rolagem[abaAtiva] = window.scrollY;
+        abaAtiva = a.id; montarAbas(); montarFolha();
+        if (casca) casca.vista();
+      });
+      nav.appendChild(b);
+    });
+  }
+
+  var rolagem = {};
+  function montarFolha(manterRolagem) {
+    var y = manterRolagem ? window.scrollY : (rolagem[abaAtiva] || 0);
+    atualizadores = [];
+    var alvo = document.getElementById('folha');
+    alvo.textContent = '';
+    var aba = abaDe(abaAtiva);
+    if (aba.painel) alvo.appendChild(aba.painel());
+    aba.render(contexto(false)).forEach(function (p) { alvo.appendChild(p); });
+    ajustarZoom();
+    aplicar();
+    window.scrollTo(0, y);
+  }
+  function remontar() { montarFolha(true); }
+
+  /* A folha é A4 de verdade; na tela ela cresce até caber na largura. */
+  function ajustarZoom() {
+    var largura = document.getElementById('folha').clientWidth - 32;
+    var z = Math.max(0.4, Math.min(1.25, largura / 1020));
+    document.documentElement.style.setProperty('--zoom', z.toFixed(3));
+  }
+  window.addEventListener('resize', function () { ajustarZoom(); });
+
+  function aplicar() {
+    if (!R) return;
+    atualizadores.forEach(function (f) { try { f(R); } catch (err) { console.error(err); } });
+    var topo = document.getElementById('resumo-topo');
+    topo.textContent = '';
+    resumo().forEach(function (d) {
+      topo.appendChild(e('div', {}, [e('span', { cls: 'r', txt: d[0] }), e('span', { cls: 'v', txt: d[1] })]));
+    });
+  }
+
+  /* Os números do topo, já escritos; a casca os mostra no cartão do estudo. */
+  function resumo() {
+    var mil = function (v) { return semValor(v) ? '—' : 'R$ ' + nz(v, 0); };
+    return [['Valor de mercado', mil(R.valor.mercadoArredondado)],
+      ['R$/m²', semValor(R.valor.m2Privativa) ? '—' : 'R$ ' + nz(R.valor.m2Privativa, 2)],
+      ['Liquidação forçada', mil(R.liquidacao.vlfArredondado)],
+      ['Precisão', R.est.precisao || '—']];
+  }
+
+  var tGuardar = null;
+  function mudou() {
+    try { R = M.calcular(P); } catch (err) { console.error(err); return; }
+    aplicar();
+    clearTimeout(tGuardar);
+    tGuardar = setTimeout(guardarEstudo, 350);
+  }
+  function guardarEstudo() {
+    if (casca) { casca.devolver(P, resumo()); return; }
+    try { localStorage.setItem('comparativo.premissas', JSON.stringify(P)); }
+    catch (err) {
+      avisar('Sem espaço no navegador', 'As fotos passaram do limite que o navegador guarda sozinho. ' +
+        'Use "Salvar" para baixar o estudo — ou abra-o pela plataforma, que guarda tudo.');
+    }
+  }
+
+  var tempoAviso = null;
+  function avisar(titulo, texto) {
+    var velho = document.getElementById('aviso-flutuante');
+    if (velho) velho.remove();
+    var el = e('div', { cls: 'aviso-flutuante', id: 'aviso-flutuante' }, [e('b', { txt: titulo }), e('span', { txt: texto })]);
+    document.body.appendChild(el);
+    clearTimeout(tempoAviso);
+    tempoAviso = setTimeout(function () { el.remove(); }, 7000);
+  }
+
+  /* ========================================================== impressão */
+  var PARTES = [['capa', 'Capa'], ['regiao', 'Região + Imóvel'], ['restricoes', 'Restrições do imóvel'],
+    ['fichas', 'Fichas de pesquisa'], ['calculo', 'Cálculo'], ['grafico', 'Gráfico'],
+    ['liquidacao', 'Liquidação forçada'], ['fotos', 'Relatório fotográfico'], ['anexos', 'Anexos']];
+  function imprimirLaudo(partes) {
+    var alvo = document.getElementById('impressao');
+    alvo.textContent = '';
+    var ctx = contexto(true);
+    partes.forEach(function (id) { abaDe(id).render(ctx).forEach(function (p) { alvo.appendChild(p); }); });
+    var imgs = Array.prototype.slice.call(alvo.querySelectorAll('img'));
+    Promise.all(imgs.map(function (im) {
+      return im.complete ? null : new Promise(function (ok) { im.onload = im.onerror = ok; });
+    })).then(function () { window.print(); });
+  }
+  function abrirDialogoImpressao() {
+    var dlg = document.getElementById('dlg-imprimir'), lista = document.getElementById('dlg-imprimir-lista');
+    lista.textContent = '';
+    var esc = P.impressao || {};
+    PARTES.forEach(function (p) {
+      var n = p[0] === 'fichas' ? '2 páginas' : p[0] === 'fotos'
+        ? (P.fotos.length ? Math.ceil(P.fotos.length / FOTOS_POR_PAGINA) + ' página(s)' : 'sem fotos')
+        : p[0] === 'anexos' ? (P.anexos.length ? P.anexos.length + ' página(s)' : 'sem anexos') : '1 página';
+      var cx = e('input', { type: 'checkbox', value: p[0], checked: esc[p[0]] !== false ? 'checked' : null });
+      lista.appendChild(e('label', {}, [cx, p[1], e('span', { cls: 'n', txt: n })]));
+    });
+    dlg.showModal();
+  }
+
+  function baixar(nome, txt, tipo) {
+    var url = URL.createObjectURL(new Blob([txt], { type: tipo }));
+    var a = document.createElement('a'); a.href = url; a.download = nome; a.click();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ----------------------------------------------------------- a casca
+     Aberto pela plataforma (index.html?casca), o estudo vem dela e volta para
+     ela; sozinho no navegador, mora no localStorage. */
+  var casca = null;
+  var CANAL = 'imovaluation';
+
+  function iniciar() {
+    if (!/[?&]casca(&|=|$)/.test(location.search) || window.parent === window) {
+      var salvo = null;
+      try { salvo = JSON.parse(localStorage.getItem('comparativo.premissas')); } catch (err) {}
+      montar(salvo);
+      return;
+    }
+    var aberto = false;
+    window.addEventListener('message', function (ev) {
+      var m = ev.data;
+      if (aberto || ev.source !== window.parent || ev.origin !== location.origin) return;
+      if (!m || m.canal !== CANAL || m.tipo !== 'abrir' || !m.estudo) return;
+      aberto = true;
+      casca = {
+        devolver: function (p, r) {
+          window.parent.postMessage({ canal: CANAL, tipo: 'mudou', premissas: p, resumo: r }, location.origin);
+        },
+        vista: function () {
+          rolagem[abaAtiva] = window.scrollY;
+          var aba = abaDe(abaAtiva);
+          window.parent.postMessage({ canal: CANAL, tipo: 'vista',
+            vista: { aba: abaAtiva, rotulo: aba ? aba.rot : '', rolagem: rolagem } }, location.origin);
+        }
+      };
+      if (m.estudo.nome) document.title = m.estudo.nome + ' · Comparativo direto';
+      var v = m.estudo.vista;
+      if (v && typeof v.aba === 'string') abaAtiva = v.aba;
+      if (v && v.rolagem && typeof v.rolagem === 'object') rolagem = v.rolagem;
+      montar(m.estudo.premissas);
+      window.parent.postMessage({ canal: CANAL, tipo: 'resumo', resumo: resumo() }, location.origin);
+      var parado = null;
+      window.addEventListener('scroll', function () {
+        clearTimeout(parado); parado = setTimeout(casca.vista, 600);
+      }, { passive: true });
+      document.getElementById('btn-json').textContent = 'Baixar premissas';
+    });
+    window.parent.postMessage({ canal: CANAL, tipo: 'pronto', modulo: 'comparativo' }, location.origin);
+  }
+
+  /* O guardado passa por cima do vazio, campo a campo: premissa de uma versão
+     anterior do módulo ganha as chaves novas sem perder as suas. */
+  function mesclar(base, salvo) {
+    if (salvo === null || salvo === undefined) return base;
+    if (Array.isArray(base)) {
+      if (!Array.isArray(salvo)) return base;
+      if (!base.length) return salvo;                       // listas livres: fotos, anexos
+      return base.map(function (b, i) { return i < salvo.length ? mesclar(b, salvo[i]) : b; });
+    }
+    if (base && typeof base === 'object') {
+      if (typeof salvo !== 'object' || Array.isArray(salvo)) return base;
+      var o = {};
+      Object.keys(base).forEach(function (k) { o[k] = mesclar(base[k], salvo[k]); });
+      Object.keys(salvo).forEach(function (k) { if (!(k in o)) o[k] = salvo[k]; });
+      return o;
+    }
+    return salvo;
+  }
+
+  var ligado = false;
+  function montar(p) {
+    try { P = mesclar(premissasVazias(), p && typeof p === 'object' ? p : null); }
+    catch (err) { P = premissasVazias(); }
+    R = M.calcular(P);
+    montarAbas(); montarFolha();
+    if (ligado) return;
+    ligado = true;
+    var btnTema = document.getElementById('btn-tema');
+    function escuroAgora() {
+      var t = document.documentElement.getAttribute('data-tema');
+      if (t) return t === 'escuro';
+      try { return window.matchMedia('(prefers-color-scheme: dark)').matches; } catch (err) { return false; }
+    }
+    function aplicarTema(t) {
+      if (t === 'claro' || t === 'escuro') document.documentElement.setAttribute('data-tema', t);
+      else document.documentElement.removeAttribute('data-tema');
+      btnTema.textContent = escuroAgora() ? 'Tema claro' : 'Tema escuro';
+      try { localStorage.setItem('comparativo.tema', t); } catch (err) {}
+    }
+    var temaSalvo = 'sistema';
+    try { temaSalvo = localStorage.getItem('comparativo.tema') || 'sistema'; } catch (err) {}
+    aplicarTema(temaSalvo);
+    btnTema.addEventListener('click', function () { aplicarTema(escuroAgora() ? 'claro' : 'escuro'); });
+
+    document.getElementById('btn-json').addEventListener('click', function () {
+      var nome = String(P.capa.matricula || P.capa.empreendimento || 'estudo').replace(/[^\w.-]+/g, '-');
+      baixar('comparativo-' + nome + '.json', JSON.stringify(P), 'application/json');
+    });
+    var arq = document.getElementById('arquivo-json');
+    document.getElementById('btn-abrir').addEventListener('click', function () { arq.value = ''; arq.click(); });
+    arq.addEventListener('change', function () {
+      var f = arq.files && arq.files[0];
+      if (!f) return;
+      f.text().then(function (t) {
+        var p = JSON.parse(t);
+        if (!p || typeof p !== 'object' || !p.capa) throw new Error('formato');
+        P = mesclar(premissasVazias(), p); rolagem = {};
+        mudou(); montarFolha();
+      }).catch(function () { avisar('Arquivo não reconhecido', 'Escolha um arquivo de premissas salvo por este módulo.'); });
+    });
+
+    var dlg = document.getElementById('dlg-imprimir');
+    document.getElementById('btn-imprimir').addEventListener('click', abrirDialogoImpressao);
+    document.getElementById('dlg-imprimir-cancelar').addEventListener('click', function () { dlg.close(); });
+    document.getElementById('dlg-imprimir-ok').addEventListener('click', function () {
+      var esc = {}, partes = [];
+      dlg.querySelectorAll('input[type="checkbox"]').forEach(function (cx) {
+        esc[cx.value] = cx.checked; if (cx.checked) partes.push(cx.value);
+      });
+      P.impressao = esc; mudou();
+      dlg.close();
+      if (partes.length) imprimirLaudo(partes);
+    });
+    window.addEventListener('afterprint', function () { document.getElementById('impressao').textContent = ''; });
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar);
+  else iniciar();
+})();

@@ -282,3 +282,37 @@ test('o módulo é servido a quem entrou, sem a suíte nem as notas internas', a
   assert.equal((await ana.get('/m/package.json')).statusCode, 404);
   assert.equal((await ana.get('/m/../casca/config.js')).statusCode, 404);
 });
+
+test('a segunda metodologia: cartão próprio, pastas próprias, sem misturar com a primeira', async () => {
+  const c = await cadastrar(T.app, 'comparativo@exemplo.com');
+  const inicio = (await c.get('/modelagens')).body;
+  assert.match(inicio, /href="\/modelagens\/comparativo"/);
+  assert.match(inicio, /Comparativo direto de dados de mercado/);
+  assert.ok(inicio.indexOf('/modelagens/involutivo') < inicio.indexOf('/modelagens/comparativo'),
+    'na ordem do registro');
+
+  const pGleba = await novaPasta(c, 'Só glebas');
+  const pComp = idDe(await c.post('/modelagens/comparativo/pastas', { nome: 'Laudos 2026' }));
+  const met = (await c.get('/modelagens/comparativo')).body;
+  assert.match(met, /Laudos 2026/);
+  assert.doesNotMatch(met, /Só glebas/, 'a pasta do involutivo não aparece no comparativo');
+
+  const e = idDe(await c.post(`/pastas/${pComp}/estudos`, { nome: 'Mat. 33.794' }));
+  assert.match((await c.get('/estudos/' + e)).body, /data-src="\/m\/comparativo\/index.html\?casca"/);
+  assert.equal((await c.post(`/estudos/${e}/mover`, { destino: pGleba })).headers.location,
+    `/modelagens/comparativo/${pComp}?r=destino`, 'estudo não muda de metodologia');
+  assert.equal((await c.get('/m/comparativo/motor.js')).statusCode, 200);
+  assert.equal((await c.get('/m/comparativo/testes/auditoria.js')).statusCode, 404);
+});
+
+test('um laudo com fotos cabe: premissas de vários megabytes são aceitas', async () => {
+  const c = await cadastrar(T.app, 'fotos@exemplo.com');
+  const p = idDe(await c.post('/modelagens/comparativo/pastas', { nome: 'Com fotos' }));
+  const e = idDe(await c.post(`/pastas/${p}/estudos`, { nome: 'Pesado' }));
+  const foto = 'data:image/jpeg;base64,' + 'A'.repeat(1024 * 1024);
+  const premissas = { fotos: Array.from({ length: 6 }, () => ({ img: foto, legenda: 'x' })) };
+  assert.equal((await salvar(c, e, premissas, [['Valor de mercado', 'R$ 1']])).statusCode, 200);
+  const volta = (await c.get('/api/estudos/' + e)).json().estudo;
+  assert.equal(volta.premissas.fotos.length, 6);
+  assert.equal(volta.premissas.fotos[5].img.length, foto.length);
+});

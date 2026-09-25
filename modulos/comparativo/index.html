@@ -1,0 +1,317 @@
+<meta charset="utf-8">
+<title>Comparativo direto de dados de mercado</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;450;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap">
+<style>
+/* ============================================================================
+   Duas camadas: a moldura da plataforma (barra, abas, painéis de tela), com
+   os mesmos tokens do involutivo; e a FOLHA DO LAUDO, que reproduz o modelo
+   impresso do avaliador — A4, Arial, faixas em azul-marinho. A folha é a
+   mesma na tela e no papel: cada aba é uma (ou mais) páginas do laudo, e os
+   campos digitáveis moram dentro dela, onde o valor sai impresso.
+   Toda cor mora nos tokens do :root e é conferida nos dois temas; na
+   impressão, a folha volta sempre ao papel claro.
+   ========================================================================== */
+:root{
+  --ground:#EDEBE4; --surface:#FAF9F5; --elev:#F2F0E9; --rule:#D2D0C6; --rule-soft:#E3E1D8;
+  --ink:#1C2226; --ink2:#4B555C; --muted:#7B848A;
+  --acento:#2C5A4C; --acento-forte:#1E4034; --acento-fraco:#DEE6E1; --acento-ink:#F2F0E9;
+  --barra-bg:#1C2226; --barra-ink:#F2F0E9; --barra-sub:#9AA2A1;
+  --campo-bg:#FFFFFF; --campo-borda:#C9C7BC; --campo-foco:#2C5A4C;
+  --neg:#8C3A1E; --warn:#8A6A14;
+  --flutua:0 6px 22px rgba(28,34,38,.20);
+  --t-rot:12.5px; --t-nota:11.5px; --t-cab:10.5px; --t-tit:15px; --alt:28px; --lh:1.45;
+  --sans:'IBM Plex Sans',system-ui,sans-serif;
+  --serif:'IBM Plex Serif',Georgia,'Times New Roman',serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+
+  /* a folha do laudo */
+  --pg-papel:#FFFFFF; --pg-area:#FBFBFB; --pg-tinta:#1A1A1A; --pg-tinta2:#404040;
+  --pg-rot:#002060; --pg-marinho:#002060; --pg-marinho-ink:#FFFFFF;
+  --pg-borda:#CFCFCF; --pg-fio:#E2E2E2; --pg-cel:#FFFFFF; --pg-link:#0563C1;
+  --pg-destaque:#FFF2CC; --pg-sombra:0 2px 14px rgba(28,34,38,.16);
+  --pg-edita:#EEF3FB; --pg-edita-borda:#B9C8E4; --pg-sugerido:#8A93A6; --pg-vazio:#EDEDED;
+  --ec1:#FFC000; --ec2:#8E5B5B; --ec3:#ED7D31; --ec4:#B4B4F0; --ec5:#3A7E4C;
+  --wf-total:#1F3864; --wf-deducao:#C0504D; --wf-final:#2E7D32;
+  --gr-grade:#D9D9D9; --gr-eixo:#8C8C8C; --gr-bissetriz:#7F7F7F;
+  --zoom:1;
+  /* a folha se desenha numa página virtual de 270 mm e sai no A4 reduzida
+     a 210/270 — o "ajustar à página" com que o Excel imprime o modelo */
+  --pg-w:270mm; --pg-h:381.8mm; --pg-escala:.77778;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-tema="claro"]){
+    --ground:#14171A; --surface:#1A1E21; --elev:#20252A; --rule:#2C3238; --rule-soft:#22272C;
+    --ink:#E7E6E1; --ink2:#AEB3B4; --muted:#7C8488;
+    --acento:#7FAE99; --acento-forte:#9CC6B2; --acento-fraco:#22312C; --acento-ink:#14171A;
+    --barra-bg:#0E1113; --barra-ink:#EDECE7; --barra-sub:#8D9497;
+    --campo-bg:#1E2327; --campo-borda:#333A40; --campo-foco:#7FAE99;
+    --neg:#D08A6A; --warn:#C9A961; --flutua:0 6px 22px rgba(0,0,0,.45);
+    --pg-papel:#1C2024; --pg-area:#1A1E21; --pg-tinta:#E4E3DE; --pg-tinta2:#B5B9BB;
+    --pg-rot:#A9BEE6; --pg-marinho:#23385F; --pg-marinho-ink:#EEF2FA;
+    --pg-borda:#3A4147; --pg-fio:#2C3238; --pg-cel:#22272C; --pg-link:#8AB4F8;
+    --pg-destaque:#3A3320; --pg-sombra:0 2px 14px rgba(0,0,0,.5);
+    --pg-edita:#223044; --pg-edita-borda:#3B5277; --pg-sugerido:#7F8A9E; --pg-vazio:#2A3036;
+    --wf-total:#5872A8; --wf-deducao:#D0746F; --wf-final:#5BAA60;
+    --gr-grade:#343B42; --gr-eixo:#7C8488; --gr-bissetriz:#9AA2A8;
+    color-scheme:dark;
+  }
+}
+:root[data-tema="escuro"]{
+  --ground:#14171A; --surface:#1A1E21; --elev:#20252A; --rule:#2C3238; --rule-soft:#22272C;
+  --ink:#E7E6E1; --ink2:#AEB3B4; --muted:#7C8488;
+  --acento:#7FAE99; --acento-forte:#9CC6B2; --acento-fraco:#22312C; --acento-ink:#14171A;
+  --barra-bg:#0E1113; --barra-ink:#EDECE7; --barra-sub:#8D9497;
+  --campo-bg:#1E2327; --campo-borda:#333A40; --campo-foco:#7FAE99;
+  --neg:#D08A6A; --warn:#C9A961; --flutua:0 6px 22px rgba(0,0,0,.45);
+  --pg-papel:#1C2024; --pg-area:#1A1E21; --pg-tinta:#E4E3DE; --pg-tinta2:#B5B9BB;
+  --pg-rot:#A9BEE6; --pg-marinho:#23385F; --pg-marinho-ink:#EEF2FA;
+  --pg-borda:#3A4147; --pg-fio:#2C3238; --pg-cel:#22272C; --pg-link:#8AB4F8;
+  --pg-destaque:#3A3320; --pg-sombra:0 2px 14px rgba(0,0,0,.5);
+  --pg-edita:#223044; --pg-edita-borda:#3B5277; --pg-sugerido:#7F8A9E; --pg-vazio:#2A3036;
+  --wf-total:#5872A8; --wf-deducao:#D0746F; --wf-final:#5BAA60;
+  --gr-grade:#343B42; --gr-eixo:#7C8488; --gr-bissetriz:#9AA2A8;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--ground);color:var(--ink);font-family:var(--sans);font-size:var(--t-rot);line-height:var(--lh)}
+button{font:inherit;color:inherit}
+
+/* ---------- barra superior e abas (a moldura da plataforma) ---------- */
+.barra{position:sticky;top:0;z-index:30;background:var(--barra-bg);color:var(--barra-ink);
+  display:flex;align-items:center;gap:14px;padding:10px 20px;flex-wrap:wrap;border-bottom:1px solid var(--rule)}
+.barra .vazio{flex:1}
+.resumo-topo{display:flex;gap:22px;align-items:baseline;flex-wrap:wrap}
+.resumo-topo div{display:flex;flex-direction:column}
+.resumo-topo .r{font-size:var(--t-cab);letter-spacing:.11em;color:var(--barra-sub);text-transform:uppercase}
+.resumo-topo .v{font-family:var(--mono);font-size:15px;font-weight:500;color:var(--barra-ink)}
+.acao{background:transparent;border:1px solid rgba(242,240,233,.28);border-radius:3px;padding:6px 11px;
+  font-size:var(--t-nota);cursor:pointer;color:var(--barra-ink);height:var(--alt)}
+.acao:hover{border-color:var(--acento);color:var(--acento)}
+.acao.destaque{background:var(--acento);border-color:var(--acento);color:var(--acento-ink);font-weight:500}
+.acao.destaque:hover{background:var(--acento-forte);border-color:var(--acento-forte)}
+.abas{position:sticky;top:49px;z-index:29;background:var(--surface);border-bottom:1px solid var(--rule);
+  display:flex;overflow-x:auto;padding:0 12px 1px;scrollbar-width:none}
+.abas::-webkit-scrollbar{display:none}
+.aba{border:none;background:none;padding:10px 15px;font-size:var(--t-rot);color:var(--muted);cursor:pointer;
+  white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-1px}
+.aba:hover{color:var(--ink)}
+.aba[aria-selected="true"]{color:var(--acento);border-bottom-color:var(--acento);font-weight:600}
+.aba:focus-visible{outline:2px solid var(--acento);outline-offset:-2px}
+
+.folha{padding:22px 16px 80px;display:flex;flex-direction:column;align-items:center;gap:22px}
+#impressao{display:none}
+
+/* ---------- painel de tela: o que não sai no laudo ---------- */
+.painel{width:calc(var(--pg-w) * var(--zoom));max-width:100%;background:var(--surface);border:1px solid var(--rule);
+  border-left:3px solid var(--acento);border-radius:2px;padding:12px 16px;font-size:var(--t-rot);color:var(--ink)}
+.painel h2{font-family:var(--serif);font-size:var(--t-tit);font-weight:600;margin:0 0 4px}
+.painel p{margin:4px 0 10px;color:var(--ink2);font-size:var(--t-nota)}
+.painel .linha{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;margin:6px 0}
+.painel label{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.painel select,.painel input[type="text"]{font:inherit;font-size:var(--t-rot);height:var(--alt);padding:0 8px;
+  background:var(--campo-bg);color:var(--ink);border:1px solid var(--campo-borda);border-radius:2px}
+.painel input[type="text"]{width:120px;text-align:right;font-family:var(--mono)}
+.painel .sugerido{color:var(--muted)}
+.painel .k{font-size:var(--t-cab);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);min-width:150px}
+.painel .botao{border:1px solid var(--campo-borda);background:var(--campo-bg);border-radius:2px;padding:5px 11px;
+  cursor:pointer;font-size:var(--t-nota)}
+.painel .botao:hover{border-color:var(--acento);color:var(--acento)}
+
+/* ============================================================ A FOLHA */
+.pagina{zoom:var(--zoom);width:var(--pg-w);min-height:var(--pg-h);background:var(--pg-papel);color:var(--pg-tinta);
+  box-shadow:var(--pg-sombra);padding:7mm 6mm 8mm;font-family:Arial,'Liberation Sans',Helvetica,sans-serif;
+  font-size:6.6pt;line-height:1.3;position:relative;display:flex;flex-direction:column}
+.pagina.anexo{padding:0;align-items:center;justify-content:center}
+.pagina.anexo img{max-width:100%;max-height:var(--pg-h);display:block}
+.pagina .corpo{background:var(--pg-area);flex:1;padding:3mm 2.4mm 3mm}
+
+/* cabeçalho: logo do cliente, título, logo da empresa, fio marinho */
+.cab{display:grid;grid-template-columns:36mm 1fr 25mm;align-items:center;background:var(--pg-area);min-height:24mm}
+.cab .titulo{text-align:center;font-size:12.5pt;color:var(--pg-rot)}
+.cab .logo{height:20mm;display:flex;align-items:center;justify-content:center;padding:1.5mm}
+.cab .logo img{max-width:100%;max-height:100%;object-fit:contain}
+.cab .logo.direita{background:var(--pg-papel)}
+.fio{height:2.2mm;background:var(--pg-marinho);flex:none}
+
+/* títulos e faixas */
+.tit{font-size:10.5pt;font-weight:700;color:var(--pg-rot);margin:2.6mm 0 1.2mm}
+.tit.menor{font-size:8.5pt;margin:2.5mm 0 1.2mm}
+.subtit{font-size:7.4pt;color:var(--pg-rot);margin:2mm 0 1mm}
+.faixa{background:var(--pg-marinho);color:var(--pg-marinho-ink);text-align:center;font-weight:700;font-size:7pt;
+  padding:1.1mm 1.5mm;text-transform:uppercase}
+.faixa.esq{text-align:left;font-weight:400;font-size:7.4pt}
+.faixa.fina{font-weight:400}
+.faixa .info{float:right;font-weight:400}
+
+/* grades de rótulo e valor */
+.g{display:grid;align-items:stretch}
+.rot{font-weight:700;color:var(--pg-rot);padding:.7mm 1mm;display:flex;align-items:center;white-space:nowrap;min-width:0}
+.rot.tinta{color:var(--pg-tinta)}
+.rot.centro{justify-content:center}
+.rot.quebra{white-space:normal}
+.rot.claro{font-weight:400;color:var(--pg-tinta)}
+.rot.dir{justify-content:flex-end}
+.rot.marinho{background:var(--pg-marinho);color:var(--pg-marinho-ink)}
+.val{padding:.7mm 1mm;display:flex;align-items:center;min-height:4.4mm;min-width:0;overflow-wrap:anywhere}
+.val.cel{background:var(--pg-cel);border:.25mm solid var(--pg-fio)}
+.val.centro{justify-content:center;text-align:center}
+.val.dir{justify-content:flex-end;text-align:right}
+.caixa{border:.25mm solid var(--pg-borda);background:var(--pg-cel)}
+.caixa > .g + .g{border-top:.25mm solid var(--pg-fio)}
+.linhas > *{border-bottom:.25mm solid var(--pg-fio)}
+.pontilhado{border-bottom:.25mm dotted var(--pg-borda)}
+.pagina a{color:var(--pg-link)}
+.espaco{height:2mm}
+.espaco.g2{height:4mm}
+
+/* tabelas da folha */
+table.t{width:100%;border-collapse:collapse;font-size:6.4pt}
+table.t th{font-weight:700;color:var(--pg-tinta);padding:.9mm .8mm;text-align:center;vertical-align:middle;
+  border:.25mm solid var(--pg-fio);background:var(--pg-cel)}
+table.t td{padding:.5mm .8mm;text-align:center;border:.25mm solid var(--pg-fio);background:var(--pg-cel);
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+table.t.marinho th{background:var(--pg-marinho);color:var(--pg-marinho-ink);border-color:var(--pg-marinho)}
+table.t td.esq{text-align:left} table.t td.dir{text-align:right}
+table.t tr.atual td{background:var(--pg-destaque);font-weight:700}
+table.t.pontos td{border-top:none;border-bottom:.25mm dotted var(--pg-borda)}
+table.t.homog th{font-weight:400;font-size:6.2pt;line-height:1.2}
+table.t.homog td{font-size:6.2pt}
+
+/* texto corrido dentro de caixa */
+.texto{border:.25mm solid var(--pg-borda);background:var(--pg-cel);padding:1.8mm 1.4mm;white-space:pre-wrap;
+  text-align:justify;tab-size:8;min-height:12mm;font-size:6.4pt;line-height:1.35}
+.texto .sub{color:var(--pg-rot);font-weight:700;font-size:7pt}
+.texto b{font-weight:700}
+
+/* marcadores (caixas de seleção da planilha) */
+.marca{display:inline-flex;align-items:center;justify-content:center;width:2.6mm;height:2.6mm;
+  border:.25mm solid var(--pg-tinta2);font-size:6pt;line-height:1;color:var(--pg-tinta2);flex:none;margin-right:2mm}
+button.marca{padding:0;background:var(--pg-edita);cursor:pointer;font:inherit;font-size:6pt}
+
+/* imagens */
+.foto{display:flex;flex-direction:column;border:.25mm solid var(--pg-borda);background:var(--pg-cel)}
+.quadro-img{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--pg-vazio);
+  position:relative}
+.quadro-img.encher img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.ficha{font-size:6.1pt}
+.ficha .rot,.ficha .val{padding:.5mm .8mm;min-height:3.9mm}
+.quadro-img img{width:100%;height:100%;object-fit:cover;display:block}
+.foto.conter .quadro-img img{object-fit:contain}
+.foto .legenda{text-align:center;padding:.8mm;font-size:6.4pt;border-top:.25mm solid var(--pg-fio);min-height:4mm}
+.foto .legenda.forte{font-weight:700;color:var(--pg-tinta)}
+.vazia{color:var(--pg-sugerido);font-size:6.4pt;text-align:center;padding:2mm}
+.acoes-img{position:absolute;right:1mm;top:1mm;display:flex;gap:1mm}
+.acoes-img button{border:none;border-radius:1mm;background:rgba(0,0,0,.62);color:#FFFFFF;font-size:6pt;
+  padding:.6mm 1.4mm;cursor:pointer}
+.quadro-img.escolher{cursor:pointer}
+.quadro-img.escolher:hover{outline:.4mm dashed var(--pg-edita-borda);outline-offset:-1.2mm}
+
+/* ---------- campos digitáveis, só na tela ---------- */
+.c{font:inherit;color:inherit;background:var(--pg-edita);border:none;border-bottom:.25mm solid var(--pg-edita-borda);
+  width:100%;min-width:0;padding:.2mm .6mm;border-radius:0;outline:none;height:auto}
+.c:focus{background:var(--pg-cel);box-shadow:0 0 0 .35mm var(--campo-foco)}
+.c.num{text-align:inherit;font-variant-numeric:tabular-nums}
+.c.sugerido{color:var(--pg-sugerido)}
+select.c{appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:3mm;
+  background-image:linear-gradient(45deg,transparent 50%,var(--pg-tinta2) 50%),linear-gradient(135deg,var(--pg-tinta2) 50%,transparent 50%);
+  background-position:calc(100% - 1.7mm) 55%,calc(100% - 1mm) 55%;background-size:.7mm .7mm;background-repeat:no-repeat}
+select.c option{color:var(--ink);background:var(--campo-bg)}
+textarea.c{resize:none;overflow:hidden;white-space:pre-wrap;display:block;line-height:1.35;min-height:12mm;tab-size:8}
+.val.dir .c,.val.dir input.c{text-align:right}
+.val.centro .c{text-align:center}
+td .c{text-align:center}
+td.dir .c{text-align:right}
+.afixo{display:flex;align-items:center;width:100%;gap:.8mm}
+.afixo .pre{flex:none}
+.afixo > :last-child{flex:1}
+.afixo.junto{justify-content:flex-start}
+.afixo.junto > :last-child{flex:none}
+.afixo.junto .c{width:12mm}
+.nota-tela{font-size:6pt;color:var(--pg-sugerido);margin:.6mm 0 0}
+.adicionar{border:.3mm dashed var(--pg-edita-borda);background:var(--pg-edita);color:var(--pg-rot);cursor:pointer;
+  font:inherit;font-size:7pt;padding:3mm;width:100%}
+
+/* ---------- gráficos ---------- */
+svg.grafico{display:block;width:100%;height:auto;font-family:Arial,'Liberation Sans',Helvetica,sans-serif}
+svg.grafico .grade{stroke:var(--gr-grade);stroke-width:.6}
+svg.grafico .eixo{stroke:var(--gr-eixo);stroke-width:.6}
+svg.grafico .bissetriz{stroke:var(--gr-bissetriz);stroke-width:1.2}
+svg.grafico text{fill:var(--pg-tinta2)}
+svg.grafico .tit-g{fill:var(--pg-tinta);font-size:11px}
+svg.grafico .ec1{fill:var(--ec1)} svg.grafico .ec2{fill:var(--ec2)} svg.grafico .ec3{fill:var(--ec3)}
+svg.grafico .ec4{fill:var(--ec4)} svg.grafico .ec5{fill:var(--ec5)}
+svg.grafico .total{fill:var(--wf-total)} svg.grafico .deducao{fill:var(--wf-deducao)} svg.grafico .final{fill:var(--wf-final)}
+.legenda-ec{display:inline-block;width:3mm;height:3mm}
+.legenda-ec.ec1{background:var(--ec1)} .legenda-ec.ec2{background:var(--ec2)} .legenda-ec.ec3{background:var(--ec3)}
+.legenda-ec.ec4{background:var(--ec4)} .legenda-ec.ec5{background:var(--ec5)}
+
+/* ---------- diálogo de impressão ---------- */
+dialog.dialogo{border:1px solid var(--rule);border-radius:3px;background:var(--surface);color:var(--ink);padding:18px 20px;
+  max-width:420px;width:92vw;box-shadow:var(--flutua)}
+dialog.dialogo::backdrop{background:rgba(20,23,26,.45)}
+dialog.dialogo h2{font-family:var(--serif);font-size:var(--t-tit);font-weight:600;margin:0 0 6px}
+dialog.dialogo p{margin:0 0 10px;color:var(--ink2);font-size:var(--t-nota)}
+dialog.dialogo label{display:flex;gap:8px;align-items:center;padding:4px 0;cursor:pointer}
+dialog.dialogo .n{margin-left:auto;color:var(--muted);font-size:var(--t-nota)}
+dialog.dialogo .botoes{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+dialog.dialogo button{border:1px solid var(--campo-borda);background:var(--campo-bg);color:var(--ink);border-radius:3px;
+  padding:6px 14px;cursor:pointer}
+dialog.dialogo button.principal{background:var(--acento);border-color:var(--acento);color:var(--acento-ink)}
+.aviso-flutuante{position:fixed;right:18px;bottom:18px;z-index:60;max-width:380px;background:var(--surface);
+  border:1px solid var(--warn);border-left:3px solid var(--warn);border-radius:2px;padding:11px 14px;
+  font-size:var(--t-rot);color:var(--ink);box-shadow:var(--flutua)}
+.aviso-flutuante b{display:block;font-size:var(--t-cab);letter-spacing:.08em;text-transform:uppercase;color:var(--warn);margin-bottom:3px}
+
+/* ============================================================ IMPRESSÃO
+   Só as páginas escolhidas, em A4, sem margem do navegador (a folha já
+   traz as suas) e sempre no papel claro. */
+@page{size:A4;margin:0}
+@media print{
+  :root,:root:not([data-tema="claro"]),:root[data-tema]{
+    --pg-papel:#FFFFFF; --pg-area:#FBFBFB; --pg-tinta:#1A1A1A; --pg-tinta2:#404040;
+    --pg-rot:#002060; --pg-marinho:#002060; --pg-marinho-ink:#FFFFFF;
+    --pg-borda:#CFCFCF; --pg-fio:#E2E2E2; --pg-cel:#FFFFFF; --pg-link:#0563C1; --pg-destaque:#FFF2CC;
+    --pg-vazio:#FFFFFF; --wf-total:#1F3864; --wf-deducao:#C0504D; --wf-final:#2E7D32;
+    --gr-grade:#D9D9D9; --gr-eixo:#8C8C8C; --gr-bissetriz:#7F7F7F;
+    color-scheme:light;
+  }
+  html,body{background:#FFFFFF}
+  .barra,.abas,#folha,.aviso-flutuante,dialog{display:none !important}
+  #impressao{display:block}
+  /* altura mínima, não fixa: texto longo demais transborda para a folha
+     seguinte em vez de sumir cortado */
+  .pagina{zoom:var(--pg-escala);box-shadow:none;width:var(--pg-w);min-height:calc(var(--pg-h) - 1mm);
+    break-after:page;page-break-after:always;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .pagina:last-child{break-after:auto;page-break-after:auto}
+}
+</style>
+
+<header class="barra">
+  <div class="resumo-topo" id="resumo-topo"></div>
+  <span class="vazio"></span>
+  <button class="acao" id="btn-tema" type="button" title="Alternar tema">Tema claro</button>
+  <button class="acao" id="btn-abrir" type="button">Abrir premissas</button>
+  <button class="acao" id="btn-json" type="button">Salvar</button>
+  <button class="acao destaque" id="btn-imprimir" type="button">Imprimir laudo</button>
+</header>
+<nav class="abas" id="abas" role="tablist"></nav>
+<main class="folha" id="folha"></main>
+<div id="impressao"></div>
+<input type="file" id="arquivo-json" accept="application/json,.json" hidden>
+
+<dialog class="dialogo" id="dlg-imprimir" aria-labelledby="dlg-imprimir-t">
+  <h2 id="dlg-imprimir-t">Imprimir laudo</h2>
+  <p>Escolha as partes que entram no laudo. Na janela do navegador, use papel A4, sem margens, e
+     "Gráficos de fundo" ligado — ou salve como PDF.</p>
+  <div id="dlg-imprimir-lista"></div>
+  <div class="botoes">
+    <button type="button" id="dlg-imprimir-cancelar">Cancelar</button>
+    <button type="button" class="principal" id="dlg-imprimir-ok">Imprimir</button>
+  </div>
+</dialog>
+
+<script src="motor.js"></script>
+<script src="app.js"></script>

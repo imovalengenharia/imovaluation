@@ -1,7 +1,8 @@
 # Imovaluation
 
 Plataforma de modelagens imobiliárias: a casca autentica, cobra e guarda; cada modelagem é um
-aplicativo dentro dela. A de **Glebas urbanizáveis** é a primeira.
+aplicativo dentro dela: **Glebas urbanizáveis** e **Comparativo direto de dados de mercado**
+(o laudo de avaliação de casas, apartamentos, lotes e salas, pronto para imprimir).
 
 ## Usar no seu computador
 
@@ -38,15 +39,15 @@ npm run dev               # http://localhost:3000, recarregando ao salvar
 ## Testar
 
 ```bash
-npm test                  # casca contra um Postgres real + auditoria do involutivo
+npm test                  # casca contra um Postgres real + auditorias dos módulos
 npm run test:navegador    # a ponte casca ↔ módulo no Chromium
 ```
 
 ## O que já existe
 
 - **Conta** — cadastro, entrar, sair, recuperação de senha por e-mail. Um login é uma pessoa.
-- **Metodologias** — a primeira tela depois de entrar mostra só elas, para escolher (por
-  ora, Glebas urbanizáveis).
+- **Metodologias** — a primeira tela depois de entrar mostra só elas, para escolher:
+  Glebas urbanizáveis e Comparativo direto de dados de mercado.
 - **Pastas de trabalho** — dentro de cada metodologia, sem misturar com as de outra; cada
   pasta com vários estudos, em
   cartões que mostram os números principais de cada um. Renomear, duplicar (para montar

@@ -147,6 +147,26 @@ const ILUSTRACOES = {
     </g>
     <circle class="marco" cx="178" cy="44" r="4"/>
   </svg>`,
+  /* um quarteirão visto de cima: o avaliando marcado ao centro, e os
+     comparativos da amostra ligados a ele — a pesquisa de mercado */
+  comparativo: html`<svg viewBox="0 0 240 150" class="ilustracao" aria-hidden="true">
+    <path class="via" d="M8 40 L232 40"/>
+    <path class="via" d="M8 112 L232 112"/>
+    <path class="via" d="M78 8 L78 142"/>
+    <path class="via" d="M164 8 L164 142"/>
+    <g class="lotes">
+      <path d="M20 52 L66 52 L66 100 L20 100 Z"/><path d="M20 76 L66 76"/><path d="M43 52 L43 76"/>
+      <path d="M90 52 L152 52 L152 100 L90 100 Z"/><path d="M110 52 L110 100"/><path d="M131 52 L131 100"/>
+      <path d="M176 52 L222 52 L222 100 L176 100 Z"/><path d="M176 76 L222 76"/><path d="M199 76 L199 100"/>
+      <path d="M20 14 L66 14 L66 30 L20 30 Z"/><path d="M90 14 L152 14 L152 30 L90 30 Z"/>
+      <path d="M90 122 L152 122 L152 138 L90 138 Z"/><path d="M176 122 L222 122 L222 138 L176 138 Z"/>
+      <path d="M120 76 L43 64 M120 76 L199 88 M120 76 L121 22 M120 76 L199 130"/>
+    </g>
+    <path class="terreno" d="M110 52 L131 52 L131 100 L110 100 Z"/>
+    <circle class="marco" cx="120" cy="76" r="5"/>
+    <circle class="marco" cx="43" cy="64" r="3"/><circle class="marco" cx="199" cy="88" r="3"/>
+    <circle class="marco" cx="121" cy="22" r="3"/><circle class="marco" cx="199" cy="130" r="3"/>
+  </svg>`,
 };
 
 /* ------------------------------------------- a tela inicial: as metodologias */

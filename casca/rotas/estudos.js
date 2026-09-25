@@ -6,6 +6,9 @@ import { paginaEstudo } from '../paginas/paginas.js';
 import { MODULOS, moduloExiste } from '../modulos.js';
 import { lerNome, urlPasta } from './comum.js';
 
+/* fotos do imóvel, dos comparativos e anexos, já reduzidas no navegador */
+export const LIMITE_PREMISSAS = 40 * 1024 * 1024;
+
 const objeto = v => v && typeof v === 'object' && !Array.isArray(v);
 
 export default async function rotasEstudos(app) {
@@ -78,8 +81,9 @@ export default async function rotasEstudos(app) {
   });
 
   /* O que o módulo devolve: o estudo em JSON, inteiro, cada vez que muda —
-     e, se ele quiser, o resumo que aparece no cartão. */
-  app.put('/api/estudos/:id/premissas', async (req, reply) => {
+     e, se ele quiser, o resumo que aparece no cartão. O limite é maior que o
+     do resto da casca porque um laudo leva as fotos dentro das premissas. */
+  app.put('/api/estudos/:id/premissas', { bodyLimit: LIMITE_PREMISSAS }, async (req, reply) => {
     const { premissas, resumo } = req.body || {};
     if (!objeto(premissas)) return reply.code(400).send({ erro: 'premissas deve ser um objeto JSON' });
     if (!uuidValido(req.params.id)) return reply.callNotFound();

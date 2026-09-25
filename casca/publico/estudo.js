@@ -24,8 +24,10 @@
     var corpo = JSON.stringify(pendente);
     pendente = null; gravando = true;
     mostrar('Salvando…');
+    /* keepalive (o que sobrevive a fechar a aba) não leva mais de 64 KB: um
+       estudo com fotos sai sem ele, e o aviso de saída segura a pessoa */
     fetch(url + '/premissas', {
-      method: 'PUT', body: corpo, keepalive: !!finalizando, credentials: 'same-origin',
+      method: 'PUT', body: corpo, keepalive: !!finalizando && corpo.length < 60000, credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json' },
     }).then(function (r) {
       gravando = false;

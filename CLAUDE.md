@@ -7,7 +7,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Imovaluation** é uma plataforma de modelagens: a **casca** autentica, cobra e
 guarda; cada **modelagem** (na tela, "tipo de análise da qualidade do
 investimento imobiliário") é um aplicativo dentro dela. A primeira é **Glebas
-urbanizáveis** (`modulos/involutivo/`). Atenção ao vocabulário, que o dono do
+urbanizáveis** (`modulos/involutivo/`); a segunda, **Comparativo direto de dados
+de mercado** (`modulos/comparativo/`), o laudo de avaliação por tratamento por
+fatores. Atenção ao vocabulário, que o dono do
 produto corrigiu: **involutivo é um método de avaliação usado dentro do estudo**,
 não o nome da análise — na interface, o produto é "Glebas urbanizáveis". A plataforma nasceu do zero — nada de código, modelo de dados ou
 hábito de projeto anterior. O nome exibido vem de `PLATAFORMA_NOME`
@@ -17,6 +19,7 @@ hábito de projeto anterior. O nome exibido vem de `PLATAFORMA_NOME`
 |---|---|---|---|
 | casca | `casca/` | Node 22, Fastify, Postgres 16, ESM | `npm run dev` → http://localhost:3000 |
 | involutivo | `modulos/involutivo/` | JavaScript puro, sem build, sem dependências | abrir `index.html` no navegador — ou dentro da casca |
+| comparativo | `modulos/comparativo/` | JavaScript puro, sem build, sem dependências | idem |
 
 Cada módulo tem o seu `CLAUDE.md`, com o contrato de cálculo e as armadilhas
 que são só dele. **Antes de mexer num módulo, leia o dele.**
@@ -28,12 +31,13 @@ docker compose -f compose.yaml -f compose.dev.yaml up -d banco   # só o Postgre
 cp .env.exemplo .env
 npm install
 npm run dev                 # migra o banco e sobe a casca, recarregando ao salvar
-npm test                    # casca no Postgres e no PGlite + auditoria do involutivo
+npm test                    # casca no Postgres e no PGlite + auditorias dos módulos
 npm run test:navegador      # a ponte casca ↔ módulo no Chromium (Playwright)
 npm run local               # como o usuário roda: PGlite em ~/Imovaluation, abre o navegador
 docker compose up --build -d # a plataforma inteira em Docker (Dockerfile + compose.yaml)
 node --env-file=.env --test --test-concurrency=1 --test-name-pattern='recuperação' 'testes/*.test.js'
 cd modulos/involutivo && node testes/auditoria.js                  # só o motor
+cd modulos/comparativo && node testes/auditoria.js                 # só o motor do comparativo
 ```
 
 A suíte **apaga e recria** o banco de `DATABASE_URL_TESTE` a cada arquivo de
@@ -75,6 +79,10 @@ escutar as mensagens: com o `src` direto no HTML, o `'pronto'` do módulo às
 vezes chegava antes do ouvinte e o estudo abria em branco — só em produção.
 
 A casca agrupa as mudanças (800 ms) e grava com `PUT /api/estudos/:id/premissas`.
+Essa rota aceita até 40 MB (`LIMITE_PREMISSAS`), o resto da casca 2 MB: o
+comparativo leva as fotos do laudo dentro das premissas. Por isso, ao sair da
+página, a casca só usa `fetch` com `keepalive` quando o corpo cabe nos 64 KB
+que o navegador permite — o aviso de saída segura quem tem mudança na fila.
 Ela **não lê** as premissas: guarda o JSON como veio e o devolve ao abrir. A
 migração de formato de premissas antigas é do módulo, não da casca.
 
