@@ -147,7 +147,13 @@ button{font:inherit;color:inherit}
 /* títulos e faixas */
 .tit{font-size:10.5pt;font-weight:700;color:var(--pg-rot);margin:2.6mm 0 1.2mm}
 .tit.menor{font-size:8.5pt;margin:2.5mm 0 1.2mm}
-.subtit{font-size:7.4pt;color:var(--pg-rot);margin:2mm 0 1mm}
+.subtit{font-size:8.5pt;font-weight:700;color:var(--pg-rot);margin:2.5mm 0 1.2mm}
+/* quadros lado a lado com a mesma altura: a caixa ocupa o que sobra da coluna
+   e as linhas dividem a altura por igual */
+.colunas{align-items:stretch}
+.coluna{display:flex;flex-direction:column}
+.coluna > .caixa{flex:1 1 auto;display:flex;flex-direction:column}
+.coluna > .caixa > *{flex:1 1 auto}
 /* a faixa de título não encosta no que vem embaixo */
 .faixa{margin-bottom:1.3mm;background:var(--pg-marinho);color:var(--pg-marinho-ink);text-align:center;font-weight:700;font-size:7pt;
   padding:1.1mm 1.5mm;text-transform:uppercase}

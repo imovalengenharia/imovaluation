@@ -676,32 +676,33 @@
     function marcado(caminho, texto) {
       return e('div', { cls: 'val', style: 'min-height:5.2mm' }, [ctx.chk(caminho), e('span', { txt: texto })]);
     }
-    var melh = e('div', {}, [faixa('MELHORAMENTOS PÚBLICOS', 'fina'), e('div', { cls: 'caixa' },
+    /* os três quadros de cima têm quatro linhas cada e a mesma altura */
+    var melh = e('div', { cls: 'coluna' }, [faixa('MELHORAMENTOS PÚBLICOS', 'fina'), e('div', { cls: 'caixa' },
       repetir(4, function (i) {
         return g('1fr 1fr', [marcado(r + 'melhoramentos.' + MELHORAMENTOS[2 * i][0], MELHORAMENTOS[2 * i][1]),
           marcado(r + 'melhoramentos.' + MELHORAMENTOS[2 * i + 1][0], MELHORAMENTOS[2 * i + 1][1])]);
       }))]);
-    var serv = e('div', {}, [faixa('SERVIÇOS PÚBLICOS E COMUNITÁRIOS', 'fina'), e('div', { cls: 'caixa' },
+    var serv = e('div', { cls: 'coluna' }, [faixa('SERVIÇOS PÚBLICOS E COMUNITÁRIOS', 'fina'), e('div', { cls: 'caixa' },
       repetir(4, function (i) {
         var a = SERVICOS[2 * i], b = SERVICOS[2 * i + 1];
         return g('20% 30% 20% 30%', [rot(a[1], 'claro'), val(ctx.sel(r + 'servicos.' + a[0], LS.distancias)),
           rot(b[1], 'claro'), val(ctx.sel(r + 'servicos.' + b[0], LS.distancias))]);
       }))]);
-    var pec = e('div', {}, [faixa('PECULIARIDADES / FATORES RESTRITIVOS', 'fina'), e('div', { cls: 'caixa' }, [
+    var pec = e('div', { cls: 'coluna' }, [faixa('PECULIARIDADES / FATORES RESTRITIVOS', 'fina'), e('div', { cls: 'caixa' }, [
       g('1fr 1fr', [marcado(r + 'peculiaridades.comunidade', 'Comunidade'), marcado(r + 'peculiaridades.inundacao', 'Risco a inundação')]),
       g('1fr 1fr', [marcado(r + 'peculiaridades.feira', 'Feira Livre'), marcado(r + 'peculiaridades.ambiental', 'Risco ambiental')]),
-      g('1fr 1fr', [marcado(r + 'peculiaridades.outros', 'Outros'), e('div')])])]);
+      g('1fr 1fr', [marcado(r + 'peculiaridades.outros', 'Outros'), e('div')]),
+      g('1fr 1fr', [e('div', { cls: 'val', style: 'min-height:5.2mm' }), e('div')])])]);
     var par2 = function (a, b, cols) {
       cols = cols || '50% 50%';
-      return e('div', { cls: 'caixa' }, [g(cols, [rot(a[0]), val(a[1])]), g(cols, [rot(b[0]), val(b[1])])]);
+      return e('div', { cls: 'coluna' }, [e('div', { cls: 'caixa' }, [g(cols, [rot(a[0]), val(a[1])]), g(cols, [rot(b[0]), val(b[1])])])]);
     };
-    var regiaoLinha2 = g('1fr 1fr 1fr', [
+    var regiaoLinha2 = [
       par2(['PADRÃO DA REGIÃO', ctx.sel(r + 'padrao', LS.padraoRegiao)],
            ['OCUPAÇÃO PREDOMINANTE', ctx.sel(r + 'ocupacao', LS.ocupacaoPredominante)], '58% 42%'),
       par2(['TRÁFEGO NA REGIÃO', ctx.sel(r + 'trafego', LS.trafego)],
            ['IMPLANTAÇÃO', ctx.sel(r + 'implantacao', LS.implantacao)]),
-      e('div', {}, [faixa('ZONEAMENTO', 'fina'), e('div', { cls: 'caixa' }, [val(ctx.txt(r + 'zoneamento'), 'centro')])])],
-      { gap: '9mm' });
+      e('div', { cls: 'coluna' }, [faixa('ZONEAMENTO', 'fina'), e('div', { cls: 'caixa' }, [val(ctx.txt(r + 'zoneamento'), 'centro')])])];
 
     var terreno = g('1fr 1fr 1fr', [
       e('div', { cls: 'caixa' }, [g('45% 55%', [rot('TOPOGRAFIA'), val(ctx.sel(im + 'topografia', LS.topografia))])]),
@@ -747,17 +748,17 @@
 
     return [pagina(ctx, [
       tit('Dados da Região'),
-      g('1fr 1fr 1fr', [melh, serv, pec], { gap: '9mm' }), espaco(),
-      regiaoLinha2, espaco(),
-      e('div', { cls: 'subtit', txt: 'OBSERVAÇÕES GERAIS SOBRE A REGIÃO' }),
+      g('1fr 1fr 1fr', [melh, serv, pec], { gap: '9mm', cls: 'colunas' }), espaco('g2'),
+      g('1fr 1fr 1fr', regiaoLinha2, { gap: '9mm', cls: 'colunas' }),
+      tit('OBSERVAÇÕES GERAIS SOBRE A REGIÃO', 'menor'),
       ctx.area(r + 'observacoes', { alt: '20mm' }),
       tit('Dados do Imóvel'),
-      faixa('TERRENO', 'esq'), espaco(), terreno, espaco(),
-      faixa('EDIFICAÇÃO', 'esq'), espaco(), edif, espaco(),
-      faixa('INFRAESTRUTURA', 'esq'), infra,
+      faixa('TERRENO', 'esq'), terreno, espaco(),
+      faixa('EDIFICAÇÃO', 'esq'), edif, espaco(),
+      faixa('INFRAESTRUTURA', 'esq'), infra, espaco(),
       faixa('UNIDADE PRIVATIVA', 'esq'), unidade, espaco(),
       faixa(e('span', {}, ['DIVISÃO INTERNA POR AMBIENTE', e('span', { cls: 'info', txt: 'ⓘ' })]), 'esq'),
-      espaco(), tab, espaco('g2'),
+      tab, espaco('g2'),
       divergencia('divTerreno', 'O imóvel possui divergência de área de terreno entre documentações e área estimada em vistoria?',
         function (rr) { return rr.capa.divTerreno; }),
       espaco(),

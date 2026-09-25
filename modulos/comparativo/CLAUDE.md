@@ -89,6 +89,15 @@ branco). No papel — impressão e aba Impressão — a cor cheia vai junto e os
 campos saem em branco, porque lá não há campo, só texto. Cor nova na folha
 deriva desses tokens; nada de azul fixo.
 
+**Espaçamento padronizado em todo o laudo** (pedido repetido do avaliador):
+entre a faixa de título e o que vem embaixo, só o `margin-bottom` da própria
+`.faixa` (1,3 mm) — nunca um `espaco()` logo depois de faixa; entre blocos,
+`espaco()` (2 mm) ou `espaco('g2')` (4 mm). Quadros lado a lado vão numa
+grade `.colunas` com cada um em `.coluna`, para ficarem da mesma altura. Os
+títulos de observações ("OBSERVAÇÕES GERAIS…") usam `tit(…, 'menor')` ou
+`.subtit`, ambos em negrito. A conferência é medir, na aba Impressão, a
+distância de cada `.faixa` ao elemento seguinte: tem de dar um valor só.
+
 Texto corrido (observações, justificativa, texto da liquidação) é editado com
 uma **barra de ferramentas** — negrito, itálico, sublinhado, subtítulo e listas — e guardado como HTML de formatação. `limparHtml()` passa tudo por uma
 lista de marcas permitidas (b, i, u, br, div, ul, ol, li, h4) antes de gravar e
