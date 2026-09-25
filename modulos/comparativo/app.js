@@ -125,7 +125,9 @@
       '@media print{:root,:root:not([data-tema="claro"]),:root:not([data-tema="claro"]):not([data-theme="light"]),' +
         ':root[data-tema],:root[data-theme="dark"]:not([data-tema="claro"]){' + papel + '}}';
     var el = document.getElementById('estilo-cor');
-    if (!el) { el = document.createElement('style'); el.id = 'estilo-cor'; document.head.appendChild(el); }
+    /* depois de todo o CSS da página, onde quer que ele esteja (no link web a
+       página inteira vai para o <body>): só assim a cor vence o azul padrão */
+    if (!el) { el = document.createElement('style'); el.id = 'estilo-cor'; document.body.appendChild(el); }
     el.textContent = css;
     var inp = document.getElementById('cor-laudo');
     if (inp && document.activeElement !== inp) inp.value = cor.toLowerCase();
