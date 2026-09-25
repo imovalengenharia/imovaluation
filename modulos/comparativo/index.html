@@ -130,7 +130,8 @@ button{font:inherit;color:inherit}
 .pagina .corpo{background:var(--pg-area);flex:1;padding:3mm 2.4mm 3mm}
 
 /* cabeçalho: logo do cliente, título, logo da empresa, fio marinho */
-.cab{display:grid;grid-template-columns:40mm 1fr 40mm;align-items:stretch;background:var(--pg-area);height:26mm}
+/* 3,5 mm de respiro entre os logos e o fio, ainda dentro da faixa */
+.cab{display:grid;grid-template-columns:40mm 1fr 40mm;align-items:stretch;background:var(--pg-area);height:29.5mm;padding-bottom:3.5mm}
 .cab .titulo{text-align:center;font-size:12.5pt;color:var(--pg-rot);align-self:center}
 /* os dois logos na mesma caixa, da borda de cima da faixa até o fio, cada um
    encostado na sua quina: o do cliente à esquerda, o da empresa à direita */
