@@ -89,9 +89,15 @@ branco). No papel — impressão e aba Impressão — a cor cheia vai junto e os
 campos saem em branco, porque lá não há campo, só texto. Cor nova na folha
 deriva desses tokens; nada de azul fixo.
 
-Texto corrido (observações, texto da liquidação) aceita duas marcas, para sair
-como no laudo: linha começando por `# ` é subtítulo em azul; `**trecho**` é
-negrito.
+Texto corrido (observações, justificativa, texto da liquidação) é editado com
+uma **barra de ferramentas** — negrito, itálico, sublinhado, subtítulo, listas,
+limpar — e guardado como HTML de formatação. `limparHtml()` passa tudo por uma
+lista de marcas permitidas (b, i, u, br, div, ul, ol, li, h4) antes de gravar e
+antes de mostrar: atributos, estilos e scripts somem, inclusive do que vem
+colado do Word. Tab insere tabulação (para alinhar colunas no texto). Estudos
+da versão 3, com as marcas antigas ("# " subtítulo, `**negrito**`), migram em
+`migrar()` (`P.versao = 4`). Na Capa, o quadro de observações desce até o fim
+da folha (`pagina(…, { estica: true })` + `ctx.area(…, { estica: true })`).
 
 ### Imagens
 

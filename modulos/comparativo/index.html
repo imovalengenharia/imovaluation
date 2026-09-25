@@ -97,7 +97,7 @@ button{font:inherit;color:inherit}
 .cor-laudo input[type="color"]{width:34px;height:var(--alt);padding:2px;border:1px solid rgba(242,240,233,.28);
   border-radius:3px;background:transparent;cursor:pointer}
 .acao.mini{padding:4px 8px;height:auto}
-.abas{position:sticky;top:49px;z-index:29;background:var(--surface);border-bottom:1px solid var(--rule);
+.abas{position:sticky;top:var(--barra-alt,49px);z-index:29;background:var(--surface);border-bottom:1px solid var(--rule);
   display:flex;overflow-x:auto;padding:0 12px 1px;scrollbar-width:none}
 .abas::-webkit-scrollbar{display:none}
 .aba{border:none;background:none;padding:10px 15px;font-size:var(--t-rot);color:var(--muted);cursor:pointer;
@@ -170,6 +170,7 @@ button{font:inherit;color:inherit}
 .val.cel{background:var(--pg-cel);border:.25mm solid var(--pg-fio)}
 .val.centro{justify-content:center;text-align:center}
 .val.dir{justify-content:flex-end;text-align:right}
+.val.cel.justo{justify-self:start;padding-right:7mm}
 .caixa{border:.25mm solid var(--pg-borda);background:var(--pg-cel)}
 .caixa > .g + .g{border-top:.25mm solid var(--pg-fio)}
 .linhas > *{border-bottom:.25mm solid var(--pg-fio)}
@@ -194,8 +195,24 @@ table.t.homog td{font-size:6.2pt}
 /* texto corrido dentro de caixa */
 .texto{border:.25mm solid var(--pg-borda);background:var(--pg-cel);padding:1.8mm 1.4mm;white-space:pre-wrap;
   text-align:justify;tab-size:8;min-height:12mm;font-size:6.4pt;line-height:1.35}
-.texto .sub{color:var(--pg-rot);font-weight:700;font-size:7pt}
+.texto .sub,.texto h4{color:var(--pg-rot);font-weight:700;font-size:7pt;margin:0}
 .texto b{font-weight:700}
+.texto ul,.texto ol{margin:0;padding-left:5mm;white-space:normal}
+.texto li{white-space:pre-wrap}
+/* o editor: a mesma caixa do papel, digitável, com a barra de formatação em cima */
+.area-texto{display:flex;flex-direction:column}
+.texto.editor{background:var(--pg-edita);outline:none;cursor:text}
+.texto.editor:focus{background:var(--pg-cel);box-shadow:0 0 0 .35mm var(--campo-foco)}
+.ferramentas{display:flex;gap:1mm;padding:.8mm 0;flex-wrap:wrap}
+.ferramentas button{font:inherit;font-size:6.4pt;color:var(--pg-rot);background:var(--pg-cel);
+  border:.25mm solid var(--pg-edita-borda);border-radius:.6mm;padding:.4mm 1.8mm;cursor:pointer;min-width:5mm}
+.ferramentas button:hover{background:var(--pg-edita)}
+.ferramentas button:focus-visible{outline:.35mm solid var(--campo-foco)}
+/* página cujo último quadro de texto desce até o fim da folha */
+.corpo.estica{display:flex;flex-direction:column}
+.corpo.estica > *{flex:none}
+.corpo.estica > .estica{flex:1 1 auto}
+.area-texto.estica > .texto{flex:1 1 auto}
 
 /* marcadores (caixas de seleção da planilha) */
 .marca{display:inline-flex;align-items:center;justify-content:center;width:2.6mm;height:2.6mm;

@@ -146,7 +146,7 @@
   function premissasVazias() {
     var area = function () { return { matricula: null, iptu: null, estimada: null, doc: null }; };
     return {
-      versao: 3,
+      versao: 4,
       logos: { cliente: null, empresa: null },
       capa: { proponente: '', tipoLaudo: '', proposta: '', matricula: '', logradouro: '', numero: '',
         complemento: '', empreendimento: '', bairro: '', cidade: '', uf: '', cep: '',
@@ -154,7 +154,7 @@
         areas: { terreno: area(), privativa: area(), comum: area() },
         valorVagaAutonoma: null, empresa: '', responsavel: '', dataEntrega: '',
         conselhoEmpresa: '', conselhoEmpresaUF: '', conselhoEmpresaNumero: '',
-        assinatura: null, conselho: '', conselhoUF: '', conselhoNumero: '', observacoes: TEXTO_CAPA },
+        assinatura: null, conselho: '', conselhoUF: '', conselhoNumero: '', observacoes: marcasParaHtml(TEXTO_CAPA) },
       regiao: { melhoramentos: {}, servicos: {}, peculiaridades: {}, padrao: '', ocupacao: '', trafego: '',
         implantacao: '', zoneamento: '', observacoes: '' },
       imovel: { topografia: '', formato: '', multFrentes: '', pavimentos: null, unidades: null, vagas: null,
@@ -171,9 +171,9 @@
       croquiSituacao: null,
       calculo: { tabela: 'C', fundamentacao: '', cotaTerreno: null, cotaConstrucao: null,
         oferta: repetir(N, function () { return null; }), fatores: {}, expoenteAuVg: null, fam: null,
-        observacoes: TEXTO_CALCULO },
+        observacoes: marcasParaHtml(TEXTO_CALCULO) },
       grafico: { croqui: null },
-      liquidacao: { texto: TEXTO_LIQUIDACAO, prazo: null, rotuloTaxa: 'Tesouro Prefixado 2029', taxa: null,
+      liquidacao: { texto: marcasParaHtml(TEXTO_LIQUIDACAO), prazo: null, rotuloTaxa: 'Tesouro Prefixado 2029', taxa: null,
         ipca: null, iptuAno: null, condominioMes: null, oferta: '', demanda: '', absorcao: '', desempenho: '' },
       fotos: [], anexos: [],
       impressao: {},
@@ -248,17 +248,54 @@
   /* Texto com duas marcas, para os quadros de observação ficarem como no
      laudo: linha começando por "# " é subtítulo; **trecho** é negrito. */
   function textoRico(s) {
+    var d = document.createElement('div');
+    d.innerHTML = limparHtml(s);          // já limpo: só as marcas de texto permitidas
     var frag = document.createDocumentFragment();
-    String(s || '').split('\n').forEach(function (linha, i) {
-      if (i) frag.appendChild(document.createTextNode('\n'));
-      if (/^# /.test(linha)) { frag.appendChild(e('span', { cls: 'sub', txt: linha.slice(2) })); return; }
-      linha.split(/(\*\*[^*]+\*\*)/).forEach(function (p) {
-        if (/^\*\*[^*]+\*\*$/.test(p)) frag.appendChild(e('b', { txt: p.slice(2, -2) }));
-        else if (p) frag.appendChild(document.createTextNode(p));
-      });
-    });
+    while (d.firstChild) frag.appendChild(d.firstChild);
     return frag;
   }
+
+  /* O texto corrido guarda HTML, mas só o de formatação: negrito, itálico,
+     sublinhado, subtítulo, listas e quebras. Tudo o mais — atributos,
+     estilos, scripts, o que vier colado do Word — some aqui, antes de gravar
+     e antes de mostrar. Negrito e itálico que o Word manda como estilo de
+     <span> viram <b> e <i>. */
+  var TAGS_TEXTO = { B: 'b', STRONG: 'b', I: 'i', EM: 'i', U: 'u', BR: 'br', DIV: 'div', P: 'div',
+    UL: 'ul', OL: 'ol', LI: 'li', H1: 'h4', H2: 'h4', H3: 'h4', H4: 'h4', H5: 'h4', H6: 'h4' };
+  function limparHtml(html) {
+    var t = document.createElement('template');
+    t.innerHTML = String(html == null ? '' : html);
+    var saida = document.createElement('div');
+    (function copiar(de, para) {
+      Array.prototype.forEach.call(de.childNodes, function (no) {
+        if (no.nodeType === 3) { para.appendChild(document.createTextNode(no.nodeValue)); return; }
+        if (no.nodeType !== 1 || /^(SCRIPT|STYLE|TEMPLATE|IFRAME|OBJECT|HEAD|TITLE|META|LINK)$/.test(no.tagName)) return;
+        var tag = TAGS_TEXTO[no.tagName], alvo = para;
+        if (tag) { alvo = document.createElement(tag); para.appendChild(alvo); }
+        else if (no.style) {
+          var peso = no.style.fontWeight;
+          if (peso === 'bold' || +peso >= 600) { alvo = alvo.appendChild(document.createElement('b')); }
+          if (no.style.fontStyle === 'italic') { alvo = alvo.appendChild(document.createElement('i')); }
+          if (/underline/.test(no.style.textDecoration || '')) { alvo = alvo.appendChild(document.createElement('u')); }
+        }
+        copiar(no, alvo);
+      });
+    })(t.content, saida);
+    return saida.innerHTML;
+  }
+  /* as marcas da versão anterior ("# " subtítulo, **negrito**) em HTML */
+  function marcasParaHtml(s) {
+    var esc = function (x) { return x.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
+    var linhas = String(s == null ? '' : s).split('\n'), out = '';
+    linhas.forEach(function (l, i) {
+      if (/^# /.test(l)) { out += '<h4>' + esc(l.slice(2)) + '</h4>'; return; }
+      out += esc(l).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+      if (i < linhas.length - 1) out += '\n';
+    });
+    return out;
+  }
+  var CAMPOS_TEXTO = ['capa.observacoes', 'regiao.observacoes', 'restricoes.justificativa',
+    'restricoes.observacoes', 'calculo.observacoes', 'liquidacao.texto'];
 
   /* ------------------------------------------------------------ imagens
      A foto entra no estudo reduzida no próprio navegador: o laudo não pede
@@ -373,23 +410,55 @@
     };
 
     /* texto corrido: na tela cresce com o que se digita, nunca rola */
+    /* texto corrido: na tela, um editor com a barra de formatação, que
+       cresce com o que se digita; no papel, o texto formatado */
     ctx.area = function (caminho, o) {
       o = o || {};
       var v = pegar(caminho) || '';
-      var caixa = e('div', { cls: 'texto', style: o.alt ? 'min-height:' + o.alt : null });
-      if (papel) { caixa.appendChild(textoRico(v)); return caixa; }
-      caixa.style.padding = '0';
-      var el = e('textarea', { cls: 'c', 'aria-label': o.rot || caminho, spellcheck: 'true',
-        style: o.alt ? 'min-height:' + o.alt : null });
-      el.value = v;
-      function crescer() { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
-      el.addEventListener('input', function () { guardar(caminho, el.value); crescer(); mudou(); });
-      requestAnimationFrame(crescer);
-      atualizadores.push(crescer);
-      caixa.appendChild(el);
-      if (o.marcas !== false) caixa.appendChild(e('div', { cls: 'nota-tela', style: 'padding:0 1mm 1mm',
-        txt: 'Na impressão: linha iniciada por "# " vira subtítulo; **trecho** sai em negrito.' }));
-      return caixa;
+      if (papel) {
+        var caixa = e('div', { cls: 'texto' + (o.estica ? ' estica' : ''), style: o.alt ? 'min-height:' + o.alt : null });
+        caixa.appendChild(textoRico(v));
+        return caixa;
+      }
+      var ed = e('div', { cls: 'texto editor', contenteditable: 'true', role: 'textbox', 'aria-multiline': 'true',
+        'aria-label': o.rot || caminho, spellcheck: 'true', style: o.alt ? 'min-height:' + o.alt : null });
+      ed.innerHTML = limparHtml(v);
+      function gravar() { guardar(caminho, limparHtml(ed.innerHTML)); mudou(); }
+      ed.addEventListener('input', gravar);
+      /* colar: só a formatação permitida, no ponto do cursor */
+      ed.addEventListener('paste', function (ev) {
+        var d = ev.clipboardData; if (!d) return;
+        ev.preventDefault();
+        var html = d.getData('text/html');
+        if (html) document.execCommand('insertHTML', false, limparHtml(html));
+        else document.execCommand('insertText', false, d.getData('text/plain'));
+      });
+      /* Tab alinha colunas no texto, como no modelo (tabela do histórico do ITBI) */
+      ed.addEventListener('keydown', function (ev) {
+        if (ev.key === 'Tab' && !ev.shiftKey) { ev.preventDefault(); document.execCommand('insertText', false, '\t'); }
+      });
+      var BOTOES = [['N', 'Negrito', 'bold', 'font-weight:700'], ['I', 'Itálico', 'italic', 'font-style:italic'],
+        ['S', 'Sublinhado', 'underline', 'text-decoration:underline'], ['Subtítulo', 'Subtítulo', 'sub'],
+        ['• Lista', 'Lista com marcadores', 'insertUnorderedList'], ['1. Lista', 'Lista numerada', 'insertOrderedList'],
+        ['Limpar', 'Tirar a formatação do trecho', 'limpar']];
+      var barra = e('div', { cls: 'ferramentas', role: 'toolbar', 'aria-label': 'Formatação do texto' },
+        BOTOES.map(function (b) {
+          var bt = e('button', { type: 'button', txt: b[0], title: b[1], 'aria-label': b[1], style: b[3] || null });
+          /* mousedown sem foco: a seleção no texto não se perde */
+          bt.addEventListener('mousedown', function (ev) { ev.preventDefault(); });
+          bt.addEventListener('click', function () {
+            ed.focus();
+            if (b[2] === 'sub') {
+              var dentro = document.queryCommandValue('formatBlock').toLowerCase() === 'h4';
+              document.execCommand('formatBlock', false, dentro ? 'div' : 'h4');
+            } else if (b[2] === 'limpar') {
+              document.execCommand('removeFormat'); document.execCommand('formatBlock', false, 'div');
+            } else document.execCommand(b[2]);
+            gravar();
+          });
+          return bt;
+        }));
+      return e('div', { cls: 'area-texto' + (o.estica ? ' estica' : '') }, [barra, ed]);
     };
 
     ctx.chk = function (caminho) {
@@ -480,7 +549,7 @@
   function pagina(ctx, filhos, o) {
     o = o || {};
     return e('section', { cls: 'pagina', 'data-parte': o.parte || '' },
-      cabecalho(ctx, o.logos).concat([e('div', { cls: 'corpo' }, filhos)]));
+      cabecalho(ctx, o.logos).concat([e('div', { cls: 'corpo' + (o.estica ? ' estica' : '') }, filhos)]));
   }
 
   /* =============================================================== CAPA */
@@ -561,7 +630,10 @@
       faixa('VALOR DE LIQUIDAÇÃO FORÇADA'),
       e('div', { cls: 'caixa' }, [val(ctx.calc(function (r) { return rs(r.liquidacao.vlfArredondado); }), 'centro')])]);
 
-    var linhaEmp = function (r, campo) { return g('38% 62%', [rot(r, 'marinho'), val(campo, 'cel')]); };
+    /* no papel, a caixa branca termina pouco depois do texto */
+    var linhaEmp = function (r, campo) {
+      return g('38% 62%', [rot(r, 'marinho'), val(campo, 'cel' + (ctx.papel ? ' justo' : ''))]);
+    };
     var empresa = g('50% 1fr 38%', [
       e('div', {}, [linhaEmp('EMPRESA', ctx.txt(c + 'empresa')),
         linhaEmp('REGISTRO', registroProfissional(ctx, 'conselhoEmpresa', false)),
@@ -579,8 +651,8 @@
 
     return [pagina(ctx, [topo, espaco(), faixa('DADOS DO IMÓVEL'), dados, espaco(), fotos, espaco('g2'),
       g('32% 1fr', [imovel, dim], { gap: '5mm' }), espaco(), res, espaco(), valores, espaco('g2'), empresa,
-      tit('OBSERVAÇÕES GERAIS DA AVALIAÇÃO', 'menor'), ctx.area(c + 'observacoes', { alt: '70mm' })],
-      { logos: true, parte: 'capa' })];
+      tit('OBSERVAÇÕES GERAIS DA AVALIAÇÃO', 'menor'), ctx.area(c + 'observacoes', { alt: '40mm', estica: true })],
+      { logos: true, parte: 'capa', estica: true })];
   }
 
   /* Registro do responsável sob a assinatura: CREA ou CAU / UF - número,
@@ -712,7 +784,7 @@
         val(ctx.txt(r + 'dataVistoria', { vazio: TRACO, cls: 'centro' }), 'centro')]),
       espaco(),
       e('div', { txt: 'Em caso negativo, justifique:', style: 'font-size:7pt;margin-bottom:1mm' }),
-      ctx.area(r + 'justificativa', { alt: '20mm', marcas: false }),
+      ctx.area(r + 'justificativa', { alt: '20mm' }),
       espaco('g2')].concat(itens).concat([
       espaco('g2'),
       e('div', { cls: 'subtit', txt: 'Observações Gerais:' }),
@@ -1234,6 +1306,9 @@
 
   /* A folha é A4 de verdade; na tela ela cresce até caber na largura. */
   function ajustarZoom() {
+    /* as abas grudam logo abaixo da barra, que pode quebrar em duas linhas */
+    var barra = document.querySelector('.barra');
+    if (barra) document.documentElement.style.setProperty('--barra-alt', barra.offsetHeight + 'px');
     var largura = document.getElementById('folha').clientWidth - 32;
     var z = Math.max(0.3, Math.min(1.25, largura / 1020));
     document.documentElement.style.setProperty('--zoom', z.toFixed(3));
@@ -1477,7 +1552,8 @@
   /* Estudos da versão 1: comum estimada era cópia da matrícula; doc.
      complementar era texto ("-"); o registro era uma linha só. */
   function migrar(p) {
-    if (!p || typeof p !== 'object' || (p.versao || 1) >= 3) return p;
+    if (!p || typeof p !== 'object' || (p.versao || 1) >= 4) return p;
+    var v0 = p.versao || 1;
     if ((p.versao || 1) < 2) {
     var ar = p.capa && p.capa.areas;
     if (ar) {
@@ -1497,6 +1573,7 @@
     if (p.capa && p.capa.uso === '-') p.capa.uso = '';
     if (p.capa && ['Ocupado', 'Desocupado'].indexOf(p.capa.ocupacao) < 0) p.capa.ocupacao = '';
     }
+    if (v0 < 3) {
     /* versão 2 → 3: o registro da empresa ganha conselho e UF, como o do
        responsável — o número vem do campo antigo, conselho e UF do responsável */
     if (p.capa) {
@@ -1508,7 +1585,16 @@
       }
       delete p.capa.creaEmpresa;
     }
-    p.versao = 3;
+    }
+    /* versão 3 → 4: o texto corrido deixa as marcas ("# ", **) e passa a HTML
+       de formatação, escrito pela barra de ferramentas */
+    CAMPOS_TEXTO.forEach(function (c) {
+      var v = pegar(c, p);
+      if (typeof v === 'string') {
+        var ks = c.split('.'); p[ks[0]][ks[1]] = marcasParaHtml(v);
+      }
+    });
+    p.versao = 4;
     return p;
   }
 
