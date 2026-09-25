@@ -128,6 +128,13 @@ das fichas das amostras com listas longas têm colunas próprias; "Idade
 estimada" virou "Idade". Travado no teste "a opção mais longa de cada lista
 cabe no campo".
 
+**Sem valor é "-", em todo campo** (pedido do avaliador). Texto, lista,
+data, número e cálculo vazios saem como traço no papel e mostram traço na
+tela (placeholder, opção vazia da lista). Valor em R$ vazio ou zero é só
+"-", sem o "R$" (`rs()`; o prefixo do campo some enquanto vazio). Exceções,
+com `vazio: ''`: linhas em branco da tabela de ambientes, nome e registro
+sob a assinatura; as marcas "X" da liquidação não são campo.
+
 **Uma altura de linha só** (pedido do avaliador, repetido: "divergências nas
 alturas das linhas dos campos"). Token `--alt-linha` (4,95 mm = 4,6 mm + 1 pt, pedido do avaliador) no `.pagina`:
 todo `.rot`, `.val`, `.ficha-perg/.ficha-resp`, `td` e `th` de uma linha de

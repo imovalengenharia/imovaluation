@@ -195,7 +195,8 @@
   function semValor(v) { return v === null || v === undefined || v === '' || (typeof v === 'number' && !isFinite(v)); }
   function nz(v, d) { return v.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d }); }
   function fn(v, d) { return semValor(v) ? TRACO : nz(+v, d === undefined ? 2 : d); }
-  function rs(v, d) { return semValor(v) ? 'R$ ' + TRACO : 'R$ ' + nz(+v, d === undefined ? 2 : d); }
+  /* sem valor (ou zero) é só o traço, sem o R$ na frente */
+  function rs(v, d) { return semValor(v) || +v === 0 ? TRACO : 'R$ ' + nz(+v, d === undefined ? 2 : d); }
   function pc(v, d) { return semValor(v) ? TRACO : nz(v * 100, d === undefined ? 2 : d) + '%'; }
   function dataBR(s) {
     var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s || ''));
@@ -345,14 +346,16 @@
       var v = pegar(caminho);
       /* vazio no papel ainda ocupa uma linha (espaço de largura zero): a linha
          em branco mede o mesmo que a preenchida, e o mesmo que na tela */
-      if (papel) return e('span', { cls: o.cls, txt: semValor(v) ? (o.vazio || '\u200b') : String(v) });
+      /* sem valor é traço (o.vazio troca); vazio de propósito ('') ainda
+         ocupa uma linha no papel (espaço de largura zero) */
+      if (papel) return e('span', { cls: o.cls, txt: semValor(v) ? ((o.vazio !== undefined ? o.vazio : TRACO) || '\u200b') : String(v) });
       /* quebra: o texto desce de linha como no papel (campo estreito de texto
          longo), para a tela medir o mesmo que a impressão */
       var el = o.quebra
-        ? e('textarea', { cls: 'c quebra ' + (o.cls || ''), rows: '1', placeholder: o.ph || '',
+        ? e('textarea', { cls: 'c quebra ' + (o.cls || ''), rows: '1', placeholder: o.ph !== undefined ? o.ph : TRACO,
             'aria-label': o.rot || caminho, spellcheck: 'false' })
         : e('input', { cls: 'c ' + (o.cls || ''), type: 'text', value: semValor(v) ? '' : String(v),
-            placeholder: o.ph || '', 'aria-label': o.rot || caminho, spellcheck: 'false' });
+            placeholder: o.ph !== undefined ? o.ph : TRACO, 'aria-label': o.rot || caminho, spellcheck: 'false' });
       if (o.quebra) {
         el.value = semValor(v) ? '' : String(v);
         el.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') ev.preventDefault(); });
@@ -380,6 +383,8 @@
       var pre = o.pre ? e('span', { cls: 'pre', txt: o.pre }) : null;
       if (papel) {
         var a = atual(), txt = semValor(a.v) ? (o.vazio !== undefined ? o.vazio : TRACO) : mostrar(a.v);
+        /* sem valor, só o traço: o R$ não aparece */
+        if (semValor(a.v)) return e('span', { txt: txt });
         if (!o.separado) return e('span', { txt: (o.pre ? o.pre + ' ' : '') + txt });
         return e('span', { cls: 'afixo' }, [pre, e('span', { txt: txt })]);
       }
@@ -390,6 +395,7 @@
         var a = atual();
         el.value = mostrar(a.v);
         el.classList.toggle('sugerido', a.sug);
+        if (pre) pre.style.visibility = semValor(a.v) ? 'hidden' : '';
       }
       el.addEventListener('input', function () {
         var v = lerNum(el.value);
@@ -398,6 +404,7 @@
         mudou();
       });
       el.addEventListener('blur', pintar);
+      if (pre) el.addEventListener('focus', function () { pre.style.visibility = ''; });
       atualizadores.push(pintar);
       pintar();
       return pre ? e('span', { cls: 'afixo' }, [pre, el]) : el;
@@ -407,11 +414,11 @@
       o = o || {};
       var v = pegar(caminho) || '';
       if (v === '-') v = '';                  /* o "-" saiu das listas: vale como vazio */
-      if (papel) return e('span', { txt: v || (o.vazio || '') });
+      if (papel) return e('span', { txt: v || ((o.vazio !== undefined ? o.vazio : TRACO) || '\u200b') });
       var opcoes = lista.slice();
       if (v && opcoes.indexOf(v) < 0) opcoes.unshift(v);
       var el = e('select', { cls: 'c', 'aria-label': o.rot || caminho },
-        [e('option', { value: '', txt: '' })].concat(opcoes.map(function (x) {
+        [e('option', { value: '', txt: o.vazio !== undefined ? o.vazio : TRACO })].concat(opcoes.map(function (x) {
           return e('option', { value: x, txt: x, selected: x === v ? 'selected' : null }); })));
       el.addEventListener('change', function () {
         guardar(caminho, el.value); mudou();
@@ -423,7 +430,7 @@
     ctx.data = function (caminho, o) {
       o = o || {};
       var v = pegar(caminho) || '';
-      if (papel) return e('span', { txt: v ? dataBR(v) : (o.vazio || '') });
+      if (papel) return e('span', { txt: v ? dataBR(v) : ((o.vazio !== undefined ? o.vazio : TRACO) || '\u200b') });
       var el = e('input', { cls: 'c', type: 'date', value: v, 'aria-label': o.rot || caminho });
       el.addEventListener('input', function () { guardar(caminho, el.value); mudou(); });
       return el;
@@ -495,7 +502,9 @@
     ctx.calc = function (f, o) {
       o = o || {};
       var el = e('span', { cls: o.cls });
-      function pintar() { var t = R ? f(R) : ''; el.textContent = t === null || t === undefined ? '' : t; }
+      /* resultado vazio mostra o traço (o.vazio troca, p.ex. por '') */
+      var vazio = o.vazio !== undefined ? o.vazio : TRACO;
+      function pintar() { var t = R ? f(R) : ''; el.textContent = t === null || t === undefined || t === '' ? vazio : t; }
       if (!papel) atualizadores.push(pintar);
       pintar();
       return el;
@@ -716,7 +725,7 @@
       e('div', { style: 'display:flex;flex-direction:column;justify-content:flex-end;text-align:center' }, [
         ctx.img(c + 'assinatura', { nu: true, alt: '11mm', png: true, max: 800, vazio: 'Assinatura (opcional)' }),
         e('div', { style: 'border-top:.25mm solid var(--pg-borda);margin-top:1mm;padding-top:1.2mm;color:var(--pg-rot)' },
-          [ctx.calc(function () { return pegar('capa.responsavel') || ''; })]),
+          [ctx.calc(function () { return pegar('capa.responsavel') || ''; }, { vazio: '' })]),
         registroProfissional(ctx, 'conselho', true)])],
       { gap: '0' });
     var assin = empresa.querySelector('.quadro-img');
@@ -735,7 +744,8 @@
       (centro ? 'color:var(--pg-rot);padding-top:.8mm;justify-content:center' : '');
     if (ctx.papel) {
       var cons = pegar(c), uf = pegar(c + 'UF'), nro = pegar(c + 'Numero');
-      var txt = cons || uf || nro ? (cons || '') + '/' + (uf || '') + ' - ' + (nro || '') : '';
+      /* sem registro: traço no quadro da empresa; sob a assinatura, nada */
+      var txt = cons || uf || nro ? (cons || '') + '/' + (uf || '') + ' - ' + (nro || '') : (centro ? '' : TRACO);
       return e('div', { style: estilo, txt: txt });
     }
     var sel = function (cam, lista, larg) { var el = ctx.sel(cam, lista); el.style.width = larg; return el; };
@@ -807,8 +817,9 @@
         .concat(repetir(ate - de, function (k) {
           var base = im + 'ambientes.' + (de + k) + '.';
           return e('tr', {}, COLS_AMBIENTE.map(function (cc) {
+            /* linha de ambiente vazia fica em branco, sem traço */
             return e('td', {}, [cc[0] === 'quantidade'
-              ? ctx.num(base + cc[0], { casas: 0, vazio: '' }) : ctx.txt(base + cc[0])]);
+              ? ctx.num(base + cc[0], { casas: 0, vazio: '', ph: '' }) : ctx.txt(base + cc[0], { vazio: '', ph: '' })]);
           }));
         })));
     }
@@ -922,7 +933,7 @@
     var R_ = function (x) { return rot(x, 'claro dir'); };
     var link = ctx.papel
       ? (pegar(b + 'link') ? e('a', { href: pegar(b + 'link'), txt: pegar(b + 'link'),
-          style: 'word-break:break-all' }) : e('span'))
+          style: 'word-break:break-all' }) : e('span', { txt: TRACO }))
       : ctx.txt(b + 'link', { ph: 'https://' });
     var campos = e('div', { style: 'border-left:.25mm solid var(--pg-borda)' }, [
       g(cols, [R_('Endereço:'), val(ctx.txt(b + 'endereco', { cls: 'forte' })), R_('nº'), t('numero'),
@@ -1186,7 +1197,7 @@
         e('td', { cls: 'dir', style: 'border:none;background:transparent;width:30%' + (forte ? ';font-weight:700' : '') }, [campo])]);
     }
     var cr = function (f) { return ctx.calc(function (r) { var L = r.liquidacao; return f(L); }); };
-    var r0 = function (v) { return semValor(v) ? 'R$ ' + TRACO : 'R$ ' + nz(v, 0); };
+    var r0 = function (v) { return semValor(v) || +v === 0 ? TRACO : 'R$ ' + nz(v, 0); };
     var premissas = e('div', {}, [faixa('PREMISSAS', 'esq'), e('table', { cls: 't' }, [
       lin('Valor de mercado (VM)', cr(function (L) { return r0(L.vm); }), true),
       lin('Prazo estimado até a venda (meses)', ctx.num(l + 'prazo', { casas: 0 })),
@@ -1263,7 +1274,7 @@
       g('40% 1fr', [premissas, ponte], { gap: '8mm' }), espaco('g2'),
       faixa('VALOR DE LIQUIDAÇÃO FORÇADA'),
       e('div', { cls: 'caixa' }, [val(ctx.calc(function (r) {
-        return semValor(r.liquidacao.vlf) ? 'R$ ' + TRACO : rs(r.liquidacao.vlf); }), 'centro')]),
+        return rs(r.liquidacao.vlf); }), 'centro')]),
       g('48mm 1fr', [rot('Deságio sobre o valor de mercado:', 'tinta'),
         val(ctx.calc(function (r) { return pc(r.liquidacao.desagio); }), '')]),
       espaco(), mercado, espaco('g2'), espaco('g2'),
