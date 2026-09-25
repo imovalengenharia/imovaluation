@@ -512,9 +512,7 @@
     var imovel = e('div', {}, [faixa('IMÓVEL'), e('div', { cls: 'caixa linhas' }, [
       linhaImovel('TIPOLOGIA', ctx.sel(c + 'tipologia', LS.tipologia)),
       linhaImovel('USO', ctx.sel(c + 'uso', LS.uso)),
-      linhaImovel(e('span', { style: 'display:flex;width:100%;justify-content:space-between' },
-        ['OCUPAÇÃO', e('span', { txt: 'ⓘ', title: 'Situação de ocupação na data da vistoria' })]),
-        ctx.sel(c + 'ocupacao', LS.ocupacao))]),
+      linhaImovel('OCUPAÇÃO', ctx.sel(c + 'ocupacao', LS.ocupacao))]),
       espaco(),
       e('div', { cls: 'caixa linhas' }, [
         linhaImovel('VAGA(s) DE GARAGEM', ctx.sel(c + 'vaga', LS.vagas)),
@@ -564,15 +562,10 @@
       e('div', { cls: 'caixa' }, [val(ctx.calc(function (r) { return rs(r.liquidacao.vlfArredondado); }), 'centro')])]);
 
     var linhaEmp = function (r, campo) { return g('38% 62%', [rot(r, 'marinho'), val(campo, 'cel')]); };
-    /* o rótulo acompanha o conselho e a UF escolhidos: "CREA/SP - EMPRESA" */
-    var rotEmpresa = ctx.calc(function () {
-      var cons = pegar(c + 'conselhoEmpresa'), uf = pegar(c + 'conselhoEmpresaUF');
-      return cons || uf ? (cons || 'REGISTRO') + (uf ? '/' + uf : '') + ' - EMPRESA' : 'REGISTRO - EMPRESA';
-    });
     var empresa = g('50% 1fr 38%', [
       e('div', {}, [linhaEmp('EMPRESA', ctx.txt(c + 'empresa')),
+        linhaEmp('REGISTRO', registroProfissional(ctx, 'conselhoEmpresa', false)),
         linhaEmp('RESPONSÁVEL TÉCNICO', ctx.txt(c + 'responsavel')),
-        linhaEmp(rotEmpresa, registroProfissional(ctx, 'conselhoEmpresa', false)),
         linhaEmp('DATA DE ENTREGA', ctx.data(c + 'dataEntrega'))]),
       e('div'),
       e('div', { style: 'display:flex;flex-direction:column;justify-content:flex-end;text-align:center' }, [

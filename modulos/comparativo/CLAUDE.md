@@ -183,8 +183,8 @@ neutro.
   de laudo "Simplificado - Vistoria externa / interna / remota / Sem vistoria".
 - **Registros profissionais**: CREA ou CAU / UF - número, com as duas
   listas e o número digitado — sob a assinatura, centralizado (`conselho`,
-  `conselhoUF`, `conselhoNumero`), e na linha da empresa (`conselhoEmpresa…`),
-  cujo rótulo acompanha a escolha ("CREA/SP - EMPRESA"). Estudos da versão 2
+  `conselhoUF`, `conselhoNumero`), e na linha "REGISTRO" da empresa
+  (`conselhoEmpresa…`), logo abaixo de EMPRESA e acima de RESPONSÁVEL TÉCNICO. Estudos da versão 2
   migram o antigo `creaEmpresa` para o número, com conselho e UF do responsável. A imagem de assinatura é
   opcional e, vazia, não deixa texto no papel — o laudo pode ser assinado
   com certificado digital.
