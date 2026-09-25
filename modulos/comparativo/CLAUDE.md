@@ -173,6 +173,19 @@ neutro.
 
 ## Corrigido em relação à planilha, a pedido do avaliador
 
+- **Dimensões (Capa)**: matrícula, IPTU, estimada e doc. complementar têm a
+  mesma lógica — terreno, privativa e comum se digitam, e a construção total
+  é privativa + comum em cada coluna. Na planilha, a comum estimada copiava a
+  da matrícula (AD43 = T43) e a doc. complementar era texto livre ("-").
+  Estudos da versão 1 são migrados em `migrar()` (`P.versao = 2`): a comum
+  estimada recebe a da matrícula, e "-" na doc. complementar vira vazio.
+- **Listas da Capa**: uso sem "-"; ocupação só Ocupado / Desocupado; tipos
+  de laudo "Simplificado - Vistoria externa / interna / remota / Sem vistoria".
+- **Registro sob a assinatura**: CREA ou CAU / UF - número, centralizado
+  (`conselho`, `conselhoUF`, `conselhoNumero`). A imagem de assinatura é
+  opcional e, vazia, não deixa texto no papel — o laudo pode ser assinado
+  com certificado digital.
+
 - **Sensibilidade por variação do VM** (Liquidação forçada, J61:M67): a
   planilha tirava a perda inflacionária do VM cheio, e não do VM já
   descontado como em F39 — a linha 0% dava R$ 6.761.777 no laudo 33.794,

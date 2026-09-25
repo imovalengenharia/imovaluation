@@ -144,16 +144,16 @@
   /* Estudo novo: tudo por informar. Nenhum dado de caso vem de fábrica —
      um laudo impresso com o endereço de outro seria o pior erro possível. */
   function premissasVazias() {
-    var area = function () { return { matricula: null, iptu: null, estimada: null, doc: '' }; };
+    var area = function () { return { matricula: null, iptu: null, estimada: null, doc: null }; };
     return {
-      versao: 1,
+      versao: 2,
       logos: { cliente: null, empresa: null },
       capa: { proponente: '', tipoLaudo: '', proposta: '', matricula: '', logradouro: '', numero: '',
         complemento: '', empreendimento: '', bairro: '', cidade: '', uf: '', cep: '',
         fotoFachada: null, fotoLogradouro: null, tipologia: '', uso: '', ocupacao: '', vaga: '', vagasTotal: null,
-        areas: { terreno: area(), total: { doc: '' }, privativa: area(), comum: area() },
+        areas: { terreno: area(), privativa: area(), comum: area() },
         valorVagaAutonoma: null, empresa: '', responsavel: '', creaEmpresa: '', dataEntrega: '',
-        assinatura: null, assinaturaCrea: '', observacoes: TEXTO_CAPA },
+        assinatura: null, conselho: '', conselhoUF: '', conselhoNumero: '', observacoes: TEXTO_CAPA },
       regiao: { melhoramentos: {}, servicos: {}, peculiaridades: {}, padrao: '', ocupacao: '', trafego: '',
         implantacao: '', zoneamento: '', observacoes: '' },
       imovel: { topografia: '', formato: '', multFrentes: '', pavimentos: null, unidades: null, vagas: null,
@@ -522,23 +522,23 @@
     var a = c + 'areas.';
     function celArea(caminho) { return e('td', {}, [ctx.num(caminho, { casas: 2 })]); }
     function celCalc(f) { return e('td', {}, [ctx.calc(f)]); }
+    var FONTES = ['matricula', 'iptu', 'estimada', 'doc'];
+    function linhaArea(rotulo, chave) {
+      return e('tr', {}, [e('td', { txt: rotulo })].concat(FONTES.map(function (k) {
+        return celArea(a + chave + '.' + k); })));
+    }
     var cabDim = e('tr', {}, ['ÁREA', 'MATRÍCULA', 'IPTU', 'ESTIMADA', 'DOC. COMPLEMENTAR'].map(function (t) {
       return e('th', { txt: t, style: 'color:var(--pg-rot)' }); }));
     var dim = e('div', {}, [faixa('DIMENSÕES (m²)'), e('table', { cls: 't' }, [
       cabDim,
-      e('tr', {}, [e('td', { txt: 'Terreno' }), celArea(a + 'terreno.matricula'), celArea(a + 'terreno.iptu'),
-        celArea(a + 'terreno.estimada'), e('td', {}, [ctx.txt(a + 'terreno.doc', { vazio: TRACO })])]),
-      e('tr', {}, [e('td', { txt: 'Construção Total' }),
-        celCalc(function (r) { return fn(r.capa.construcao.matricula); }),
-        celCalc(function (r) { return fn(r.capa.construcao.iptu); }),
-        celCalc(function (r) { return fn(r.capa.construcao.estimada); }),
-        e('td', {}, [ctx.txt(a + 'total.doc', { vazio: TRACO })])]),
+      /* as quatro fontes com a mesma lógica: terreno, privativa e comum se
+         digitam; a construção total é a soma das duas últimas */
+      linhaArea('Terreno', 'terreno'),
+      e('tr', {}, [e('td', { txt: 'Construção Total' })].concat(FONTES.map(function (k) {
+        return celCalc(function (r) { return fn(r.capa.construcao[k]); }); }))),
       e('tr', {}, [e('td', { colspan: '5', style: 'border:none;background:transparent;height:2.5mm;padding:0' })]),
-      e('tr', {}, [e('td', { txt: 'Privativa/Útil' }), celArea(a + 'privativa.matricula'), celArea(a + 'privativa.iptu'),
-        celArea(a + 'privativa.estimada'), e('td', {}, [ctx.txt(a + 'privativa.doc', { vazio: TRACO })])]),
-      e('tr', {}, [e('td', { txt: 'Comum' }), celArea(a + 'comum.matricula'), celArea(a + 'comum.iptu'),
-        celCalc(function (r) { return fn(r.capa.comumEstimada); }),
-        e('td', {}, [ctx.txt(a + 'comum.doc', { vazio: TRACO })])])])]);
+      linhaArea('Privativa/Útil', 'privativa'),
+      linhaArea('Comum', 'comum')])]);
 
     var res = e('div', {}, [faixa('RESULTADO DA AVALIAÇÃO'),
       g('18% 13.5% 5% 14% 13.5% 5% 13% 18%', [
@@ -572,7 +572,7 @@
         ctx.img(c + 'assinatura', { nu: true, alt: '11mm', png: true, max: 800, vazio: 'Assinatura (opcional)' }),
         e('div', { style: 'border-top:.25mm solid var(--pg-borda);margin-top:1mm;padding-top:1.2mm;color:var(--pg-rot)' },
           [ctx.calc(function () { return pegar('capa.responsavel') || ''; })]),
-        e('div', { style: 'color:var(--pg-rot);padding-top:.8mm' }, [ctx.txt(c + 'assinaturaCrea', { ph: 'CREA/SP nº', cls: 'centro' })])])],
+        registroProfissional(ctx)])],
       { gap: '8mm' });
     var assin = empresa.querySelector('.quadro-img');
     if (assin) { assin.style.background = 'transparent'; }
@@ -581,6 +581,22 @@
       g('32% 1fr', [imovel, dim], { gap: '5mm' }), espaco(), res, espaco(), valores, espaco('g2'), empresa,
       tit('OBSERVAÇÕES GERAIS DA AVALIAÇÃO', 'menor'), ctx.area(c + 'observacoes', { alt: '70mm' })],
       { logos: true, parte: 'capa' })];
+  }
+
+  /* Registro do responsável sob a assinatura: CREA ou CAU / UF - número,
+     centralizado. Na tela, duas listas e o número; no papel, a linha pronta. */
+  function registroProfissional(ctx) {
+    var c = 'capa.', estilo = 'color:var(--pg-rot);padding-top:.8mm;display:flex;justify-content:center;align-items:center;gap:1mm';
+    if (ctx.papel) {
+      var cons = pegar(c + 'conselho'), uf = pegar(c + 'conselhoUF'), nro = pegar(c + 'conselhoNumero');
+      var txt = cons || uf || nro ? (cons || '') + '/' + (uf || '') + ' - ' + (nro || '') : '';
+      return e('div', { style: estilo, txt: txt });
+    }
+    var sel = function (cam, lista, larg) { var el = ctx.sel(cam, lista); el.style.width = larg; return el; };
+    var numero = ctx.txt(c + 'conselhoNumero', { ph: 'número', rot: 'Número do registro' });
+    numero.style.width = '26mm';
+    return e('div', { style: estilo }, [sel(c + 'conselho', LS.conselho, '15mm'), e('span', { txt: '/' }),
+      sel(c + 'conselhoUF', LS.uf, '11mm'), e('span', { txt: '-' }), numero]);
   }
 
   /* ==================================================== REGIÃO + IMÓVEL */
@@ -1457,8 +1473,33 @@
   }
 
   var ligado = false;
+  /* Estudos da versão 1: comum estimada era cópia da matrícula; doc.
+     complementar era texto ("-"); o registro era uma linha só. */
+  function migrar(p) {
+    if (!p || typeof p !== 'object' || (p.versao || 1) >= 2) return p;
+    var ar = p.capa && p.capa.areas;
+    if (ar) {
+      if (ar.comum && (ar.comum.estimada === null || ar.comum.estimada === undefined)) ar.comum.estimada = ar.comum.matricula;
+      ['terreno', 'privativa', 'comum'].forEach(function (k) {
+        if (ar[k] && typeof ar[k].doc === 'string') ar[k].doc = lerNum(ar[k].doc);
+      });
+      delete ar.total;
+    }
+    var crea = p.capa && p.capa.assinaturaCrea;
+    if (typeof crea === 'string' && crea.trim()) {
+      var m = /^\s*(CREA|CAU)\s*\/?\s*([A-Za-z]{2})?\s*[-–]?\s*(.*)$/i.exec(crea);
+      if (m) { p.capa.conselho = m[1].toUpperCase(); p.capa.conselhoUF = (m[2] || '').toUpperCase(); p.capa.conselhoNumero = m[3].trim(); }
+      else p.capa.conselhoNumero = crea.trim();
+    }
+    if (p.capa) delete p.capa.assinaturaCrea;
+    if (p.capa && p.capa.uso === '-') p.capa.uso = '';
+    if (p.capa && ['Ocupado', 'Desocupado'].indexOf(p.capa.ocupacao) < 0) p.capa.ocupacao = '';
+    p.versao = 2;
+    return p;
+  }
+
   function montar(p) {
-    try { P = mesclar(premissasVazias(), p && typeof p === 'object' ? p : null); }
+    try { P = mesclar(premissasVazias(), migrar(p && typeof p === 'object' ? p : null)); }
     catch (err) { P = premissasVazias(); }
     R = M.calcular(P);
     aplicarCor();
@@ -1511,7 +1552,7 @@
       f.text().then(function (t) {
         var p = JSON.parse(t);
         if (!p || typeof p !== 'object' || !p.capa) throw new Error('formato');
-        P = mesclar(premissasVazias(), p); rolagem = {};
+        P = mesclar(premissasVazias(), migrar(p)); rolagem = {};
         aplicarCor(); mudou(); montarFolha();
       }).catch(function () { avisar('Arquivo não reconhecido', 'Escolha um arquivo de premissas salvo por este módulo.'); });
     });

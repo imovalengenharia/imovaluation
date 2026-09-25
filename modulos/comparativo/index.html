@@ -164,6 +164,8 @@ button{font:inherit;color:inherit}
 .rot.claro{font-weight:400;color:var(--pg-tinta)}
 .rot.dir{justify-content:flex-end}
 .rot.marinho{background:var(--pg-marinho);color:var(--pg-marinho-ink)}
+/* célula colorida sobre outra igual: um fio branco fino entre elas */
+.g + .g > .rot.marinho, .caixa > .g + .g > .rot.marinho{box-shadow:inset 0 .35mm 0 var(--pg-papel)}
 .val{padding:.7mm 1mm;display:flex;align-items:center;min-height:4.4mm;min-width:0;overflow-wrap:anywhere}
 .val.cel{background:var(--pg-cel);border:.25mm solid var(--pg-fio)}
 .val.centro{justify-content:center;text-align:center}

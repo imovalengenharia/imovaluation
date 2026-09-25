@@ -49,7 +49,7 @@ function REF() {
       cidade: 'Fortaleza', uf: 'CE', empreendimento: 'Edifício Mansão Macedo Condominium',
       areas: { terreno: { matricula: 6025.8, iptu: 6025.8, estimada: 6025.8 },
                privativa: { matricula: 883.32, iptu: 883.32, estimada: 883.32 },
-               comum: { matricula: 412.97, iptu: 412.97 } }
+               comum: { matricula: 412.97, iptu: 412.97, estimada: 412.97 } }
     },
     imovel: { topografia: 'Plano', multFrentes: 'Esquina', vagas: 12, padrao: 'Apartamento - Padrão Luxo',
               idade: 17, intervalo: 'Médio/Máximo', conservacao: 'c - regular',
@@ -134,7 +134,10 @@ conferir('construção total — matrícula (T40)', R.capa.construcao.matricula,
 conferir('R$/m² privativo (V48)', R.valor.m2Privativa, 10245.465745793837);
 conferir('valor de mercado arredondado (C55)', R.valor.mercadoArredondado, 9051000);
 conferir('liquidação forçada arredondada (C58)', R.liquidacao.vlfArredondado, 6862000);
-conferir('comum estimada = matrícula (AD43)', R.capa.comumEstimada, 412.97);
+conferir('construção total — estimada = privativa + comum', R.capa.construcao.estimada, 1296.29, { rel: 1e-12 });
+conferir('construção total — doc. complementar vazia fica vazia', R.capa.construcao.doc, null);
+var PDoc = REF(); PDoc.capa.areas.privativa.doc = 880; PDoc.capa.areas.comum.doc = 410;
+conferir('construção total — doc. complementar soma', Motor.calcular(PDoc).capa.construcao.doc, 1290);
 conferir('divergência de terreno sem "Sim" (AL68)', R.capa.divTerreno, null);
 
 B('1e · LIQUIDAÇÃO FORÇADA');

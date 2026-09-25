@@ -86,8 +86,11 @@
     tipologia: ['Apartamento', 'Casa', 'Casa em condomínio', 'Depósito Autônomo', 'Flat', 'Galpão',
       'Laje Corporativa', 'Loja', 'Prédio Coml./Misto', 'Sala Comercial', 'Terreno',
       'Terreno em Condomínio', 'Vaga Autônoma'],
-    uso: ['Comercial', 'Residencial', 'Misto', 'Não Residencial', '-'],
-    ocupacao: ['Ocupado', 'Desocupado', 'Em construção', 'Em reforma', 'Não se aplica'],
+    uso: ['Comercial', 'Residencial', 'Misto', 'Não Residencial'],
+    ocupacao: ['Ocupado', 'Desocupado'],
+    conselho: ['CREA', 'CAU'],
+    uf: ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE',
+      'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'],
     padraoRegiao: ['Baixo', 'Baixo-médio', 'Médio', 'Médio-alto', 'Alto', '-'],
     ocupacaoPredominante: ['Residencial', 'Comercial', 'Misto', 'Industrial', 'Outros'],
     trafego: ['Reduzido', 'Moderado', 'Intenso'],
@@ -281,13 +284,12 @@
     var aT = areas.terreno || {}, aP = areas.privativa || {}, aC = areas.comum || {};
 
     /* ---------------------------------------------------------- a capa */
-    var comumEstimada = num(aC.matricula);                           // AD43 = T43
+    /* Construção total = privativa + comum, nas quatro fontes (T40, Y40, AD40
+       e, a pedido do avaliador, também na estimada e na doc. complementar,
+       que a planilha deixava fora: lá a comum estimada copiava a da matrícula) */
     var soma = function (a, b) { return a === null && b === null ? null : (a || 0) + (b || 0); };
-    var construcao = {                                               // T40, Y40, AD40
-      matricula: soma(num(aP.matricula), num(aC.matricula)),
-      iptu: soma(num(aP.iptu), num(aC.iptu)),
-      estimada: soma(num(aP.estimada), comumEstimada)
-    };
+    var construcao = {};
+    ['matricula', 'iptu', 'estimada', 'doc'].forEach(function (k) { construcao[k] = soma(num(aP[k]), num(aC[k])); });
     /* 'Região + Imóvel'!AL68 e AL71: só com resposta "Sim" */
     function divergencia(resp, mat, iptu, est) {
       if (resp !== 'Sim' || est === null || !est) return null;
@@ -506,7 +508,7 @@
       tabela: { letra: letra, nome: T.nome, colunas: colunas, linhas: linhas,
                 cotaTerreno: cotaTerreno, cotaConstrucao: cotaConstrucao, expoenteAuVg: expoente },
       est: est, valor: valor,
-      capa: { construcao: construcao, comumEstimada: comumEstimada,
+      capa: { construcao: construcao,
               divTerreno: divTerreno, divConstruida: divConstruida },
       liquidacao: liq, grafico: grafico
     };
