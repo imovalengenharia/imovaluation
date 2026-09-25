@@ -136,9 +136,7 @@ button{font:inherit;color:inherit}
 /* os dois logos na mesma caixa, da borda de cima da faixa até o fio, cada um
    encostado na sua quina: o do cliente à esquerda, o da empresa à direita */
 .cab .logo{height:26mm;min-width:0;display:flex;align-items:stretch;padding:0}
-.cab .logo img{width:100%;height:100%;object-fit:contain;display:block}
-.cab .logo.esquerda img{object-position:left center}
-.cab .logo.direita img{object-position:right center}
+.cab .logo img{width:100%;height:100%;object-fit:fill;display:block}
 .cab .logo .quadro-img:has(img){background:transparent}
 .fio{height:2.2mm;background:var(--pg-marinho);flex:none}
 
@@ -203,11 +201,12 @@ button.marca{padding:0;background:var(--pg-edita);cursor:pointer;font:inherit;fo
    dentro dele (posição absoluta) e nunca o empurra, vazio ou preenchido */
 .quadro-img{flex:none;display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--pg-vazio);
   position:relative}
-.quadro-img.encher img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.quadro-img.encher img{position:absolute;inset:0;width:100%;height:100%;object-fit:fill}
 .ficha{font-size:6.1pt}
 .ficha .rot,.ficha .val{padding:.5mm .8mm;min-height:3.9mm}
-.quadro-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
-.foto.conter .quadro-img img{object-fit:contain}
+/* a imagem ocupa o campo inteiro, sem corte: estica até as bordas, como a
+   foto arrastada até o quadro no Excel (pedido do avaliador) */
+.quadro-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;display:block}
 .foto .legenda{text-align:center;padding:.8mm;font-size:6.4pt;border-top:.25mm solid var(--pg-fio);min-height:4mm}
 .foto .legenda.forte{font-weight:700;color:var(--pg-tinta)}
 .vazia{color:var(--pg-sugerido);font-size:6.4pt;text-align:center;padding:2mm}

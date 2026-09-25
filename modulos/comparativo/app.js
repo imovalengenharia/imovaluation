@@ -419,7 +419,6 @@
         box.appendChild(ctx.img('logos.' + chave, { nu: true, alt: '100%', png: true, max: 700, conter: true,
           vazio: chave === 'cliente' ? 'Logo do cliente' : 'Logo da empresa' }));
         box.querySelector('.quadro-img').style.width = '100%';
-        var im = box.querySelector('img'); if (im) im.style.objectFit = 'contain';
       } else if (P.logos && P.logos[chave]) box.appendChild(e('img', { src: P.logos[chave], alt: '' }));
       return box;
     }
@@ -526,7 +525,7 @@
         e('div', { style: 'color:var(--pg-rot);padding-top:.8mm' }, [ctx.txt(c + 'assinaturaCrea', { ph: 'CREA/SP nº', cls: 'centro' })])])],
       { gap: '8mm' });
     var assin = empresa.querySelector('.quadro-img');
-    if (assin) { assin.style.background = 'transparent'; var ai = assin.querySelector('img'); if (ai) ai.style.objectFit = 'contain'; }
+    if (assin) { assin.style.background = 'transparent'; }
 
     return [pagina(ctx, [topo, espaco(), faixa('DADOS DO IMÓVEL'), dados, espaco(), fotos, espaco('g2'),
       g('32% 1fr', [imovel, dim], { gap: '5mm' }), espaco(), res, espaco(), valores, espaco('g2'), empresa,
