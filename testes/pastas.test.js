@@ -187,16 +187,35 @@ test('renomear, mover entre pastas e apagar estudo', async () => {
   assert.equal(await T.banco.um('SELECT 1 FROM estudo WHERE id = $1', [e]), null);
 });
 
-test('pasta com estudos não se apaga; vazia, sim; renomear pasta', async () => {
+test('apagar pasta leva os estudos junto, só com a confirmação da quantidade certa', async () => {
   const p = await novaPasta(ana, 'Cheia');
   const e = await novoEstudo(ana, p, 'Dentro');
-  assert.equal((await ana.post(`/pastas/${p}/apagar`)).headers.location, `/modelagens/involutivo/${p}?r=pasta-nao-vazia`);
+  assert.equal((await ana.post(`/pastas/${p}/apagar`)).headers.location, `/modelagens/involutivo/${p}?r=pasta-mudou`,
+    'sem declarar os estudos, nada se apaga');
+  assert.equal((await ana.post(`/pastas/${p}/apagar`, { com_estudos: '2' })).headers.location, `/modelagens/involutivo/${p}?r=pasta-mudou`,
+    'quantidade diferente da que existe: nada se apaga');
   assert.ok(await T.banco.um('SELECT 1 FROM estudo WHERE id = $1', [e]));
-  await ana.post(`/pastas/${p}/renomear`, { nome: 'Esvaziada' });
-  assert.equal((await T.banco.um('SELECT nome FROM pasta WHERE id = $1', [p])).nome, 'Esvaziada');
-  await ana.post(`/estudos/${e}/apagar`);
-  assert.equal((await ana.post(`/pastas/${p}/apagar`)).headers.location, '/modelagens/involutivo?r=pasta-apagada');
+
+  await ana.post(`/pastas/${p}/renomear`, { nome: 'Renomeada' });
+  assert.equal((await T.banco.um('SELECT nome FROM pasta WHERE id = $1', [p])).nome, 'Renomeada');
+
+  assert.equal((await ana.post(`/pastas/${p}/apagar`, { com_estudos: '1' })).headers.location, '/modelagens/involutivo?r=pasta-apagada');
   assert.equal(await T.banco.um('SELECT 1 FROM pasta WHERE id = $1', [p]), null);
+  assert.equal(await T.banco.um('SELECT 1 FROM estudo WHERE id = $1', [e]), null, 'o estudo foi junto');
+
+  const vazia = await novaPasta(ana, 'Vazia');
+  assert.equal((await ana.post(`/pastas/${vazia}/apagar`, { com_estudos: '0' })).headers.location, '/modelagens/involutivo?r=pasta-apagada');
+  assert.equal((await beto.post(`/pastas/${await novaPasta(ana, 'Da Ana')}/apagar`, { com_estudos: '0' })).statusCode, 404);
+});
+
+test('o quadro de cada pasta tem o menu ⋯ com renomear e apagar', async () => {
+  const p = await novaPasta(ana, 'Com menu');
+  await novoEstudo(ana, p, 'Um'); await novoEstudo(ana, p, 'Dois');
+  const r = (await ana.get('/modelagens/involutivo')).body;
+  assert.match(r, new RegExp(`data-abrir="pa-${p}-renomear"`));
+  assert.match(r, new RegExp(`data-abrir="pa-${p}-apagar"`));
+  assert.match(r, /Apagar pasta e 2 estudos/);
+  assert.match(r, new RegExp(`id="pa-${p}-apagar"[\\s\\S]*?name="com_estudos" value="2"`));
 });
 
 test('o nome chega escapado na página', async () => {

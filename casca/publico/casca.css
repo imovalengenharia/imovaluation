@@ -160,7 +160,8 @@ a.modelagem:focus-visible{outline:3px solid var(--acento-fraco);border-color:var
 .estudo .datas{display:flex;flex-direction:column;gap:1px;font-variant-numeric:tabular-nums}
 .estudo .parou{margin:0;font-size:12px;color:var(--muted)}
 .estudo .parou em{font-style:normal;color:var(--ink2)}
-.pasta-cartao{text-decoration:none;color:inherit;min-height:160px}
+.pasta-cartao{min-height:160px}
+.pasta-cartao header{justify-content:space-between;align-items:center}
 .icone-pasta{width:30px;height:23px;border:1.6px solid var(--acento);border-radius:3px;background:var(--acento-fraco);
   clip-path:polygon(0 0,40% 0,50% 18%,100% 18%,100% 100%,0 100%)}
 a.botao{display:inline-flex;align-items:center;text-decoration:none}
@@ -172,8 +173,8 @@ a.botao{display:inline-flex;align-items:center;text-decoration:none}
 
 /* menu ⋯ do cartão: fica acima do link que cobre o cartão */
 .menu{position:relative;z-index:2}
-.menu summary{list-style:none;cursor:pointer;color:var(--muted);width:28px;height:24px;display:grid;place-items:center;
-  border-radius:4px;font-size:18px;line-height:1}
+.menu summary{list-style:none;cursor:pointer;color:var(--ink2);width:32px;height:28px;display:grid;place-items:center;
+  border-radius:4px;font-size:20px;line-height:1;border:1px solid var(--rule-soft)}
 .menu summary::-webkit-details-marker{display:none}
 .menu summary:hover,.menu[open] summary{background:var(--elev);color:var(--ink)}
 .menu-lista{position:absolute;right:0;top:28px;min-width:170px;background:var(--surface);border:1px solid var(--rule);

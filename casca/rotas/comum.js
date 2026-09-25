@@ -2,7 +2,7 @@
 
 /* O recado de uma ação volta pela URL como código, nunca como texto livre. */
 export const RECADOS = {
-  'pasta-nao-vazia': ['erro', 'A pasta não está vazia. Mova ou apague os estudos dela antes.'],
+  'pasta-mudou': ['erro', 'A pasta mudou enquanto você confirmava. Confira os estudos e tente de novo.'],
   'destino': ['erro', 'Pasta de destino não encontrada.'],
   'nome': ['erro', 'Informe um nome.'],
   'pasta-apagada': ['ok', 'Pasta apagada.'],

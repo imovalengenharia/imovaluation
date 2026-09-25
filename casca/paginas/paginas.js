@@ -186,6 +186,22 @@ const botoesDialogo = (rotulo, classe = '') => html`<div class="botoes">
   <button type="button" class="botao leve" data-fechar>Cancelar</button>
   <button type="submit" class="botao ${classe}">${rotulo}</button></div>`;
 
+/* Renomear e apagar pasta: os mesmos diálogos no quadro da pasta e dentro dela.
+   Apagar leva os estudos junto, e o formulário declara quantos: se a pasta
+   mudou enquanto a pessoa confirmava, o servidor recusa em vez de apagar mais. */
+function dialogosPasta(pasta, nEstudos, prefixo) {
+  return html`${dialogo(`${prefixo}-renomear`, 'Renomear pasta', html`<form method="post" action="/pastas/${pasta.id}/renomear">
+      <input type="text" name="nome" value="${pasta.nome}" required maxlength="120" aria-label="Nome da pasta">
+      ${botoesDialogo('Salvar')}</form>`)}
+    ${dialogo(`${prefixo}-apagar`, 'Apagar pasta', html`<form method="post" action="/pastas/${pasta.id}/apagar">
+      <input type="hidden" name="com_estudos" value="${nEstudos}">
+      <p>${nEstudos
+        ? html`Apagar a pasta <strong>${pasta.nome}</strong> e ${nEstudos === 1 ? 'o estudo' : `os ${nEstudos} estudos`} dentro dela?
+               Não há como desfazer.`
+        : html`Apagar a pasta <strong>${pasta.nome}</strong>? Ela está vazia.`}</p>
+      ${botoesDialogo(nEstudos ? `Apagar pasta e ${plural(nEstudos, 'estudo', 'estudos')}` : 'Apagar pasta', 'perigo')}</form>`)}`;
+}
+
 function cartaoEstudo(e, pastas, pastaAtual) {
   const outras = pastas.filter(p => p.id !== pastaAtual.id);
   const resumo = Array.isArray(e.resumo) ? e.resumo : [];
@@ -250,13 +266,24 @@ export function paginaAreaDeTrabalho(config, usuario, { modulo, pastas, pasta, e
       <button type="button" class="estudo novo" data-abrir="m-nova-pasta">
         <span class="mais" aria-hidden="true">+</span><span>Nova pasta de trabalho</span>
       </button>
-      ${pastas.map(p => html`<a class="estudo pasta-cartao" href="/modelagens/${modulo.id}/${p.id}">
-        <span class="icone-pasta" aria-hidden="true"></span>
+      ${pastas.map(p => html`<article class="estudo pasta-cartao">
+        <a class="cobre" href="/modelagens/${modulo.id}/${p.id}" aria-label="Abrir a pasta ${p.nome}"></a>
+        <header>
+          <span class="icone-pasta" aria-hidden="true"></span>
+          <details class="menu">
+            <summary aria-label="Ações da pasta">⋯</summary>
+            <div class="menu-lista">
+              <button type="button" data-abrir="pa-${p.id}-renomear">Renomear</button>
+              <button type="button" class="perigo" data-abrir="pa-${p.id}-apagar">Apagar</button>
+            </div>
+          </details>
+        </header>
         <h3>${p.nome}</h3>
         <p class="sem-calculo">${p.estudos ? plural(p.estudos, 'estudo', 'estudos') : 'Pasta vazia'}</p>
         <footer>${datas(p.criada_em, p.alterada_em, 'a')}
           <span class="seta">Abrir <span aria-hidden="true">→</span></span></footer>
-      </a>`)}
+      </article>
+      ${dialogosPasta(p, p.estudos, `pa-${p.id}`)}`)}
     </div>
     ${dialogo('m-nova-pasta', 'Nova pasta de trabalho', html`<form method="post" action="/modelagens/${modulo.id}/pastas">
       <input type="text" name="nome" placeholder="Ex.: Clientes 2026" required maxlength="120" aria-label="Nome da pasta">
@@ -288,16 +315,7 @@ export function paginaAreaDeTrabalho(config, usuario, { modulo, pastas, pasta, e
     ${dialogo('p-novo', 'Novo estudo', html`<form method="post" action="/pastas/${pasta.id}/estudos">
       <input type="text" name="nome" placeholder="Ex.: Gleba Itu — cenário base" required maxlength="160" aria-label="Nome do estudo">
       ${botoesDialogo('Criar e abrir')}</form>`)}
-    ${dialogo('p-renomear', 'Renomear pasta', html`<form method="post" action="/pastas/${pasta.id}/renomear">
-      <input type="text" name="nome" value="${pasta.nome}" required maxlength="120" aria-label="Nome da pasta">
-      ${botoesDialogo('Salvar')}</form>`)}
-    ${dialogo('p-apagar', 'Apagar pasta', vazia
-      ? html`<form method="post" action="/pastas/${pasta.id}/apagar">
-          <p>Apagar a pasta <strong>${pasta.nome}</strong>? Ela está vazia.</p>
-          ${botoesDialogo('Apagar', 'perigo')}</form>`
-      : html`<p>A pasta <strong>${pasta.nome}</strong> tem ${plural(estudos.length, 'estudo', 'estudos')}.
-          Mova ou apague os estudos antes — nenhum estudo some junto com a pasta.</p>
-          <div class="botoes"><button type="button" class="botao" data-fechar>Entendi</button></div>`)}`;
+    ${dialogosPasta(pasta, estudos.length, 'p')}`;
   }
 
   return documento({ titulo: pasta ? `${pasta.nome} · ${modulo.nome}` : modulo.nome, config, corpo: html`

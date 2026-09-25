@@ -162,7 +162,11 @@ ociosa que cai — banco reiniciado, por exemplo — derruba o servidor inteiro.
 - **A pasta é de uma modelagem, e tem um nível só** (migração 002; `pai_id` ficou
   no banco, sempre nulo). O estudo mora sempre numa pasta da **mesma**
   modelagem: a chave `(usuario_id, pasta_id, modulo)` faz o banco recusar o resto.
-- **Pasta com estudos não se apaga.** Nenhum estudo some por cascata.
+- **Apagar pasta leva os estudos junto**, depois de uma confirmação que diz
+  quantos (decisão do dono do produto). O formulário declara a quantidade
+  (`com_estudos`) e o servidor só apaga se ela ainda for a mesma — estudo criado
+  entre a confirmação e o clique nunca some calado. Cada quadro de pasta e de
+  estudo tem o menu ⋯ (renomear, apagar; no estudo também duplicar e mover).
 - Duplicar estudo é o jeito de fazer cenário: copia premissas, resumo e vista.
 - `assinatura` existe desde a primeira migração, vazia: a cobrança é a
   próxima fatia (Stripe, cartão e Pix; o plano libera módulos).

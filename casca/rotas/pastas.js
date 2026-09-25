@@ -16,16 +16,23 @@ export default async function rotasPastas(app) {
     return reply.redirect(urlPasta(pasta.modulo, pasta.id), 303);
   });
 
-  /* Pasta com estudos não se apaga: nenhum estudo some por tabela. */
+  /* Apagar pasta leva os estudos junto — mas só os que a pessoa viu na
+     confirmação: o formulário declara quantos, e se a pasta ganhou ou perdeu
+     estudo nesse meio-tempo, nada se apaga. */
   app.post('/pastas/:id/apagar', async (req, reply) => {
     const pasta = await P.pasta(req.usuario.id, req.params.id);
     if (!pasta) return reply.callNotFound();
-    const r = await banco.consulta(
-      `DELETE FROM pasta p WHERE p.id = $1
-          AND NOT EXISTS (SELECT 1 FROM estudo e WHERE e.pasta_id = p.id)`, [pasta.id]);
-    return reply.redirect(r.rowCount
+    const declarados = Number(req.body?.com_estudos || 0);
+    const feito = await banco.transacao(async c => {
+      const { n } = (await c.query('SELECT count(*)::int AS n FROM estudo WHERE pasta_id = $1', [pasta.id])).rows[0];
+      if (n !== declarados) return false;
+      await c.query('DELETE FROM estudo WHERE pasta_id = $1', [pasta.id]);
+      await c.query('DELETE FROM pasta WHERE id = $1', [pasta.id]);
+      return true;
+    });
+    return reply.redirect(feito
       ? urlPasta(pasta.modulo, null, 'pasta-apagada')
-      : urlPasta(pasta.modulo, pasta.id, 'pasta-nao-vazia'), 303);
+      : urlPasta(pasta.modulo, pasta.id, 'pasta-mudou'), 303);
   });
 
   /* Estudo novo nasce na pasta e já abre. */
