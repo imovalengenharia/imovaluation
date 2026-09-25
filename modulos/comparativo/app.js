@@ -1168,7 +1168,7 @@
   /* A folha é A4 de verdade; na tela ela cresce até caber na largura. */
   function ajustarZoom() {
     var largura = document.getElementById('folha').clientWidth - 32;
-    var z = Math.max(0.4, Math.min(1.25, largura / 1020));
+    var z = Math.max(0.3, Math.min(1.25, largura / 1020));
     document.documentElement.style.setProperty('--zoom', z.toFixed(3));
   }
   window.addEventListener('resize', function () { ajustarZoom(); });
@@ -1201,12 +1201,47 @@
   }
   function guardarEstudo() {
     if (casca) { casca.devolver(P, resumo()); return; }
-    try { localStorage.setItem('comparativo.premissas', JSON.stringify(P)); }
-    catch (err) {
-      avisar('Sem espaço no navegador', 'As fotos passaram do limite que o navegador guarda sozinho. ' +
+    local.gravar(P).catch(function () {
+      avisar('Estudo não guardado', 'O navegador recusou guardar o estudo (janela anônima ou sem espaço). ' +
         'Use "Salvar" para baixar o estudo — ou abra-o pela plataforma, que guarda tudo.');
-    }
+    });
   }
+
+  /* Sozinho no navegador, o estudo mora no IndexedDB: com fotos, ele passa
+     dos ~5 MB que o localStorage aceita. O localStorage fica só para ler
+     estudos guardados antes. */
+  var local = {
+    base: function () {
+      return new Promise(function (ok, erro) {
+        var r = indexedDB.open('comparativo', 1);
+        r.onupgradeneeded = function () { r.result.createObjectStore('estudo'); };
+        r.onsuccess = function () { ok(r.result); };
+        r.onerror = function () { erro(r.error); };
+      });
+    },
+    ler: function () {
+      return local.base().then(function (db) {
+        return new Promise(function (ok) {
+          var q = db.transaction('estudo', 'readonly').objectStore('estudo').get('premissas');
+          q.onsuccess = function () { ok(q.result || null); };
+          q.onerror = function () { ok(null); };
+        });
+      }).catch(function () { return null; }).then(function (p) {
+        if (p) return p;
+        try { return JSON.parse(localStorage.getItem('comparativo.premissas')); } catch (err) { return null; }
+      });
+    },
+    gravar: function (p) {
+      return local.base().then(function (db) {
+        return new Promise(function (ok, erro) {
+          var tx = db.transaction('estudo', 'readwrite');
+          tx.objectStore('estudo').put(JSON.parse(JSON.stringify(p)), 'premissas');
+          tx.oncomplete = function () { ok(); };
+          tx.onerror = tx.onabort = function () { erro(tx.error); };
+        });
+      });
+    }
+  };
 
   var tempoAviso = null;
   function avisar(titulo, texto) {
@@ -1254,15 +1289,15 @@
 
   /* ----------------------------------------------------------- a casca
      Aberto pela plataforma (index.html?casca), o estudo vem dela e volta para
-     ela; sozinho no navegador, mora no localStorage. */
+     ela; sozinho no navegador, mora no IndexedDB. Sem estudo guardado, abre
+     o que a página trouxer em window.COMPARATIVO_INICIAL (a versão de
+     revisão traz um laudo de exemplo), ou em branco. */
   var casca = null;
   var CANAL = 'imovaluation';
 
   function iniciar() {
     if (!/[?&]casca(&|=|$)/.test(location.search) || window.parent === window) {
-      var salvo = null;
-      try { salvo = JSON.parse(localStorage.getItem('comparativo.premissas')); } catch (err) {}
-      montar(salvo);
+      local.ler().then(function (salvo) { montar(salvo || window.COMPARATIVO_INICIAL || null); });
       return;
     }
     var aberto = false;
@@ -1293,6 +1328,7 @@
         clearTimeout(parado); parado = setTimeout(casca.vista, 600);
       }, { passive: true });
       document.getElementById('btn-json').textContent = 'Baixar premissas';
+      document.getElementById('btn-novo').hidden = true;   // estudo novo se cria na pasta
     });
     window.parent.postMessage({ canal: CANAL, tipo: 'pronto', modulo: 'comparativo' }, location.origin);
   }
@@ -1344,6 +1380,18 @@
     document.getElementById('btn-json').addEventListener('click', function () {
       var nome = String(P.capa.matricula || P.capa.empreendimento || 'estudo').replace(/[^\w.-]+/g, '-');
       baixar('comparativo-' + nome + '.json', JSON.stringify(P), 'application/json');
+    });
+    /* apagar tudo pede um segundo clique, na própria barra */
+    var btnNovo = document.getElementById('btn-novo'), tNovo = null;
+    btnNovo.addEventListener('click', function () {
+      if (!btnNovo.classList.contains('confirmar')) {
+        btnNovo.classList.add('confirmar'); btnNovo.textContent = 'Apagar tudo? Clique de novo';
+        tNovo = setTimeout(function () { btnNovo.classList.remove('confirmar'); btnNovo.textContent = 'Estudo em branco'; }, 4000);
+        return;
+      }
+      clearTimeout(tNovo); btnNovo.classList.remove('confirmar'); btnNovo.textContent = 'Estudo em branco';
+      P = premissasVazias(); rolagem = {}; abaAtiva = 'capa';
+      mudou(); montarAbas(); montarFolha();
     });
     var arq = document.getElementById('arquivo-json');
     document.getElementById('btn-abrir').addEventListener('click', function () { arq.value = ''; arq.click(); });
