@@ -89,12 +89,15 @@ branco). No papel — impressão e aba Impressão — a cor cheia vai junto e os
 campos saem em branco, porque lá não há campo, só texto. Cor nova na folha
 deriva desses tokens; nada de azul fixo.
 
-**Ficha técnica** (`ficha(colunas, [[rótulo, campo], …])`): um quadro na
-largura toda, células iguais separadas por fio fino (o vão de .25 mm mostra
-o fundo), rótulo pequeno em maiúsculas em cima e o valor embaixo. É o formato
-que o avaliador escolheu para Terreno, Edificação (4 colunas, fachada e
-conservação no fim da linha) e Unidade privativa — preferido aos quadros
-soltos de pares rótulo → campo, que ficavam espalhados no papel.
+**Ficha técnica** (`ficha(nPares, [[pergunta, resposta], …], pesos)`): pares
+em linha dentro de um quadro na largura toda; a pergunta numa célula
+sombreada (`--pg-pergunta`), em maiúsculas na cor do laudo, e a resposta
+numa célula branca ao lado. É o formato que o avaliador aprovou para Terreno
+(3 pares), Edificação (4 pares × 2 linhas, fachada e conservação no fim da
+linha) e Unidade privativa. Recusados antes: quadros soltos de pares, que
+sobravam espalhados no papel, e rótulo pequeno sobre o valor em células
+largas ("muito espaço para pouco preenchimento; não dá para saber o que é
+pergunta e o que é resposta").
 
 **Rótulo e campo, em todo o laudo** (pedido do avaliador): o campo começa
 logo depois do rótulo, e num mesmo quadro todos os campos alinham pelo

@@ -30,7 +30,7 @@
   --pg-rot:#002060; --pg-marinho:#002060; --pg-marinho-ink:#FFFFFF;
   --pg-borda:#CFCFCF; --pg-fio:#E2E2E2; --pg-cel:#FFFFFF; --pg-link:#0563C1;
   --pg-destaque:#FFF2CC; --pg-sombra:0 2px 14px rgba(28,34,38,.16);
-  --pg-edita:#EEF3FB; --pg-edita-borda:#B9C8E4; --pg-sugerido:#8A93A6; --pg-vazio:#EDEDED;
+  --pg-edita:#EEF3FB; --pg-edita-borda:#B9C8E4; --pg-pergunta:#EFF1F4; --pg-sugerido:#8A93A6; --pg-vazio:#EDEDED;
   --ec1:#FFC000; --ec2:#8E5B5B; --ec3:#ED7D31; --ec4:#B4B4F0; --ec5:#3A7E4C;
   --wf-total:#1F3864; --wf-deducao:#C0504D; --wf-final:#2E7D32;
   --gr-grade:#D9D9D9; --gr-eixo:#8C8C8C; --gr-bissetriz:#7F7F7F;
@@ -52,7 +52,7 @@
     --pg-rot:#A9BEE6; --pg-marinho:#23385F; --pg-marinho-ink:#EEF2FA;
     --pg-borda:#3A4147; --pg-fio:#2C3238; --pg-cel:#22272C; --pg-link:#8AB4F8;
     --pg-destaque:#3A3320; --pg-sombra:0 2px 14px rgba(0,0,0,.5);
-    --pg-edita:#223044; --pg-edita-borda:#3B5277; --pg-sugerido:#7F8A9E; --pg-vazio:#2A3036;
+    --pg-edita:#223044; --pg-edita-borda:#3B5277; --pg-pergunta:#262C32; --pg-sugerido:#7F8A9E; --pg-vazio:#2A3036;
     --wf-total:#5872A8; --wf-deducao:#D0746F; --wf-final:#5BAA60;
     --gr-grade:#343B42; --gr-eixo:#7C8488; --gr-bissetriz:#9AA2A8;
     color-scheme:dark;
@@ -69,7 +69,7 @@
   --pg-rot:#A9BEE6; --pg-marinho:#23385F; --pg-marinho-ink:#EEF2FA;
   --pg-borda:#3A4147; --pg-fio:#2C3238; --pg-cel:#22272C; --pg-link:#8AB4F8;
   --pg-destaque:#3A3320; --pg-sombra:0 2px 14px rgba(0,0,0,.5);
-  --pg-edita:#223044; --pg-edita-borda:#3B5277; --pg-sugerido:#7F8A9E; --pg-vazio:#2A3036;
+  --pg-edita:#223044; --pg-edita-borda:#3B5277; --pg-pergunta:#262C32; --pg-sugerido:#7F8A9E; --pg-vazio:#2A3036;
   --wf-total:#5872A8; --wf-deducao:#D0746F; --wf-final:#5BAA60;
   --gr-grade:#343B42; --gr-eixo:#7C8488; --gr-bissetriz:#9AA2A8;
   color-scheme:dark;
@@ -181,14 +181,14 @@ button{font:inherit;color:inherit}
 .grade-pares{grid-template-columns:max-content minmax(0,1fr)}
 .grade-pares > .rot{padding-right:3mm}
 .grade-pares > :nth-child(n+3){border-top:.25mm solid var(--pg-fio)}
-/* ficha técnica: células iguais, fio fino entre elas, rótulo pequeno em cima */
-/* os fios entre as células são o fundo aparecendo no vão de .25 mm */
+/* ficha técnica: pergunta sombreada, resposta branca ao lado; os fios entre
+   as células são o fundo aparecendo no vão de .25 mm */
 .ficha-tec{display:grid;gap:.25mm;border:.25mm solid var(--pg-borda);background:var(--pg-fio)}
-.ficha-cel{padding:.9mm 1.6mm 1mm;background:var(--pg-cel);min-width:0}
-.ficha-rot{font-size:5.4pt;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--pg-rot);
-  line-height:1.2;margin-bottom:.5mm}
-.ficha-val{font-size:6.8pt;color:var(--pg-tinta);min-height:3.6mm;display:flex;align-items:center}
-.ficha-val .c{width:100%}
+.ficha-perg{background:var(--pg-pergunta);color:var(--pg-rot);font-size:5.8pt;font-weight:700;letter-spacing:.04em;
+  text-transform:uppercase;padding:.9mm 2mm;display:flex;align-items:center;white-space:nowrap}
+.ficha-resp{background:var(--pg-cel);color:var(--pg-tinta);font-size:6.8pt;padding:.7mm 2mm;min-width:0;
+  display:flex;align-items:center;min-height:4.6mm}
+.ficha-resp .c{width:100%}
 /* no papel, o quadro termina pouco depois do texto */
 .caixa.justa{align-self:flex-start;justify-self:start;width:max-content;max-width:100%}
 .caixa.justa .val{padding-right:7mm}
@@ -291,7 +291,7 @@ td.dir .c{text-align:right}
   --pg-papel:#FFFFFF; --pg-area:#FBFBFB; --pg-tinta:#1A1A1A; --pg-tinta2:#404040;
   --pg-rot:#002060; --pg-marinho:#002060; --pg-marinho-ink:#FFFFFF;
   --pg-borda:#CFCFCF; --pg-fio:#E2E2E2; --pg-cel:#FFFFFF; --pg-link:#0563C1; --pg-destaque:#FFF2CC;
-  --pg-vazio:#FFFFFF; --wf-total:#1F3864; --wf-deducao:#C0504D; --wf-final:#2E7D32;
+  --pg-vazio:#FFFFFF; --pg-pergunta:#EFF1F4; --wf-total:#1F3864; --wf-deducao:#C0504D; --wf-final:#2E7D32;
   --gr-grade:#D9D9D9; --gr-eixo:#8C8C8C; --gr-bissetriz:#7F7F7F}
 .folha-previa{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
 .rotulo-pagina{font-size:var(--t-nota);color:var(--muted);letter-spacing:.02em}
@@ -338,7 +338,7 @@ dialog.dialogo button.principal{background:var(--acento);border-color:var(--acen
     --pg-papel:#FFFFFF; --pg-area:#FBFBFB; --pg-tinta:#1A1A1A; --pg-tinta2:#404040;
     --pg-rot:#002060; --pg-marinho:#002060; --pg-marinho-ink:#FFFFFF;
     --pg-borda:#CFCFCF; --pg-fio:#E2E2E2; --pg-cel:#FFFFFF; --pg-link:#0563C1; --pg-destaque:#FFF2CC;
-    --pg-vazio:#FFFFFF; --wf-total:#1F3864; --wf-deducao:#C0504D; --wf-final:#2E7D32;
+    --pg-vazio:#FFFFFF; --pg-pergunta:#EFF1F4; --wf-total:#1F3864; --wf-deducao:#C0504D; --wf-final:#2E7D32;
     --gr-grade:#D9D9D9; --gr-eixo:#8C8C8C; --gr-bissetriz:#7F7F7F;
     color-scheme:light;
   }

@@ -535,14 +535,18 @@
     return e('div', { cls: 'caixa pares' + (ctx.papel ? ' justa' : '') },
       [e('div', { cls: 'g grade-pares' }, filhos)]);
   }
-  /* Ficha técnica: um quadro na largura toda, dividido em células iguais por
-     fios finos; em cada célula, o rótulo pequeno em cima e o valor embaixo.
-     celulas: [[rótulo, campo], …], na ordem de leitura (linha a linha). */
-  function ficha(colunas, celulas) {
-    return e('div', { cls: 'ficha-tec', style: 'grid-template-columns:' + colunas },
-      celulas.map(function (c) {
-        return e('div', { cls: 'ficha-cel' }, [e('div', { cls: 'ficha-rot', txt: c[0] }), e('div', { cls: 'ficha-val' }, [c[1]])]);
-      }));
+  /* Ficha técnica: pares pergunta → resposta em linha, n pares por linha.
+     A pergunta numa célula sombreada, em maiúsculas na cor do laudo; a
+     resposta numa célula branca, logo ao lado. A coluna de cada pergunta tem
+     o tamanho da pergunta mais longa daquela coluna. */
+  function ficha(nPares, celulas, pesos) {
+    var filhos = [];
+    celulas.forEach(function (c) {
+      filhos.push(e('div', { cls: 'ficha-perg', txt: c[0] }));
+      filhos.push(e('div', { cls: 'ficha-resp' }, [c[1]]));
+    });
+    var cols = []; for (var k = 0; k < nPares; k++) cols.push('max-content minmax(0,' + ((pesos && pesos[k]) || 1) + 'fr)');
+    return e('div', { cls: 'ficha-tec', style: 'grid-template-columns:' + cols.join(' ') }, filhos);
   }
   /* célula branca de valor: no papel, termina pouco depois do texto */
   function celula(ctx, campo, cls) { return val(campo, 'cel' + (ctx.papel ? ' justo' : '') + (cls ? ' ' + cls : '')); }
@@ -721,29 +725,29 @@
            ['IMPLANTAÇÃO', ctx.sel(r + 'implantacao', LS.implantacao)]),
       e('div', { cls: 'coluna' }, [faixa('ZONEAMENTO', 'fina'), e('div', { cls: 'caixa' }, [val(ctx.txt(r + 'zoneamento'), 'centro')])])];
 
-    var terreno = ficha('1fr 1fr 1fr', [
+    var terreno = ficha(3, [
       ['Topografia', ctx.sel(im + 'topografia', LS.topografia)],
       ['Formato', ctx.sel(im + 'formato', LS.formato)],
       ['Frentes múltiplas', ctx.sel(im + 'multFrentes', LS.multFrentes)]]);
     var n0 = function (cam) { return ctx.num(cam, { casas: 0 }); };
     /* quatro colunas: as contagens e, no fim da linha, fachada e conservação */
-    var edif = ficha('1fr 1fr 1fr 1.25fr', [
-      ['Nº de pavimentos', n0(im + 'pavimentos')],
-      ['Nº total de unidades', n0(im + 'unidades')],
-      ['Nº de vagas de garagem', n0(im + 'vagas')],
+    var edif = ficha(4, [
+      ['Pavimentos', n0(im + 'pavimentos')],
+      ['Total de unidades', n0(im + 'unidades')],
+      ['Vagas de garagem', n0(im + 'vagas')],
       ['Fachada', ctx.sel(im + 'fachada', LS.padraoRegiao)],
-      ['Nº de unidades por andar', n0(im + 'unidadesAndar')],
-      ['Nº de elevadores', n0(im + 'elevadores')],
-      ['Nº de subsolos', n0(im + 'subsolos')],
-      ['Estado de conservação do condomínio', ctx.sel(im + 'conservacaoCondominio', LS.conservacaoCondominio)]]);
+      ['Unidades por andar', n0(im + 'unidadesAndar')],
+      ['Elevadores', n0(im + 'elevadores')],
+      ['Subsolos', n0(im + 'subsolos')],
+      ['Conservação do condomínio', ctx.sel(im + 'conservacaoCondominio', LS.conservacaoCondominio)]]);
     var infra = g('repeat(5,1fr)', INFRA.map(function (x) { return marcado(im + 'infra.' + x[0], x[1]); }));
 
-    var unidade = ficha('2fr 1fr .8fr 1.5fr', [
+    var unidade = ficha(4, [
       ['Padrão construtivo', ctx.sel(im + 'padrao', LS.padrao)],
       ['Intervalo de valor', ctx.sel(im + 'intervalo', LS.intervalo)],
       ['Idade estimada', e('span', { cls: 'afixo junto' },
         [ctx.num(im + 'idade', { casas: 0 }), e('span', { cls: 'pre', txt: ' ano(s)' })])],
-      ['Estado de conservação', ctx.sel(im + 'conservacao', LS.conservacao)]]);
+      ['Estado de conservação', ctx.sel(im + 'conservacao', LS.conservacao)]], [1.7, 1, .6, 1.1]);
 
     var tab = e('table', { cls: 't pontos' }, [e('tr', {}, COLS_AMBIENTE.map(function (cc) { return e('th', { txt: cc[1] }); }))]
       .concat(repetir(N_AMBIENTES, function (i) {
