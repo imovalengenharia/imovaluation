@@ -80,9 +80,16 @@
     ['quadra', 'Quadra'], ['jardins', 'Jardins'], ['gerador', 'Gerador'], ['sauna', 'Sauna'], ['jogos', 'Salão de Jogos'],
     ['academia', 'Academia'], ['antena', 'Antena Coletiva'], ['brinquedoteca', 'Brinquedoteca'], ['deposito', 'Depósito Individual'], ['cooper', 'Pista de Cooper'],
     ['vigilancia', 'Vigilância Eletrônica'], ['lavanderia', 'Lavanderia Coletiva'], ['telefonia', 'Sistema de Telefonia'], ['conveniencia', 'Loja de Conveniência'], ['heliponto', 'Heliponto']];
-  var COLS_AMBIENTE = [['ambiente', 'AMBIENTE'], ['quantidade', 'QUANTIDADE'], ['parede', 'PAREDE'], ['piso', 'PISO'],
-    ['teto', 'TETO'], ['porta', 'PORTA'], ['esquadrias', 'ESQUADRIAS']];
-  var N_AMBIENTES = 13, FOTOS_POR_PAGINA = 8;
+  /* larguras fixas: a tabela e a sua continuação alinham coluna por coluna */
+  var COLS_AMBIENTE = [['ambiente', 'AMBIENTE', 24], ['quantidade', 'QUANTIDADE', 12], ['parede', 'PAREDE', 12.8],
+    ['piso', 'PISO', 12.8], ['teto', 'TETO', 12.8], ['porta', 'PORTA', 12.8], ['esquadrias', 'ESQUADRIAS', 12.8]];
+  /* 13 linhas de ambiente no mínimo; na página da Região cabem AMB_PRIMEIRA,
+     numa página de continuação AMB_CONTINUACAO */
+  var N_AMBIENTES = 13, AMB_PRIMEIRA = 30, AMB_CONTINUACAO = 60, FOTOS_POR_PAGINA = 8;
+  function ambienteVazio() {
+    return { ambiente: '', quantidade: null, parede: '', piso: '', teto: '', porta: '', esquadrias: '',
+             bancadas: '', metais: '' };
+  }
   var MERCADO = [['oferta', 'Nível de Oferta:'], ['demanda', 'Nível de Demanda:'],
     ['absorcao', 'Absorção:'], ['desempenho', 'Desempenho do Mercado Atual:']];
 
@@ -160,9 +167,7 @@
       imovel: { topografia: '', formato: '', multFrentes: '', pavimentos: null, unidades: null, vagas: null,
         unidadesAndar: null, elevadores: null, subsolos: null, fachada: '', conservacaoCondominio: '', infra: {},
         padrao: '', idade: null, intervalo: '', conservacao: '',
-        ambientes: repetir(N_AMBIENTES, function () {
-          return { ambiente: '', quantidade: null, parede: '', piso: '', teto: '', porta: '', esquadrias: '',
-                   bancadas: '', metais: '' }; }),
+        ambientes: repetir(N_AMBIENTES, ambienteVazio),
         divTerreno: { resposta: '', justificativa: '' }, divConstruida: { resposta: '', justificativa: '' } },
       restricoes: { garantia: '', dataVistoria: '', justificativa: '',
         itens: repetir(PERGUNTAS.length, function () { return { resposta: '', obs: '' }; }), observacoes: '' },
@@ -749,15 +754,69 @@
         [ctx.num(im + 'idade', { casas: 0 }), e('span', { cls: 'pre', txt: ' ano(s)' })])],
       ['Estado de conservação', ctx.sel(im + 'conservacao', LS.conservacao)]], [1.7, 1, .6, 1.1]);
 
-    var tab = e('table', { cls: 't pontos' }, [e('tr', {}, COLS_AMBIENTE.map(function (cc) { return e('th', { txt: cc[1] }); }))]
-      .concat(repetir(N_AMBIENTES, function (i) {
-        var base = im + 'ambientes.' + i + '.';
-        return e('tr', {}, COLS_AMBIENTE.map(function (cc) {
-          return e('td', { style: 'height:4.3mm' }, [cc[0] === 'quantidade'
-            ? ctx.num(base + cc[0], { casas: 0, vazio: '' }) : ctx.txt(base + cc[0])]);
-        }));
-      })));
+    /* ambientes: 13 linhas no mínimo, mais pelo botão; o que não cabe na
+       página da Região segue em páginas de continuação */
+    var amb = P.imovel.ambientes;
+    var nAmb = Math.max(N_AMBIENTES, amb.length);
+    function tabelaAmb(de, ate) {
+      return e('table', { cls: 't pontos', style: 'table-layout:fixed' }, [e('tr', {}, COLS_AMBIENTE.map(function (cc) {
+        return e('th', { txt: cc[1], style: 'width:' + cc[2] + '%' }); }))]
+        .concat(repetir(ate - de, function (k) {
+          var base = im + 'ambientes.' + (de + k) + '.';
+          return e('tr', {}, COLS_AMBIENTE.map(function (cc) {
+            return e('td', { style: 'height:4.3mm' }, [cc[0] === 'quantidade'
+              ? ctx.num(base + cc[0], { casas: 0, vazio: '' }) : ctx.txt(base + cc[0])]);
+          }));
+        })));
+    }
+    function botoesAmb() {
+      if (ctx.papel) return e('div');
+      var mais = e('button', { type: 'button', cls: 'botao-linha', txt: '+ Linha de ambiente' });
+      mais.addEventListener('click', function () {
+        while (amb.length < nAmb) amb.push(ambienteVazio());
+        amb.push(ambienteVazio()); mudou(); remontar();
+      });
+      var filhos = [mais];
+      var ult = amb[nAmb - 1];
+      if (nAmb > N_AMBIENTES) {
+        var menos = e('button', { type: 'button', cls: 'botao-linha', txt: '− Remover última linha' });
+        var cheia = ult && COLS_AMBIENTE.some(function (cc) { return !semValor(ult[cc[0]]) && ult[cc[0]] !== ''; });
+        if (cheia) { menos.disabled = true; menos.title = 'A última linha tem dados: apague-os antes'; }
+        menos.addEventListener('click', function () { amb.length = nAmb - 1; mudou(); remontar(); });
+        filhos.push(menos);
+      }
+      return e('div', { cls: 'linha-botoes' }, filhos);
+    }
+    var nPrim = Math.min(nAmb, AMB_PRIMEIRA);
+    var faixaAmb = function (cont) {
+      return faixa(e('span', {}, ['DIVISÃO INTERNA POR AMBIENTE' + (cont ? ' (CONTINUAÇÃO)' : ''),
+        e('span', { cls: 'info', txt: 'ⓘ' })]), 'esq');
+    };
 
+    var paginas = [pagina(ctx, [
+      tit('Dados da Região'),
+      g('1fr 1fr 1fr', [melh, serv, pec], { gap: '9mm', cls: 'colunas' }), espaco('g2'),
+      g('1fr 1fr 1fr', regiaoLinha2, { gap: '9mm', cls: 'colunas' }),
+      tit('OBSERVAÇÕES GERAIS SOBRE A REGIÃO', 'menor'),
+      ctx.area(r + 'observacoes', { alt: '30mm', estica: true }),
+      tit('Dados do Imóvel'),
+      faixa('TERRENO', 'esq'), terreno, espaco(),
+      faixa('EDIFICAÇÃO (QUANDO EMPREENDIMENTO VERTICALIZADO)', 'esq'), edif, espaco(),
+      faixa('INFRAESTRUTURA DO EMPREENDIMENTO', 'esq'), infra, espaco(),
+      faixa('UNIDADE PRIVATIVA', 'esq'), unidade, espaco(),
+      faixaAmb(false), tabelaAmb(0, nPrim)].concat(nPrim === nAmb ? [botoesAmb()] : []),
+      { parte: 'regiao', estica: true })];
+    for (var de = nPrim; de < nAmb; de += AMB_CONTINUACAO) {
+      var ate = Math.min(nAmb, de + AMB_CONTINUACAO);
+      paginas.push(pagina(ctx, [faixaAmb(true), tabelaAmb(de, ate)].concat(ate === nAmb ? [botoesAmb()] : []),
+        { parte: 'regiao' }));
+    }
+    return paginas;
+  }
+
+  /* as duas perguntas de divergência de área abrem a página seguinte */
+  function divergencias(ctx) {
+    var im = 'imovel.';
     function divergencia(chave, pergunta, f) {
       return e('div', {}, [
         g('1fr auto 10mm', [rot(pergunta, 'semquebra'), rot('Percentual de divergência:'),
@@ -765,25 +824,12 @@
         g('15mm 28mm 16mm 1fr', [rot('Resposta:', 'claro'), val(ctx.sel(im + chave + '.resposta', LS.validacao)),
           rot('Justifique:', 'claro'), val(ctx.txt(im + chave + '.justificativa'))])]);
     }
-
-    return [pagina(ctx, [
-      tit('Dados da Região'),
-      g('1fr 1fr 1fr', [melh, serv, pec], { gap: '9mm', cls: 'colunas' }), espaco('g2'),
-      g('1fr 1fr 1fr', regiaoLinha2, { gap: '9mm', cls: 'colunas' }),
-      tit('OBSERVAÇÕES GERAIS SOBRE A REGIÃO', 'menor'),
-      ctx.area(r + 'observacoes', { alt: '20mm' }),
-      tit('Dados do Imóvel'),
-      faixa('TERRENO', 'esq'), terreno, espaco(),
-      faixa('EDIFICAÇÃO (QUANDO EMPREENDIMENTO VERTICALIZADO)', 'esq'), edif, espaco(),
-      faixa('INFRAESTRUTURA', 'esq'), infra, espaco(),
-      faixa('UNIDADE PRIVATIVA', 'esq'), unidade, espaco(),
-      faixa(e('span', {}, ['DIVISÃO INTERNA POR AMBIENTE', e('span', { cls: 'info', txt: 'ⓘ' })]), 'esq'),
-      tab, espaco('g2'),
+    return [
       divergencia('divTerreno', 'O imóvel possui divergência de área de terreno entre documentações e área estimada em vistoria?',
         function (rr) { return rr.capa.divTerreno; }),
       espaco(),
       divergencia('divConstruida', 'O imóvel possui divergência de área construída entre documentações e área estimada em vistoria?',
-        function (rr) { return rr.capa.divConstruida; })], { parte: 'regiao' })];
+        function (rr) { return rr.capa.divConstruida; })];
   }
 
   /* ============================================================ RESTRIÇÕES */
@@ -795,7 +841,7 @@
         g('15mm 20mm 8mm 1fr', [rot('Resposta:', 'claro'), val(ctx.sel(b + 'resposta', LS.validacao)),
           rot('Obs:', 'claro dir'), val(ctx.txt(b + 'obs'), 'pontilhado')])]);
     });
-    return [pagina(ctx, [
+    return [pagina(ctx, divergencias(ctx).concat([espaco('g2'),
       tit('Restrições do Imóvel'),
       g('1fr 28mm', [rot('Considerando as diligências e aspectos técnicos analisados neste laudo, o imóvel é recomendado como garantia?'),
         rot('Data Vistoria', 'centro')]),
@@ -807,7 +853,7 @@
       espaco('g2')].concat(itens).concat([
       espaco('g2'),
       e('div', { cls: 'subtit', txt: 'Observações Gerais:' }),
-      ctx.area(r + 'observacoes', { alt: '32mm' })]), { parte: 'restricoes' })];
+      ctx.area(r + 'observacoes', { alt: '32mm' })])), { parte: 'restricoes' })];
   }
 
   /* ======================================================== FICHAS */
