@@ -79,6 +79,16 @@ formatos do laudo (duas casas em áreas, fatores e percentuais da estatística;
 plataforma. Fora da folha (barra, painel, resumo do cartão) valem as regras
 de sempre.
 
+**A cor do laudo é escolha do avaliador** (`P.aparencia.cor`, padrão
+`#002060`, seletor "Cor do laudo" na barra). `aplicarCor()` gera, num
+`<style id="estilo-cor">` posto depois do CSS da página, os tokens da folha
+nos dois temas: a cor cheia em `--pg-marinho`/`--pg-rot` (faixas, títulos,
+rótulos), texto preto ou branco sobre a faixa conforme a luminância, e os
+campos digitáveis num tom bem claro da mesma cor (`--pg-edita`, 92% de
+branco). No papel — impressão e aba Impressão — a cor cheia vai junto e os
+campos saem em branco, porque lá não há campo, só texto. Cor nova na folha
+deriva desses tokens; nada de azul fixo.
+
 Texto corrido (observações, texto da liquidação) aceita duas marcas, para sair
 como no laudo: linha começando por `# ` é subtítulo em azul; `**trecho**` é
 negrito.

@@ -93,6 +93,10 @@ button{font:inherit;color:inherit}
 .acao.destaque{background:var(--acento);border-color:var(--acento);color:var(--acento-ink);font-weight:500}
 .acao.destaque:hover{background:var(--acento-forte);border-color:var(--acento-forte)}
 .acao.confirmar{border-color:var(--neg);color:var(--neg)}
+.cor-laudo{display:inline-flex;align-items:center;gap:7px;font-size:var(--t-nota);color:var(--barra-sub)}
+.cor-laudo input[type="color"]{width:34px;height:var(--alt);padding:2px;border:1px solid rgba(242,240,233,.28);
+  border-radius:3px;background:transparent;cursor:pointer}
+.acao.mini{padding:4px 8px;height:auto}
 .abas{position:sticky;top:49px;z-index:29;background:var(--surface);border-bottom:1px solid var(--rule);
   display:flex;overflow-x:auto;padding:0 12px 1px;scrollbar-width:none}
 .abas::-webkit-scrollbar{display:none}
@@ -311,6 +315,10 @@ dialog.dialogo button.principal{background:var(--acento);border-color:var(--acen
 <header class="barra">
   <div class="resumo-topo" id="resumo-topo"></div>
   <span class="vazio"></span>
+  <label class="cor-laudo" title="A cor das faixas, títulos e rótulos do laudo; os campos digitáveis ganham o mesmo tom, bem claro">
+    Cor do laudo <input type="color" id="cor-laudo" value="#002060">
+    <button class="acao mini" id="cor-padrao" type="button" title="Voltar ao azul-marinho do modelo">Padrão</button>
+  </label>
   <button class="acao" id="btn-tema" type="button" title="Alternar tema">Tema claro</button>
   <button class="acao" id="btn-novo" type="button">Estudo em branco</button>
   <button class="acao" id="btn-abrir" type="button">Abrir premissas</button>

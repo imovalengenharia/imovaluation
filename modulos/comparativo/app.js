@@ -86,6 +86,51 @@
   var MERCADO = [['oferta', 'Nível de Oferta:'], ['demanda', 'Nível de Demanda:'],
     ['absorcao', 'Absorção:'], ['desempenho', 'Desempenho do Mercado Atual:']];
 
+  var COR_PADRAO = '#002060';
+
+  /* ------------------------------------------------------- a cor do laudo
+     Uma cor escolhida pelo avaliador gera os tokens da folha nos dois temas:
+     a cor cheia nas faixas e rótulos, e um tom bem claro dela nos campos
+     digitáveis. No papel (impressão e prévia) os campos saem em branco — lá
+     não há campo, só texto — e a cor cheia vai junto. */
+  function rgb(hex) {
+    var m = /^#?([0-9a-f]{6})$/i.exec(String(hex || ''));
+    if (!m) return null;
+    var n = parseInt(m[1], 16);
+    return [n >> 16 & 255, n >> 8 & 255, n & 255];
+  }
+  function misturar(a, b, t) {   /* t = quanto de b */
+    var x = rgb(a), y = rgb(b);
+    return '#' + x.map(function (v, i) {
+      return ('0' + Math.round(v + (y[i] - v) * t).toString(16)).slice(-2); }).join('').toUpperCase();
+  }
+  function tintaSobre(hex) {       /* texto legível sobre a faixa */
+    var c = rgb(hex).map(function (v) { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2] > 0.4 ? '#1A1A1A' : '#FFFFFF';
+  }
+  function aplicarCor() {
+    var cor = rgb(P.aparencia && P.aparencia.cor) ? P.aparencia.cor.toUpperCase() : COR_PADRAO;
+    var claro = '--pg-marinho:' + cor + ';--pg-rot:' + cor + ';--pg-marinho-ink:' + tintaSobre(cor) +
+      ';--pg-edita:' + misturar(cor, '#FFFFFF', 0.92) + ';--pg-edita-borda:' + misturar(cor, '#FFFFFF', 0.68) + ';';
+    var marinhoEsc = misturar(cor, '#FFFFFF', 0.14);
+    var escuro = '--pg-marinho:' + marinhoEsc + ';--pg-rot:' + misturar(cor, '#FFFFFF', 0.62) +
+      ';--pg-marinho-ink:' + tintaSobre(marinhoEsc) + ';--pg-edita:' + misturar(cor, '#1C2024', 0.8) +
+      ';--pg-edita-borda:' + misturar(cor, '#1C2024', 0.45) + ';';
+    var papel = '--pg-marinho:' + cor + ';--pg-rot:' + cor + ';--pg-marinho-ink:' + tintaSobre(cor) + ';';
+    var css = ':root{' + claro + '}\n' +
+      '@media (prefers-color-scheme:dark){:root:not([data-tema="claro"]):not([data-theme="light"]),' +
+        ':root:not([data-tema="claro"]){' + escuro + '}}\n' +
+      ':root[data-tema="escuro"],:root[data-theme="dark"]:not([data-tema="claro"]){' + escuro + '}\n' +
+      '.previa{' + papel + '}\n' +
+      '@media print{:root,:root:not([data-tema="claro"]),:root:not([data-tema="claro"]):not([data-theme="light"]),' +
+        ':root[data-tema],:root[data-theme="dark"]:not([data-tema="claro"]){' + papel + '}}';
+    var el = document.getElementById('estilo-cor');
+    if (!el) { el = document.createElement('style'); el.id = 'estilo-cor'; document.head.appendChild(el); }
+    el.textContent = css;
+    var inp = document.getElementById('cor-laudo');
+    if (inp && document.activeElement !== inp) inp.value = cor.toLowerCase();
+  }
+
   function repetir(n, f) { var a = []; for (var i = 0; i < n; i++) a.push(f(i)); return a; }
   function amostraVazia() {
     return { foto: null, endereco: '', numero: '', complemento: '', cep: '', bairro: '', empreendimento: '',
@@ -128,7 +173,10 @@
       liquidacao: { texto: TEXTO_LIQUIDACAO, prazo: null, rotuloTaxa: 'Tesouro Prefixado 2029', taxa: null,
         ipca: null, iptuAno: null, condominioMes: null, oferta: '', demanda: '', absorcao: '', desempenho: '' },
       fotos: [], anexos: [],
-      impressao: {}
+      impressao: {},
+      /* a cor do laudo: faixas, títulos e rótulos; os campos digitáveis
+         ganham o mesmo tom bem claro */
+      aparencia: { cor: COR_PADRAO }
     };
   }
 
@@ -1411,9 +1459,15 @@
     try { P = mesclar(premissasVazias(), p && typeof p === 'object' ? p : null); }
     catch (err) { P = premissasVazias(); }
     R = M.calcular(P);
+    aplicarCor();
     montarAbas(); montarFolha();
     if (ligado) return;
     ligado = true;
+    var corInp = document.getElementById('cor-laudo');
+    corInp.addEventListener('input', function () { guardar('aparencia.cor', corInp.value.toUpperCase()); aplicarCor(); mudou(); });
+    document.getElementById('cor-padrao').addEventListener('click', function () {
+      guardar('aparencia.cor', COR_PADRAO); aplicarCor(); mudou();
+    });
     var btnTema = document.getElementById('btn-tema');
     function escuroAgora() {
       var t = document.documentElement.getAttribute('data-tema');
@@ -1445,7 +1499,7 @@
       }
       clearTimeout(tNovo); btnNovo.classList.remove('confirmar'); btnNovo.textContent = 'Estudo em branco';
       P = premissasVazias(); rolagem = {}; abaAtiva = 'capa';
-      mudou(); montarAbas(); montarFolha();
+      aplicarCor(); mudou(); montarAbas(); montarFolha();
     });
     var arq = document.getElementById('arquivo-json');
     document.getElementById('btn-abrir').addEventListener('click', function () { arq.value = ''; arq.click(); });
@@ -1456,7 +1510,7 @@
         var p = JSON.parse(t);
         if (!p || typeof p !== 'object' || !p.capa) throw new Error('formato');
         P = mesclar(premissasVazias(), p); rolagem = {};
-        mudou(); montarFolha();
+        aplicarCor(); mudou(); montarFolha();
       }).catch(function () { avisar('Arquivo não reconhecido', 'Escolha um arquivo de premissas salvo por este módulo.'); });
     });
 
