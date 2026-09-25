@@ -92,5 +92,12 @@ test('reabre na aba onde parou, e o laudo impresso sai em páginas A4', async ()
     'sem fotos nem anexos, oito páginas');
   assert.equal(await quadro.evaluate(() => document.querySelectorAll('#impressao input, #impressao select').length), 0,
     'no papel não há campo, só texto');
+
+  /* a aba Impressão mostra as mesmas páginas, numeradas, sem nenhum campo */
+  await fr.locator('#abas button', { hasText: 'Impressão' }).click();
+  await fr.locator('.previa .rotulo-pagina').first().waitFor();
+  assert.equal(await fr.locator('.previa .rotulo-pagina').first().textContent(), 'Página 1 de 8 · Capa');
+  assert.equal(await fr.locator('.previa input, .previa select, .previa textarea').count(), 0);
+  assert.equal(await fr.locator('.folha-previa.passa').count(), 0, 'o estudo em branco cabe em A4');
   assert.deepEqual(erros, []);
 });

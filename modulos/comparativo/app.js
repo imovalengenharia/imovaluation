@@ -1130,7 +1130,8 @@
     { id: 'grafico', rot: 'Gráfico', render: folhaGrafico },
     { id: 'liquidacao', rot: 'Liquidação forçada', render: folhaLiquidacao },
     { id: 'fotos', rot: 'Relatório fotográfico', render: folhaFotos },
-    { id: 'anexos', rot: 'Anexos', render: folhaAnexos }
+    { id: 'anexos', rot: 'Anexos', render: folhaAnexos },
+    { id: 'impressao', rot: 'Impressão', render: folhaImpressao, painel: painelImpressao }
   ];
   function abaDe(id) { return ABAS.filter(function (a) { return a.id === id; })[0]; }
 
@@ -1267,6 +1268,60 @@
       return im.complete ? null : new Promise(function (ok) { im.onload = im.onerror = ok; });
     })).then(function () { window.print(); });
   }
+  /* ------------------------------------------ a prévia da impressão
+     O laudo como sai no papel, página a página: as mesmas funções, no
+     contexto de papel, com as cores do papel claro em qualquer tema. Página
+     que passa da folha A4 ganha o aviso — no papel ela sairia em duas. */
+  function partesEscolhidas() {
+    var esc = P.impressao || {};
+    return PARTES.filter(function (p) { return esc[p[0]] !== false; });
+  }
+  function painelImpressao() {
+    var esc = P.impressao || {};
+    var marcas = PARTES.map(function (p) {
+      var cx = e('input', { type: 'checkbox', checked: esc[p[0]] !== false ? 'checked' : null });
+      cx.addEventListener('change', function () {
+        guardar('impressao.' + p[0], cx.checked); mudou(); remontar();
+      });
+      return e('label', {}, [cx, p[1]]);
+    });
+    var botao = e('button', { type: 'button', cls: 'botao', id: 'btn-imprimir-previa', txt: 'Imprimir estas páginas' });
+    botao.addEventListener('click', function () {
+      imprimirLaudo(partesEscolhidas().map(function (p) { return p[0]; }));
+    });
+    return e('section', { cls: 'painel' }, [
+      e('h2', { txt: 'Impressão' }),
+      e('p', { txt: 'O laudo como sai no papel A4, página a página, sempre no papel claro. Aqui não se edita: ' +
+        'volte à aba da página para ajustar. Uma página marcada em vermelho passa da folha e sairia em duas.' }),
+      e('div', { cls: 'linha' }, [e('span', { cls: 'k', txt: 'Partes do laudo' })].concat(marcas)),
+      e('div', { cls: 'linha' }, [botao])]);
+  }
+  function folhaImpressao() {
+    var ctx = contexto(true), paginas = [];
+    partesEscolhidas().forEach(function (p) {
+      abaDe(p[0]).render(ctx).forEach(function (pg) { paginas.push({ pg: pg, parte: p[1] }); });
+    });
+    var caixa = e('div', { cls: 'previa' });
+    if (!paginas.length) caixa.appendChild(e('p', { cls: 'rotulo-pagina', txt: 'Nenhuma parte escolhida.' }));
+    paginas.forEach(function (x, i) {
+      var rotulo = e('div', { cls: 'rotulo-pagina', txt: 'Página ' + (i + 1) + ' de ' + paginas.length + ' · ' + x.parte });
+      caixa.appendChild(e('div', { cls: 'folha-previa' }, [rotulo, x.pg]));
+    });
+    /* depois de desenhada, mede: a altura da página em mm contra a da folha */
+    requestAnimationFrame(function () {
+      caixa.querySelectorAll('.folha-previa').forEach(function (f) {
+        var pg = f.querySelector('.pagina'), mm = pg.offsetHeight * 25.4 / 96;
+        var limite = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--pg-h')) || 381.8;
+        if (mm > limite + 0.8) {
+          f.classList.add('passa');
+          f.querySelector('.rotulo-pagina').textContent += ' — passa da folha A4 (sairia em ' +
+            Math.ceil(mm / limite - 0.01) + ' folhas)';
+        }
+      });
+    });
+    return [caixa];
+  }
+
   function abrirDialogoImpressao() {
     var dlg = document.getElementById('dlg-imprimir'), lista = document.getElementById('dlg-imprimir-lista');
     lista.textContent = '';

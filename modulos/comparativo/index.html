@@ -242,6 +242,18 @@ td.dir .c{text-align:right}
 .adicionar{border:.3mm dashed var(--pg-edita-borda);background:var(--pg-edita);color:var(--pg-rot);cursor:pointer;
   font:inherit;font-size:7pt;padding:3mm;width:100%}
 
+/* ---------- prévia da impressão: o papel claro, em qualquer tema ---------- */
+.previa{display:flex;flex-direction:column;align-items:center;gap:6px;
+  --pg-papel:#FFFFFF; --pg-area:#FBFBFB; --pg-tinta:#1A1A1A; --pg-tinta2:#404040;
+  --pg-rot:#002060; --pg-marinho:#002060; --pg-marinho-ink:#FFFFFF;
+  --pg-borda:#CFCFCF; --pg-fio:#E2E2E2; --pg-cel:#FFFFFF; --pg-link:#0563C1; --pg-destaque:#FFF2CC;
+  --pg-vazio:#FFFFFF; --wf-total:#1F3864; --wf-deducao:#C0504D; --wf-final:#2E7D32;
+  --gr-grade:#D9D9D9; --gr-eixo:#8C8C8C; --gr-bissetriz:#7F7F7F}
+.folha-previa{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.rotulo-pagina{font-size:var(--t-nota);color:var(--muted);letter-spacing:.02em}
+.folha-previa.passa .rotulo-pagina{color:var(--neg);font-weight:500}
+.folha-previa.passa .pagina{outline:2px solid var(--neg)}
+
 /* ---------- gráficos ---------- */
 svg.grafico{display:block;width:100%;height:auto;font-family:Arial,'Liberation Sans',Helvetica,sans-serif}
 svg.grafico .grade{stroke:var(--gr-grade);stroke-width:.6}

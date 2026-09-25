@@ -32,6 +32,7 @@ Como no involutivo: sem build, sem dependências; o publicado são exatamente
 | Liquidação forçada | aba **Liquidação forçada** (premissas, ponte, sensibilidade) |
 | Fotos, Fotos (2), (3), (5) | aba **Relatório fotográfico** — 8 fotos por página, quantas páginas precisar |
 | (documentos anexados ao PDF) | aba **Anexos** — uma imagem por página, sem cabeçalho |
+| — | aba **Impressão**: a prévia do laudo como sai no papel, página a página e numerada, sempre no papel claro; página que passa da folha A4 fica marcada em vermelho. É o que o avaliador usa para ajustar o laudo no link web, onde `window.print()` não funciona |
 | Cálculo_apoio, Inf. Auxiliar, Listas Suspensas | **ocultas**: as tabelas e fórmulas moram no `motor.js`; as escolhas do Cálculo_apoio ficam no painel "Tratamento dos dados", sobre a página do Cálculo, que não sai no laudo |
 | Declaração, LIC | fora — não fazem parte do laudo impresso |
 
