@@ -387,6 +387,7 @@
     ctx.sel = function (caminho, lista, o) {
       o = o || {};
       var v = pegar(caminho) || '';
+      if (v === '-') v = '';                  /* o "-" saiu das listas: vale como vazio */
       if (papel) return e('span', { txt: v || (o.vazio || '') });
       var opcoes = lista.slice();
       if (v && opcoes.indexOf(v) < 0) opcoes.unshift(v);

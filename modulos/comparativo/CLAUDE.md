@@ -186,6 +186,11 @@ neutro.
   estimada recebe a da matrícula, e "-" na doc. complementar vira vazio.
 - **Listas da Capa**: uso sem "-"; ocupação só Ocupado / Desocupado; tipos
   de laudo "Simplificado - Vistoria externa / interna / remota / Sem vistoria".
+- **Todas as listas suspensas** saem sem "-" e em ordem alfabética
+  (`Intl.Collator('pt-BR')`, no fim de `LISTAS`). O motor não depende dessa
+  ordem: o Pc lê `INTERVALOS` (Mínimo → Máximo), que fica intacto. Valor "-"
+  guardado vale como vazio na lista. As escalas de mercado da Liquidação
+  (alto → baixo) não são listas e mantêm a ordem.
 - **Registros profissionais**: CREA ou CAU / UF - número, com as duas
   listas e o número digitado — sob a assinatura, centralizado (`conselho`,
   `conselhoUF`, `conselhoNumero`), e na linha "REGISTRO" da empresa

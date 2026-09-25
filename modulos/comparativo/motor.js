@@ -108,7 +108,7 @@
     transacao: ['Oferta', 'Venda'],
     fundamentacao: ['I', 'II', 'III'],
     tabela: ['A', 'B', 'C'],
-    vagas: ['Vinculada', 'Autônoma', 'Viculada + Autônoma', '-'],
+    vagas: ['Vinculada', 'Autônoma', 'Vinculada + Autônoma'],
     tipoLaudo: ['Simplificado - Vistoria externa', 'Simplificado - Vistoria interna',
       'Simplificado - Vistoria remota', 'Simplificado - Sem vistoria'],
     zoneamento: ['Residencial', 'Comercial', 'Misto', 'Industrial', 'Expansão', 'Rural', 'Urbano'],
@@ -117,6 +117,16 @@
     absorcao: ['rápida', 'normal/rápida', 'normal', 'normal/difícil', 'difícil'],
     desempenho: ['aquecido', 'normal/aquecido', 'normal', 'normal/recessivo', 'recessivo']
   };
+  /* As listas suspensas saem sem o "-" e em ordem alfabética (pedido do
+     avaliador), comparando como se lê em português: sem distinguir maiúscula
+     nem acento, e números pela grandeza. Ficam de fora as escalas do mercado
+     da Liquidação forçada, que não são listas: são a régua de alto a baixo. */
+  var ESCALAS = { oferta: 1, demanda: 1, absorcao: 1, desempenho: 1 };
+  var ordem = new Intl.Collator('pt-BR', { sensitivity: 'base', numeric: true });
+  Object.keys(LISTAS).forEach(function (k) {
+    if (ESCALAS[k]) return;
+    LISTAS[k] = LISTAS[k].filter(function (x) { return x !== '-'; }).slice().sort(ordem.compare);
+  });
 
   /* As três tabelas de homogeneização do Cálculo_apoio. Peso 't' multiplica
      o desvio do fator pela cota-parte do terreno; 'c', pela da construção.
