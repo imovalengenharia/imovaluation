@@ -148,12 +148,16 @@ neutro.
 
 ## Onde o módulo **copia** a planilha mesmo parecendo errado
 
-- **Sensibilidade por variação do VM** (Liquidação forçada, J61:M67): a
-  planilha tira a perda inflacionária do VM cheio, não do VM descontado como
-  em F39. Por isso a linha 0% (R$ 6.761.777 no laudo 33.794) não bate com o
-  VLF da página (R$ 6.861.974). Está igual ao laudo impresso; corrigir é
-  decisão do avaliador — mude `porVariacao` no motor e o teste `1e`.
 - Capa: "Valor total" não soma o valor da vaga autônoma (AI50 = Cálculo!C67).
+
+## Corrigido em relação à planilha, a pedido do avaliador
+
+- **Sensibilidade por variação do VM** (Liquidação forçada, J61:M67): a
+  planilha tirava a perda inflacionária do VM cheio, e não do VM já
+  descontado como em F39 — a linha 0% dava R$ 6.761.777 no laudo 33.794,
+  contra o VLF de R$ 6.861.974 da mesma página. Agora cada linha usa a mesma
+  conta do VLF (`deducoes(vm)`), e a linha 0% é o próprio VLF. A tabela por
+  nível de deságio (D61:E67) já era coerente e não mudou.
 
 ## Ao mexer no motor
 

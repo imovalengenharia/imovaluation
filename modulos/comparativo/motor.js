@@ -483,15 +483,13 @@
         var g = liq.desagio + d;
         return { desagio: g, vlf: liq.vm * (1 - g), atual: d === 0 };
       });
-      /* J61: aqui a planilha tira a perda inflacionária do VM cheio, e não do
-         VM já descontado como em F39 — por isso a linha 0% não bate com o VLF
-         acima. Fica como está, porque é o que o laudo impresso mostra; ver o
-         CLAUDE.md do módulo. */
-      var anos = liq.prazo / 12;
+      /* J61:M67 — a mesma conta do VLF acima, aplicada a cada VM: a perda
+         inflacionária incide sobre o VM já descontado (F39). A planilha de
+         origem a tirava do VM cheio, e a linha 0% não batia com o VLF da
+         página (R$ 6.761.777 × R$ 6.861.974 no laudo 33.794); corrigido a
+         pedido do avaliador. */
       liq.porVariacao = [-0.15, -0.1, -0.05, 0, 0.05, 0.1, 0.15].map(function (v) {
-        var vm = liq.vm * (1 + v);
-        var vlf = vm - (vm * (1 - 1 / Math.pow(1 + liq.taxaReal, anos)) +
-          vm * (1 - 1 / Math.pow(1 + liq.ipca, anos)) + liq.iptu + liq.condominio);
+        var vm = liq.vm * (1 + v), vlf = vm - deducoes(vm).total;
         return { variacao: v, vm: vm, vlf: vlf, razao: vlf / vm, desconto: vm - vlf,
                  desagio: (vm - vlf) / vm, atual: v === 0 };
       });

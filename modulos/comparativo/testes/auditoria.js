@@ -156,11 +156,14 @@ conferir('ponte: base de (a) (H27)', L.ponte[1].base, 7894598.388370659);
 conferir('ponte: base de (d) (H30)', L.ponte[4].base, 6861974.07952834);
 conferir('sensibilidade −3 p.p. (E61)', L.porDesagio[0].vlf, 7133474.823605578);
 conferir('sensibilidade +3 p.p. (E67)', L.porDesagio[6].vlf, 6590473.335451101);
-conferir('VM −15% → VLF (J61)', L.porVariacao[0].vlf, 5695308.214144658);
-conferir('VM atual → VLF (J64)', L.porVariacao[3].vlf, 6761776.936729756);
-conferir('VM +15% → VLF (J67)', L.porVariacao[6].vlf, 7828245.659314852);
-conferir('VLF/VM a −15% (K61)', L.porVariacao[0].razao, 0.7403695294812789);
-conferir('deságio a +15% (M67)', L.porVariacao[6].desagio, 0.24782856544237256);
+/* sensibilidade por VM: a mesma conta do VLF (corrigida em relação à planilha,
+   que tirava a perda inflacionária do VM cheio e dava R$ 6.761.777 a 0%) */
+conferir('VM atual → VLF = VLF da página (J64 = C46)', L.porVariacao[3].vlf, 6861974.079528339);
+var kVP = 1 / Math.pow(1 + L.taxaReal, 2) / Math.pow(1 + L.ipca, 2);   // 24 meses
+conferir('VM −15% → VLF (J61)', L.porVariacao[0].vlf, 0.85 * L.vm * kVP - L.iptu - L.condominio);
+conferir('VM +15% → VLF (J67)', L.porVariacao[6].vlf, 1.15 * L.vm * kVP - L.iptu - L.condominio);
+conferir('VLF/VM a −15% (K61)', L.porVariacao[0].razao, (0.85 * L.vm * kVP - L.iptu - L.condominio) / (0.85 * L.vm));
+conferir('deságio a 0% = deságio da página (M64 = E47)', L.porVariacao[3].desagio, 0.2417728979509317);
 
 B('1f · GRÁFICO');
 conferir('extremo da bissetriz (N48)', R.grafico.bissetriz, 19817.88079470199);
