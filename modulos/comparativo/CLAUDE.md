@@ -89,6 +89,15 @@ branco). No papel — impressão e aba Impressão — a cor cheia vai junto e os
 campos saem em branco, porque lá não há campo, só texto. Cor nova na folha
 deriva desses tokens; nada de azul fixo.
 
+**Rótulo e campo, em todo o laudo** (pedido do avaliador): o campo começa
+logo depois do rótulo, e num mesmo quadro todos os campos alinham pelo
+rótulo mais longo — `pares(ctx, [[rótulo, campo], …])`, uma grade só com
+`max-content minmax(0, 1fr)`. No papel, o quadro (`.caixa.justa`) e a célula
+branca solta (`celula()` → `.val.cel.justo`) terminam 7 mm depois do texto.
+Quadros de uma mesma fileira ficam nas mesmas colunas (`.colunas`/`.coluna`).
+Tabelas (dimensões, homogeneização, sensibilidade), o resultado da avaliação
+e as fichas de pesquisa seguem como tabela.
+
 **Espaçamento padronizado em todo o laudo** (pedido repetido do avaliador):
 entre a faixa de título e o que vem embaixo, só o `margin-bottom` da própria
 `.faixa` (1,3 mm) — nunca um `espaco()` logo depois de faixa; entre blocos,

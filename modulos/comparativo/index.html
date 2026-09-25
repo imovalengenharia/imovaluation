@@ -177,6 +177,15 @@ button{font:inherit;color:inherit}
 .val.centro{justify-content:center;text-align:center}
 .val.dir{justify-content:flex-end;text-align:right}
 .val.cel.justo{justify-self:start;padding-right:7mm}
+/* pares rótulo → campo: coluna do rótulo do tamanho do rótulo mais longo */
+.grade-pares{grid-template-columns:max-content minmax(0,1fr)}
+.grade-pares > .rot{padding-right:3mm}
+.grade-pares > :nth-child(n+3){border-top:.25mm solid var(--pg-fio)}
+.unidade > .rot{padding-right:3mm}
+.unidade > :nth-child(4n+3){padding-left:6mm}
+/* no papel, o quadro termina pouco depois do texto */
+.caixa.justa{align-self:flex-start;justify-self:start;width:max-content;max-width:100%}
+.caixa.justa .val{padding-right:7mm}
 .caixa{border:.25mm solid var(--pg-borda);background:var(--pg-cel)}
 .caixa > .g + .g{border-top:.25mm solid var(--pg-fio)}
 .linhas > *{border-bottom:.25mm solid var(--pg-fio)}

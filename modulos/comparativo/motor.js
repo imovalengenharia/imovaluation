@@ -138,7 +138,7 @@
     testada:      { rot: 'Fator Testada' },
     profundidade: { rot: 'Fator Profundidade' },
     topografia:   { rot: 'Fator Topografia', calc: true },
-    multFrentes:  { rot: 'Fator Mult. Frentes' },
+    multFrentes:  { rot: 'Fator Frentes Múltiplas' },
     padrao:       { rot: 'Fator Padrão', calc: true },
     idade:        { rot: 'Fator Idade / Conserv.', calc: true },
     vaga:         { rot: 'Fator Vaga de Garagem' },

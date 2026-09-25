@@ -525,6 +525,18 @@
   }
   function rot(t, cls) { return e('div', { cls: 'rot ' + (cls || '') }, [t]); }
   function val(filho, cls) { return e('div', { cls: 'val ' + (cls || '') }, [filho]); }
+  /* Pares rótulo → campo num quadro: o campo começa logo depois do rótulo
+     mais longo do quadro, e todos os campos do quadro ficam alinhados. No
+     papel, o quadro termina pouco depois do texto, como na Capa. */
+  function pares(ctx, linhas, o) {
+    o = o || {};
+    var filhos = [];
+    linhas.forEach(function (l) { filhos.push(rot(l[0], o.rot)); filhos.push(val(l[1], o.val)); });
+    return e('div', { cls: 'caixa pares' + (ctx.papel ? ' justa' : '') },
+      [e('div', { cls: 'g grade-pares' }, filhos)]);
+  }
+  /* célula branca de valor: no papel, termina pouco depois do texto */
+  function celula(ctx, campo, cls) { return val(campo, 'cel' + (ctx.papel ? ' justo' : '') + (cls ? ' ' + cls : '')); }
   function faixa(t, cls) { return e('div', { cls: 'faixa ' + (cls || '') }, [t]); }
   function tit(t, cls) { return e('div', { cls: 'tit ' + (cls || ''), txt: t }); }
   function espaco(cls) { return e('div', { cls: 'espaco ' + (cls || '') }); }
@@ -554,36 +566,35 @@
   function folhaCapa(ctx) {
     var c = 'capa.';
     var topo = g('auto 1.5fr auto 1.25fr auto .55fr auto .7fr', [
-      rot('PROPONENTE', 'marinho'), val(ctx.txt(c + 'proponente'), 'cel'),
-      rot('TIPO LAUDO', 'marinho'), val(ctx.sel(c + 'tipoLaudo', LS.tipoLaudo), 'cel'),
-      rot('PROPOSTA Nº', 'marinho'), val(ctx.txt(c + 'proposta'), 'cel'),
-      rot('MATRÍCULA DO IMÓVEL', 'marinho'), val(ctx.txt(c + 'matricula'), 'cel')], { gap: '2.2mm' });
+      rot('PROPONENTE', 'marinho'), celula(ctx, ctx.txt(c + 'proponente')),
+      rot('TIPO LAUDO', 'marinho'), celula(ctx, ctx.sel(c + 'tipoLaudo', LS.tipoLaudo)),
+      rot('PROPOSTA Nº', 'marinho'), celula(ctx, ctx.txt(c + 'proposta')),
+      rot('MATRÍCULA DO IMÓVEL', 'marinho'), celula(ctx, ctx.txt(c + 'matricula'))], { gap: '2.2mm' });
 
     var dados = e('div', {}, [
       g('auto 1.4fr auto .35fr auto .7fr auto 1.4fr', [
-        rot('LOGRADOURO', 'tinta'), val(ctx.txt(c + 'logradouro'), 'cel'),
-        rot('IDENTIFICAÇÃO NUMÉRICA', 'tinta'), val(ctx.txt(c + 'numero'), 'cel'),
-        rot('COMPLEMENTO', 'tinta'), val(ctx.txt(c + 'complemento'), 'cel'),
-        rot('NOME DO EMPREENDIMENTO', 'tinta'), val(ctx.txt(c + 'empreendimento'), 'cel')], { gap: '1mm' }),
+        rot('LOGRADOURO', 'tinta'), celula(ctx, ctx.txt(c + 'logradouro')),
+        rot('IDENTIFICAÇÃO NUMÉRICA', 'tinta'), celula(ctx, ctx.txt(c + 'numero')),
+        rot('COMPLEMENTO', 'tinta'), celula(ctx, ctx.txt(c + 'complemento')),
+        rot('NOME DO EMPREENDIMENTO', 'tinta'), celula(ctx, ctx.txt(c + 'empreendimento'))], { gap: '1mm' }),
       g('auto 1fr auto .9fr auto .3fr auto .8fr 1.6fr', [
-        rot('BAIRRO', 'tinta'), val(ctx.txt(c + 'bairro'), 'cel'),
-        rot('CIDADE', 'tinta'), val(ctx.txt(c + 'cidade'), 'cel'),
-        rot('UF', 'tinta'), val(ctx.txt(c + 'uf'), 'cel'),
-        rot('CEP', 'tinta'), val(ctx.txt(c + 'cep'), 'cel'), e('div')], { gap: '1mm' })]);
+        rot('BAIRRO', 'tinta'), celula(ctx, ctx.txt(c + 'bairro')),
+        rot('CIDADE', 'tinta'), celula(ctx, ctx.txt(c + 'cidade')),
+        rot('UF', 'tinta'), celula(ctx, ctx.txt(c + 'uf')),
+        rot('CEP', 'tinta'), celula(ctx, ctx.txt(c + 'cep')), e('div')], { gap: '1mm' })]);
 
     var fotos = g('1fr 1fr', [
       ctx.img(c + 'fotoFachada', { alt: '57mm', legenda: 'Fachada', forte: true }),
       ctx.img(c + 'fotoLogradouro', { alt: '57mm', legenda: 'Logradouro', forte: true })], { gap: '5mm' });
 
-    var linhaImovel = function (r, campo) { return g('46% 54%', [rot(r), val(campo, 'cel')]); };
-    var imovel = e('div', {}, [faixa('IMÓVEL'), e('div', { cls: 'caixa linhas' }, [
-      linhaImovel('TIPOLOGIA', ctx.sel(c + 'tipologia', LS.tipologia)),
-      linhaImovel('USO', ctx.sel(c + 'uso', LS.uso)),
-      linhaImovel('OCUPAÇÃO', ctx.sel(c + 'ocupacao', LS.ocupacao))]),
+    var imovel = e('div', {}, [faixa('IMÓVEL'), pares(ctx, [
+      ['TIPOLOGIA', ctx.sel(c + 'tipologia', LS.tipologia)],
+      ['USO', ctx.sel(c + 'uso', LS.uso)],
+      ['OCUPAÇÃO', ctx.sel(c + 'ocupacao', LS.ocupacao)]]),
       espaco(),
-      e('div', { cls: 'caixa linhas' }, [
-        linhaImovel('VAGA(s) DE GARAGEM', ctx.sel(c + 'vaga', LS.vagas)),
-        linhaImovel('Nº TOTAL VAGA (s)', ctx.num(c + 'vagasTotal', { casas: 0 }))])]);
+      pares(ctx, [
+        ['VAGA(s) DE GARAGEM', ctx.sel(c + 'vaga', LS.vagas)],
+        ['Nº TOTAL VAGA (s)', ctx.num(c + 'vagasTotal', { casas: 0 })]])]);
 
     var a = c + 'areas.';
     function celArea(caminho) { return e('td', {}, [ctx.num(caminho, { casas: 2 })]); }
@@ -693,41 +704,40 @@
       g('1fr 1fr', [marcado(r + 'peculiaridades.feira', 'Feira Livre'), marcado(r + 'peculiaridades.ambiental', 'Risco ambiental')]),
       g('1fr 1fr', [marcado(r + 'peculiaridades.outros', 'Outros'), e('div')]),
       g('1fr 1fr', [e('div', { cls: 'val', style: 'min-height:5.2mm' }), e('div')])])]);
-    var par2 = function (a, b, cols) {
-      cols = cols || '50% 50%';
-      return e('div', { cls: 'coluna' }, [e('div', { cls: 'caixa' }, [g(cols, [rot(a[0]), val(a[1])]), g(cols, [rot(b[0]), val(b[1])])])]);
-    };
+    var par2 = function (a, b) { return e('div', { cls: 'coluna' }, [pares(ctx, [a, b])]); };
     var regiaoLinha2 = [
       par2(['PADRÃO DA REGIÃO', ctx.sel(r + 'padrao', LS.padraoRegiao)],
-           ['OCUPAÇÃO PREDOMINANTE', ctx.sel(r + 'ocupacao', LS.ocupacaoPredominante)], '58% 42%'),
+           ['OCUPAÇÃO PREDOMINANTE', ctx.sel(r + 'ocupacao', LS.ocupacaoPredominante)]),
       par2(['TRÁFEGO NA REGIÃO', ctx.sel(r + 'trafego', LS.trafego)],
            ['IMPLANTAÇÃO', ctx.sel(r + 'implantacao', LS.implantacao)]),
       e('div', { cls: 'coluna' }, [faixa('ZONEAMENTO', 'fina'), e('div', { cls: 'caixa' }, [val(ctx.txt(r + 'zoneamento'), 'centro')])])];
 
     var terreno = g('1fr 1fr 1fr', [
-      e('div', { cls: 'caixa' }, [g('45% 55%', [rot('TOPOGRAFIA'), val(ctx.sel(im + 'topografia', LS.topografia))])]),
-      e('div', { cls: 'caixa' }, [g('45% 55%', [rot('FORMATO'), val(ctx.sel(im + 'formato', LS.formato))])]),
-      e('div', { cls: 'caixa' }, [g('45% 55%', [rot('MULT. FRENTES'), val(ctx.sel(im + 'multFrentes', LS.multFrentes))])])],
-      { gap: '9mm' });
+      e('div', { cls: 'coluna' }, [pares(ctx, [['TOPOGRAFIA', ctx.sel(im + 'topografia', LS.topografia)]])]),
+      e('div', { cls: 'coluna' }, [pares(ctx, [['FORMATO', ctx.sel(im + 'formato', LS.formato)]])]),
+      e('div', { cls: 'coluna' }, [pares(ctx, [['FRENTES MÚLTIPLAS', ctx.sel(im + 'multFrentes', LS.multFrentes)]])])],
+      { gap: '9mm', cls: 'colunas' });
     var n0 = function (cam) { return ctx.num(cam, { casas: 0 }); };
     var edif = e('div', {}, [
       g('1fr 1fr 1fr', [
-        par2(['Nº DE PAVIMENTOS', n0(im + 'pavimentos')], ['Nº UNIDADES POR ANDAR', n0(im + 'unidadesAndar')], '58% 42%'),
-        par2(['Nº TOTAL DE UNIDADES', n0(im + 'unidades')], ['Nº DE ELEVADORES', n0(im + 'elevadores')], '58% 42%'),
-        par2(['Nº VAGAS DE GARAGEM', n0(im + 'vagas')], ['Nº DE SUBSOLOS', n0(im + 'subsolos')], '58% 42%')], { gap: '9mm' }),
+        par2(['Nº DE PAVIMENTOS', n0(im + 'pavimentos')], ['Nº UNIDADES POR ANDAR', n0(im + 'unidadesAndar')]),
+        par2(['Nº TOTAL DE UNIDADES', n0(im + 'unidades')], ['Nº DE ELEVADORES', n0(im + 'elevadores')]),
+        par2(['Nº VAGAS DE GARAGEM', n0(im + 'vagas')], ['Nº DE SUBSOLOS', n0(im + 'subsolos')])], { gap: '9mm', cls: 'colunas' }),
       espaco(),
-      g('1fr 1.2fr .8fr', [
-        e('div', { cls: 'caixa' }, [g('45% 55%', [rot('Fachada'), val(ctx.sel(im + 'fachada', LS.padraoRegiao))])]),
-        e('div', { cls: 'caixa' }, [g('70% 30%', [rot('ESTADO DE CONSERVAÇÃO CONDOMÍNIO'),
-          val(ctx.sel(im + 'conservacaoCondominio', LS.conservacaoCondominio))])]), e('div')], { gap: '9mm' })]);
+      /* nas mesmas colunas dos quadros de cima */
+      g('1fr 1fr 1fr', [
+        e('div', { cls: 'coluna' }, [pares(ctx, [['FACHADA', ctx.sel(im + 'fachada', LS.padraoRegiao)]])]),
+        e('div', { cls: 'coluna' }, [pares(ctx, [['ESTADO DE CONSERVAÇÃO DO CONDOMÍNIO',
+          ctx.sel(im + 'conservacaoCondominio', LS.conservacaoCondominio)]])]), e('div')], { gap: '9mm', cls: 'colunas' })]);
     var infra = g('repeat(5,1fr)', INFRA.map(function (x) { return marcado(im + 'infra.' + x[0], x[1]); }));
 
-    var unidade = e('div', {}, [
-      g('16% 32% 17% 35%', [rot('PADRÃO CONSTRUTIVO:'), val(ctx.sel(im + 'padrao', LS.padrao)),
-        rot('IDADE ESTIMADA:'), val(e('span', { cls: 'afixo junto' },
-          [ctx.num(im + 'idade', { casas: 0 }), e('span', { cls: 'pre', txt: ' ano(s)' })]))], { gap: '1mm' }),
-      g('16% 32% 17% 35%', [rot('INTERVALO DE VALOR:'), val(ctx.sel(im + 'intervalo', LS.intervalo)),
-        rot('ESTADO DE CONSERVAÇÃO:'), val(ctx.sel(im + 'conservacao', LS.conservacao))], { gap: '1mm' })]);
+    /* duas colunas de pares; cada campo logo depois do rótulo mais longo da coluna */
+    var unidade = g('max-content minmax(0,1fr) max-content minmax(0,1fr)', [
+      rot('PADRÃO CONSTRUTIVO:'), val(ctx.sel(im + 'padrao', LS.padrao)),
+      rot('IDADE ESTIMADA:'), val(e('span', { cls: 'afixo junto' },
+        [ctx.num(im + 'idade', { casas: 0 }), e('span', { cls: 'pre', txt: ' ano(s)' })])),
+      rot('INTERVALO DE VALOR:'), val(ctx.sel(im + 'intervalo', LS.intervalo)),
+      rot('ESTADO DE CONSERVAÇÃO:'), val(ctx.sel(im + 'conservacao', LS.conservacao))], { gap: '1mm', cls: 'unidade' });
 
     var tab = e('table', { cls: 't pontos' }, [e('tr', {}, COLS_AMBIENTE.map(function (cc) { return e('th', { txt: cc[1] }); }))]
       .concat(repetir(N_AMBIENTES, function (i) {
@@ -754,7 +764,7 @@
       ctx.area(r + 'observacoes', { alt: '20mm' }),
       tit('Dados do Imóvel'),
       faixa('TERRENO', 'esq'), terreno, espaco(),
-      faixa('EDIFICAÇÃO', 'esq'), edif, espaco(),
+      faixa('EDIFICAÇÃO (QUANDO EMPREENDIMENTO VERTICALIZADO)', 'esq'), edif, espaco(),
       faixa('INFRAESTRUTURA', 'esq'), infra, espaco(),
       faixa('UNIDADE PRIVATIVA', 'esq'), unidade, espaco(),
       faixa(e('span', {}, ['DIVISÃO INTERNA POR AMBIENTE', e('span', { cls: 'info', txt: 'ⓘ' })]), 'esq'),
@@ -807,7 +817,7 @@
         rot('Conservação:', 'claro'), val(calc(function (r) { return r.paradigma.conservacao; })), e('div'), e('div')]),
       g(cols, [rot('Testada:', 'claro'), val(ctx.num(p + 'testada')),
         rot('Topografia:', 'claro'), val(calc(function (r) { return r.paradigma.topografia; })),
-        rot('Mult. Frentes:', 'claro'), val(calc(function (r) { return r.paradigma.multFrentes; })),
+        rot('Frentes múltiplas:', 'claro'), val(calc(function (r) { return r.paradigma.multFrentes; })),
         rot('Índ. Local:', 'claro dir'), val(ctx.num(p + 'indiceLocal'))]),
       g(cols, [rot('Nº dormitórios:', 'claro'), val(n0(p + 'dormitorios')),
         rot('Nº suítes:', 'claro'), val(n0(p + 'suites')),
@@ -836,7 +846,7 @@
       g(cols, [R_('Área Terreno:'), nn('areaTerreno', { casas: 1 }), R_('Área Construída:'), nn('areaConstruida'),
         R_('Idade Aparente:'), nn('idade', { casas: 0 }), R_('Andar:'), nn('andar', { casas: 0, suf: ' º' })]),
       g(cols, [R_('Testada:'), nn('testada'), R_('Topografia:'), val(ctx.sel(b + 'topografia', LS.topografia)),
-        R_('Mult. Frentes:'), val(ctx.sel(b + 'multFrentes', LS.multFrentes)), R_('Índ. Local:'), nn('indiceLocal')]),
+        R_('Frentes múltiplas:'), val(ctx.sel(b + 'multFrentes', LS.multFrentes)), R_('Índ. Local:'), nn('indiceLocal')]),
       g(cols, [R_('Nº dormitórios:'), nn('dormitorios', { casas: 0 }), R_('Nº suítes:'), nn('suites', { casas: 0 }),
         R_('Nº banheiros:'), nn('banheiros', { casas: 0 }), R_('Nº vagas de garagem:'), nn('vagas', { casas: 0 })],
         { cls: 'sep' }),
