@@ -146,13 +146,14 @@
   function premissasVazias() {
     var area = function () { return { matricula: null, iptu: null, estimada: null, doc: null }; };
     return {
-      versao: 2,
+      versao: 3,
       logos: { cliente: null, empresa: null },
       capa: { proponente: '', tipoLaudo: '', proposta: '', matricula: '', logradouro: '', numero: '',
         complemento: '', empreendimento: '', bairro: '', cidade: '', uf: '', cep: '',
         fotoFachada: null, fotoLogradouro: null, tipologia: '', uso: '', ocupacao: '', vaga: '', vagasTotal: null,
         areas: { terreno: area(), privativa: area(), comum: area() },
-        valorVagaAutonoma: null, empresa: '', responsavel: '', creaEmpresa: '', dataEntrega: '',
+        valorVagaAutonoma: null, empresa: '', responsavel: '', dataEntrega: '',
+        conselhoEmpresa: '', conselhoEmpresaUF: '', conselhoEmpresaNumero: '',
         assinatura: null, conselho: '', conselhoUF: '', conselhoNumero: '', observacoes: TEXTO_CAPA },
       regiao: { melhoramentos: {}, servicos: {}, peculiaridades: {}, padrao: '', ocupacao: '', trafego: '',
         implantacao: '', zoneamento: '', observacoes: '' },
@@ -562,18 +563,24 @@
       faixa('VALOR DE LIQUIDAÇÃO FORÇADA'),
       e('div', { cls: 'caixa' }, [val(ctx.calc(function (r) { return rs(r.liquidacao.vlfArredondado); }), 'centro')])]);
 
-    var linhaEmp = function (r, campo) { return g('27% 73%', [rot(r, 'marinho'), val(campo, 'cel')]); };
-    var empresa = g('1fr 32%', [
+    var linhaEmp = function (r, campo) { return g('38% 62%', [rot(r, 'marinho'), val(campo, 'cel')]); };
+    /* o rótulo acompanha o conselho e a UF escolhidos: "CREA/SP - EMPRESA" */
+    var rotEmpresa = ctx.calc(function () {
+      var cons = pegar(c + 'conselhoEmpresa'), uf = pegar(c + 'conselhoEmpresaUF');
+      return cons || uf ? (cons || 'REGISTRO') + (uf ? '/' + uf : '') + ' - EMPRESA' : 'REGISTRO - EMPRESA';
+    });
+    var empresa = g('50% 1fr 38%', [
       e('div', {}, [linhaEmp('EMPRESA', ctx.txt(c + 'empresa')),
         linhaEmp('RESPONSÁVEL TÉCNICO', ctx.txt(c + 'responsavel')),
-        linhaEmp('CREA/SP - EMPRESA', ctx.txt(c + 'creaEmpresa')),
+        linhaEmp(rotEmpresa, registroProfissional(ctx, 'conselhoEmpresa', false)),
         linhaEmp('DATA DE ENTREGA', ctx.data(c + 'dataEntrega'))]),
+      e('div'),
       e('div', { style: 'display:flex;flex-direction:column;justify-content:flex-end;text-align:center' }, [
         ctx.img(c + 'assinatura', { nu: true, alt: '11mm', png: true, max: 800, vazio: 'Assinatura (opcional)' }),
         e('div', { style: 'border-top:.25mm solid var(--pg-borda);margin-top:1mm;padding-top:1.2mm;color:var(--pg-rot)' },
           [ctx.calc(function () { return pegar('capa.responsavel') || ''; })]),
-        registroProfissional(ctx)])],
-      { gap: '8mm' });
+        registroProfissional(ctx, 'conselho', true)])],
+      { gap: '0' });
     var assin = empresa.querySelector('.quadro-img');
     if (assin) { assin.style.background = 'transparent'; }
 
@@ -585,18 +592,19 @@
 
   /* Registro do responsável sob a assinatura: CREA ou CAU / UF - número,
      centralizado. Na tela, duas listas e o número; no papel, a linha pronta. */
-  function registroProfissional(ctx) {
-    var c = 'capa.', estilo = 'color:var(--pg-rot);padding-top:.8mm;display:flex;justify-content:center;align-items:center;gap:1mm';
+  function registroProfissional(ctx, pre, centro) {
+    var c = 'capa.' + (pre || 'conselho'), estilo = 'display:flex;align-items:center;gap:1mm;' +
+      (centro ? 'color:var(--pg-rot);padding-top:.8mm;justify-content:center' : '');
     if (ctx.papel) {
-      var cons = pegar(c + 'conselho'), uf = pegar(c + 'conselhoUF'), nro = pegar(c + 'conselhoNumero');
+      var cons = pegar(c), uf = pegar(c + 'UF'), nro = pegar(c + 'Numero');
       var txt = cons || uf || nro ? (cons || '') + '/' + (uf || '') + ' - ' + (nro || '') : '';
       return e('div', { style: estilo, txt: txt });
     }
     var sel = function (cam, lista, larg) { var el = ctx.sel(cam, lista); el.style.width = larg; return el; };
-    var numero = ctx.txt(c + 'conselhoNumero', { ph: 'número', rot: 'Número do registro' });
+    var numero = ctx.txt(c + 'Numero', { ph: 'número', rot: 'Número do registro' });
     numero.style.width = '26mm';
-    return e('div', { style: estilo }, [sel(c + 'conselho', LS.conselho, '15mm'), e('span', { txt: '/' }),
-      sel(c + 'conselhoUF', LS.uf, '11mm'), e('span', { txt: '-' }), numero]);
+    return e('div', { style: estilo }, [sel(c, LS.conselho, '15mm'), e('span', { txt: '/' }),
+      sel(c + 'UF', LS.uf, '11mm'), e('span', { txt: '-' }), numero]);
   }
 
   /* ==================================================== REGIÃO + IMÓVEL */
@@ -1476,7 +1484,8 @@
   /* Estudos da versão 1: comum estimada era cópia da matrícula; doc.
      complementar era texto ("-"); o registro era uma linha só. */
   function migrar(p) {
-    if (!p || typeof p !== 'object' || (p.versao || 1) >= 2) return p;
+    if (!p || typeof p !== 'object' || (p.versao || 1) >= 3) return p;
+    if ((p.versao || 1) < 2) {
     var ar = p.capa && p.capa.areas;
     if (ar) {
       if (ar.comum && (ar.comum.estimada === null || ar.comum.estimada === undefined)) ar.comum.estimada = ar.comum.matricula;
@@ -1494,7 +1503,19 @@
     if (p.capa) delete p.capa.assinaturaCrea;
     if (p.capa && p.capa.uso === '-') p.capa.uso = '';
     if (p.capa && ['Ocupado', 'Desocupado'].indexOf(p.capa.ocupacao) < 0) p.capa.ocupacao = '';
-    p.versao = 2;
+    }
+    /* versão 2 → 3: o registro da empresa ganha conselho e UF, como o do
+       responsável — o número vem do campo antigo, conselho e UF do responsável */
+    if (p.capa) {
+      var ant = p.capa.creaEmpresa;
+      if (ant !== undefined && ant !== null && String(ant).trim()) {
+        p.capa.conselhoEmpresaNumero = String(ant).trim();
+        if (!p.capa.conselhoEmpresa) p.capa.conselhoEmpresa = p.capa.conselho || '';
+        if (!p.capa.conselhoEmpresaUF) p.capa.conselhoEmpresaUF = p.capa.conselhoUF || '';
+      }
+      delete p.capa.creaEmpresa;
+    }
+    p.versao = 3;
     return p;
   }
 

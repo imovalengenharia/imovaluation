@@ -181,8 +181,11 @@ neutro.
   estimada recebe a da matrícula, e "-" na doc. complementar vira vazio.
 - **Listas da Capa**: uso sem "-"; ocupação só Ocupado / Desocupado; tipos
   de laudo "Simplificado - Vistoria externa / interna / remota / Sem vistoria".
-- **Registro sob a assinatura**: CREA ou CAU / UF - número, centralizado
-  (`conselho`, `conselhoUF`, `conselhoNumero`). A imagem de assinatura é
+- **Registros profissionais**: CREA ou CAU / UF - número, com as duas
+  listas e o número digitado — sob a assinatura, centralizado (`conselho`,
+  `conselhoUF`, `conselhoNumero`), e na linha da empresa (`conselhoEmpresa…`),
+  cujo rótulo acompanha a escolha ("CREA/SP - EMPRESA"). Estudos da versão 2
+  migram o antigo `creaEmpresa` para o número, com conselho e UF do responsável. A imagem de assinatura é
   opcional e, vazia, não deixa texto no papel — o laudo pode ser assinado
   com certificado digital.
 
