@@ -541,9 +541,13 @@
      o tamanho da pergunta mais longa daquela coluna. */
   function ficha(nPares, celulas, pesos) {
     var filhos = [];
-    celulas.forEach(function (c) {
-      filhos.push(e('div', { cls: 'ficha-perg', txt: c[0] }));
-      filhos.push(e('div', { cls: 'ficha-resp' }, [c[1]]));
+    /* os fios são bordas das células (à direita e embaixo), nunca o fundo
+       num vão: vão de fração de pixel sai ora fino, ora grosso */
+    var nLin = Math.ceil(celulas.length / nPares);
+    celulas.forEach(function (c, i) {
+      var fim = (i % nPares === nPares - 1 ? ' ult-col' : '') + (Math.floor(i / nPares) === nLin - 1 ? ' ult-lin' : '');
+      filhos.push(e('div', { cls: 'ficha-perg' + (Math.floor(i / nPares) === nLin - 1 ? ' ult-lin' : ''), txt: c[0] }));
+      filhos.push(e('div', { cls: 'ficha-resp' + fim }, [c[1]]));
     });
     var cols = []; for (var k = 0; k < nPares; k++) cols.push('max-content minmax(0,' + ((pesos && pesos[k]) || 1) + 'fr)');
     return e('div', { cls: 'ficha-tec', style: 'grid-template-columns:' + cols.join(' ') }, filhos);
@@ -584,7 +588,7 @@
       rot('PROPOSTA Nº', 'marinho'), celula(ctx, ctx.txt(c + 'proposta')),
       rot('MATRÍCULA DO IMÓVEL', 'marinho'), celula(ctx, ctx.txt(c + 'matricula'))], { gap: '2.2mm' });
 
-    var dados = e('div', {}, [
+    var dados = e('div', { cls: 'pilha larga' }, [
       g('auto 1.4fr auto .35fr auto .7fr auto 1.4fr', [
         rot('LOGRADOURO', 'tinta'), celula(ctx, ctx.txt(c + 'logradouro')),
         rot('IDENTIFICAÇÃO NUMÉRICA', 'tinta'), celula(ctx, ctx.txt(c + 'numero')),
@@ -630,7 +634,7 @@
       linhaArea('Privativa/Útil', 'privativa'),
       linhaArea('Comum', 'comum')])]);
 
-    var res = e('div', {}, [faixa('RESULTADO DA AVALIAÇÃO'),
+    var res = e('div', { cls: 'pilha' }, [faixa('RESULTADO DA AVALIAÇÃO'),
       g('18% 13.5% 5% 14% 13.5% 5% 13% 18%', [
         rot('ÁREA TERRENO'), val(ctx.calc(function (r) { return fn(r.paradigma.areaTerreno); }), 'cel'), e('div'),
         rot('VALOR (R$/m²)'), val(ctx.calc(function (r) { return r.valor.m2Terreno ? fn(r.valor.m2Terreno) : ''; }), 'cel'), e('div'),
@@ -657,7 +661,7 @@
       return g('38% 62%', [rot(r, 'marinho'), val(campo, 'cel' + (ctx.papel ? ' justo' : ''))]);
     };
     var empresa = g('50% 1fr 38%', [
-      e('div', {}, [linhaEmp('EMPRESA', ctx.txt(c + 'empresa')),
+      e('div', { cls: 'pilha' }, [linhaEmp('EMPRESA', ctx.txt(c + 'empresa')),
         linhaEmp('REGISTRO', registroProfissional(ctx, 'conselhoEmpresa', false)),
         linhaEmp('RESPONSÁVEL TÉCNICO', ctx.txt(c + 'responsavel')),
         linhaEmp('DATA DE ENTREGA', ctx.data(c + 'dataEntrega'))]),
@@ -861,7 +865,8 @@
       g(cols, [R_('Conservação:'), val(ctx.sel(b + 'conservacao', LS.conservacao)), R_('Fonte:'), t('fonte'),
         R_('Nome:'), t('contato'), R_('Telefone:'), t('telefone')]),
       g('1.3fr 10.9fr', [R_('Link oferta:'), val(link)])]);
-    campos.querySelectorAll('.g').forEach(function (x) { x.style.borderBottom = '.25mm solid var(--pg-fio)'; });
+    /* a última linha não leva fio: a borda do quadro já fecha embaixo */
+    campos.querySelectorAll(':scope > .g:not(:last-child)').forEach(function (x) { x.style.borderBottom = '.25mm solid var(--pg-fio)'; });
     campos.querySelectorAll('.g.sep').forEach(function (x) { x.style.borderBottom = '.35mm solid var(--pg-tinta2)'; });
     var foto = ctx.img(b + 'foto', { nu: true, alt: 'auto', vazio: 'Foto do comparativo' });
     foto.classList.add('encher');

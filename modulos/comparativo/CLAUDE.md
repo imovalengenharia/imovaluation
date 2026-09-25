@@ -101,6 +101,15 @@ sobravam espalhados no papel, e rótulo pequeno sobre o valor em células
 largas ("muito espaço para pouco preenchimento; não dá para saber o que é
 pergunta e o que é resposta").
 
+**Fios de uma espessura só** (pedido do avaliador: "essas linhas estão mais
+grossas"). Duas armadilhas que engrossam fio: (1) fio feito de fundo
+aparecendo num vão (`gap` de .25 mm) — vão de fração de pixel sai ora com 1,
+ora com 2 pixels; fio é sempre `border`; (2) duas bordas encostadas — células
+brancas empilhadas, fio de linha somado à borda do quadro. Células empilhadas
+levam respiro entre si (`.pilha`), a última linha de um quadro não leva fio,
+e a ficha técnica marca `ult-col`/`ult-lin`. Conferir com um detector que
+procura, em cada página, bordas de elementos diferentes encostadas.
+
 **Rótulo e campo, em todo o laudo** (pedido do avaliador): o campo começa
 logo depois do rótulo, e num mesmo quadro todos os campos alinham pelo
 rótulo mais longo — `pares(ctx, [[rótulo, campo], …])`, uma grade só com

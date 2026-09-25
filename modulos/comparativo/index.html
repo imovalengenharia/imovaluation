@@ -175,6 +175,12 @@ button{font:inherit;color:inherit}
 .g + .g > .rot.marinho, .caixa > .g + .g > .rot.marinho{box-shadow:inset 0 .35mm 0 var(--pg-papel)}
 .val{padding:.7mm 1mm;display:flex;align-items:center;min-height:4.4mm;min-width:0;overflow-wrap:anywhere}
 .val.cel{background:var(--pg-cel);border:.25mm solid var(--pg-fio)}
+/* células brancas empilhadas: nunca encostadas, que as duas bordas somam
+   um fio grosso; um respiro entre elas, e os rótulos marinho usam o mesmo
+   respiro como o fio branco */
+.pilha > .g + .g{margin-top:.35mm}
+.pilha.larga > .g + .g{margin-top:1mm}
+.pilha > .g + .g > .rot.marinho{box-shadow:none}
 .val.centro{justify-content:center;text-align:center}
 .val.dir{justify-content:flex-end;text-align:right}
 .val.cel.justo{justify-self:start;padding-right:7mm}
@@ -183,8 +189,11 @@ button{font:inherit;color:inherit}
 .grade-pares > .rot{padding-right:3mm}
 .grade-pares > :nth-child(n+3){border-top:.25mm solid var(--pg-fio)}
 /* ficha técnica: pergunta sombreada, resposta branca ao lado; os fios entre
-   as células são o fundo aparecendo no vão de .25 mm */
-.ficha-tec{display:grid;gap:.25mm;border:.25mm solid var(--pg-borda);background:var(--pg-fio)}
+   as células são bordas (nunca o fundo num vão, que sai com espessura variável) */
+.ficha-tec{display:grid;border:.25mm solid var(--pg-borda);background:var(--pg-cel)}
+.ficha-tec > *{border-right:.25mm solid var(--pg-fio);border-bottom:.25mm solid var(--pg-fio)}
+.ficha-tec > .ult-col{border-right:0}
+.ficha-tec > .ult-lin{border-bottom:0}
 .ficha-perg{background:var(--pg-pergunta);color:var(--pg-rot);font-size:5.8pt;font-weight:700;letter-spacing:.04em;
   text-transform:uppercase;padding:.9mm 2mm;display:flex;align-items:center;white-space:nowrap}
 .ficha-resp{background:var(--pg-cel);color:var(--pg-tinta);font-size:6.8pt;padding:.7mm 2mm;min-width:0;
@@ -196,6 +205,8 @@ button{font:inherit;color:inherit}
 .caixa{border:.25mm solid var(--pg-borda);background:var(--pg-cel)}
 .caixa > .g + .g{border-top:.25mm solid var(--pg-fio)}
 .linhas > *{border-bottom:.25mm solid var(--pg-fio)}
+.linhas > *:last-child{border-bottom:0}
+.caixa.linhas > .g + .g{border-top:0}
 .pontilhado{border-bottom:.25mm dotted var(--pg-borda)}
 .pagina a{color:var(--pg-link)}
 .espaco{height:2mm}
