@@ -110,6 +110,10 @@ linha", só vazia) acrescenta até `AMB_MAX` (21), o que cabe na página — sem
 página de continuação, pedido do avaliador. Mudou a altura das observações ou
 de algo acima da tabela, remeça `AMB_MAX`.
 
+**Capa**: fachada e logradouro com 80 mm de altura (pedido do avaliador); as
+observações gerais da avaliação esticam até o fim da página e ficam com o
+que sobra (~94 mm). Crescer algo na Capa encolhe as observações.
+
 **A tela mede o mesmo que o papel** (pedido do avaliador: "o espaçamento da
 impressão representado fielmente nas abas de preenchimento"). Cada página da
 tela tem, bloco a bloco, a altura da página impressa. Por isso: o campo `.c`

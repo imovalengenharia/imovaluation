@@ -620,8 +620,8 @@
         rot('CEP', 'tinta'), celula(ctx, ctx.txt(c + 'cep')), e('div')], { gap: '1mm' })]);
 
     var fotos = g('1fr 1fr', [
-      ctx.img(c + 'fotoFachada', { alt: '57mm', legenda: 'Fachada', forte: true }),
-      ctx.img(c + 'fotoLogradouro', { alt: '57mm', legenda: 'Logradouro', forte: true })], { gap: '5mm' });
+      ctx.img(c + 'fotoFachada', { alt: '80mm', legenda: 'Fachada', forte: true }),
+      ctx.img(c + 'fotoLogradouro', { alt: '80mm', legenda: 'Logradouro', forte: true })], { gap: '5mm' });
 
     var imovel = e('div', {}, [faixa('IMÓVEL'), pares(ctx, [
       ['TIPOLOGIA', ctx.sel(c + 'tipologia', LS.tipologia)],
