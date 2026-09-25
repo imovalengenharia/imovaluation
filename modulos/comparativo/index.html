@@ -198,12 +198,14 @@ button.marca{padding:0;background:var(--pg-edita);cursor:pointer;font:inherit;fo
 
 /* imagens */
 .foto{display:flex;flex-direction:column;border:.25mm solid var(--pg-borda);background:var(--pg-cel)}
-.quadro-img{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--pg-vazio);
+/* o campo de imagem tem tamanho fixo, dado pela página: a imagem se ajusta
+   dentro dele (posição absoluta) e nunca o empurra, vazio ou preenchido */
+.quadro-img{flex:none;display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--pg-vazio);
   position:relative}
 .quadro-img.encher img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .ficha{font-size:6.1pt}
 .ficha .rot,.ficha .val{padding:.5mm .8mm;min-height:3.9mm}
-.quadro-img img{width:100%;height:100%;object-fit:cover;display:block}
+.quadro-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
 .foto.conter .quadro-img img{object-fit:contain}
 .foto .legenda{text-align:center;padding:.8mm;font-size:6.4pt;border-top:.25mm solid var(--pg-fio);min-height:4mm}
 .foto .legenda.forte{font-weight:700;color:var(--pg-tinta)}

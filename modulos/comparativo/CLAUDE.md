@@ -84,6 +84,14 @@ negrito.
 
 ### Imagens
 
+**O campo de imagem tem tamanho fixo, definido pela página, e a imagem se
+ajusta a ele — nunca o contrário** (pedido do avaliador, vale para toda a
+modelagem). Em CSS: `.quadro-img` com altura própria e `flex: none`, e a
+`<img>` em posição absoluta preenchendo o quadro (`object-fit: cover` nas
+fotos, `contain` em logos e assinatura). Um `flex: 1` no quadro já fez o
+campo da Capa crescer com a foto; a conferência é inserir uma imagem muito
+alta e uma muito larga e medir o quadro antes e depois.
+
 Logos, fotos, croquis, assinatura e anexos entram **dentro de `P`**, como data
 URL, reduzidos no navegador (`lerImagem`: fotos em JPEG até 1600 px, logos em
 PNG até 700 px, anexos até 2400 px). A casca guarda o JSON como veio — por
