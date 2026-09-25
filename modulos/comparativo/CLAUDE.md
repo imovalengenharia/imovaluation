@@ -94,7 +94,9 @@ em linha dentro de um quadro na largura toda; a pergunta numa célula
 sombreada (`--pg-pergunta`), em maiúsculas na cor do laudo, e a resposta
 numa célula branca ao lado. É o formato que o avaliador aprovou para Terreno
 (3 pares), Edificação (4 pares × 2 linhas, fachada e conservação no fim da
-linha) e Unidade privativa. Recusados antes: quadros soltos de pares, que
+linha) e Unidade privativa, e depois estendido à Região: Serviços públicos
+(2 pares por linha) e os três quadros de baixo (padrão/ocupação,
+tráfego/implantação, zoneamento), cada ficha esticada à altura da coluna. Recusados antes: quadros soltos de pares, que
 sobravam espalhados no papel, e rótulo pequeno sobre o valor em células
 largas ("muito espaço para pouco preenchimento; não dá para saber o que é
 pergunta e o que é resposta").

@@ -706,24 +706,20 @@
         return g('1fr 1fr', [marcado(r + 'melhoramentos.' + MELHORAMENTOS[2 * i][0], MELHORAMENTOS[2 * i][1]),
           marcado(r + 'melhoramentos.' + MELHORAMENTOS[2 * i + 1][0], MELHORAMENTOS[2 * i + 1][1])]);
       }))]);
-    var serv = e('div', { cls: 'coluna' }, [faixa('SERVIÇOS PÚBLICOS E COMUNITÁRIOS', 'fina'), e('div', { cls: 'caixa' },
-      repetir(4, function (i) {
-        var a = SERVICOS[2 * i], b = SERVICOS[2 * i + 1];
-        return g('20% 30% 20% 30%', [rot(a[1], 'claro'), val(ctx.sel(r + 'servicos.' + a[0], LS.distancias)),
-          rot(b[1], 'claro'), val(ctx.sel(r + 'servicos.' + b[0], LS.distancias))]);
-      }))]);
+    var serv = e('div', { cls: 'coluna' }, [faixa('SERVIÇOS PÚBLICOS E COMUNITÁRIOS', 'fina'),
+      ficha(2, SERVICOS.map(function (x) { return [x[1], ctx.sel(r + 'servicos.' + x[0], LS.distancias)]; }))]);
     var pec = e('div', { cls: 'coluna' }, [faixa('PECULIARIDADES / FATORES RESTRITIVOS', 'fina'), e('div', { cls: 'caixa' }, [
       g('1fr 1fr', [marcado(r + 'peculiaridades.comunidade', 'Comunidade'), marcado(r + 'peculiaridades.inundacao', 'Risco a inundação')]),
       g('1fr 1fr', [marcado(r + 'peculiaridades.feira', 'Feira Livre'), marcado(r + 'peculiaridades.ambiental', 'Risco ambiental')]),
       g('1fr 1fr', [marcado(r + 'peculiaridades.outros', 'Outros'), e('div')]),
       g('1fr 1fr', [e('div', { cls: 'val', style: 'min-height:5.2mm' }), e('div')])])]);
-    var par2 = function (a, b) { return e('div', { cls: 'coluna' }, [pares(ctx, [a, b])]); };
+    /* na mesma ficha técnica, nas colunas dos quadros de cima */
     var regiaoLinha2 = [
-      par2(['PADRÃO DA REGIÃO', ctx.sel(r + 'padrao', LS.padraoRegiao)],
-           ['OCUPAÇÃO PREDOMINANTE', ctx.sel(r + 'ocupacao', LS.ocupacaoPredominante)]),
-      par2(['TRÁFEGO NA REGIÃO', ctx.sel(r + 'trafego', LS.trafego)],
-           ['IMPLANTAÇÃO', ctx.sel(r + 'implantacao', LS.implantacao)]),
-      e('div', { cls: 'coluna' }, [faixa('ZONEAMENTO', 'fina'), e('div', { cls: 'caixa' }, [val(ctx.txt(r + 'zoneamento'), 'centro')])])];
+      e('div', { cls: 'coluna' }, [ficha(1, [['Padrão da região', ctx.sel(r + 'padrao', LS.padraoRegiao)],
+        ['Ocupação predominante', ctx.sel(r + 'ocupacao', LS.ocupacaoPredominante)]])]),
+      e('div', { cls: 'coluna' }, [ficha(1, [['Tráfego na região', ctx.sel(r + 'trafego', LS.trafego)],
+        ['Implantação', ctx.sel(r + 'implantacao', LS.implantacao)]])]),
+      e('div', { cls: 'coluna' }, [ficha(1, [['Zoneamento', ctx.txt(r + 'zoneamento')]])])];
 
     var terreno = ficha(3, [
       ['Topografia', ctx.sel(im + 'topografia', LS.topografia)],
