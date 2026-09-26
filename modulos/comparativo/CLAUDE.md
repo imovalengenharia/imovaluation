@@ -110,8 +110,8 @@ pergunta e o que é resposta").
 têm altura fixa de 78 mm (2/3 do que ocupavam esticadas); a faixa é
 "Infraestrutura do empreendimento"; as duas perguntas de divergência de área
 abrem a página de Restrições. Ambientes: 5 linhas no mínimo — padrão pedido pelo avaliador; a migração 4 → 5 tira as linhas vazias do fim de estudos antigos (não precisam
-acabar no fim da página); o botão "+ Linha de ambiente" (e "Remover última
-linha", só vazia) acrescenta até `AMB_MAX` (17), o que cabe na página — sem
+acabar no fim da página); um só botão, "+ Adicionar linha" (sem botão de remover
+— recusado), acrescenta até `AMB_MAX` (17), o que cabe na página — sem
 página de continuação, pedido do avaliador. Mudou a altura das observações ou
 de algo acima da tabela, remeça `AMB_MAX`.
 
@@ -129,7 +129,7 @@ estimada" virou "Idade". Travado no teste "a opção mais longa de cada lista
 cabe no campo".
 
 **Divisão interna por ambiente** (pedido do avaliador, com a proposta
-técnica): Ambiente (16%, livre, com sugestões em `datalist` — `LISTAS.ambientes`),
+técnica): Ambiente (16%, digitado pelo avaliador — sem lista nem sugestão, pedido dele),
 Qtd., e acabamentos em listas com cabeçalho em dois níveis: REVESTIMENTOS
 (piso `revPiso`, parede `revParede`, teto/forro `revTeto`) e ESQUADRIAS
 (portas `portas`, janelas `janelas`). Chaves das premissas mantidas (piso,

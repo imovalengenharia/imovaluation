@@ -131,12 +131,7 @@
     portas: ['Aço', 'Alumínio', 'Madeira maciça', 'Madeira semioca', 'Madeira com vidro', 'PVC',
       'Vidro temperado', 'Sem porta', 'Não vistoriado'],
     janelas: ['Aço', 'Alumínio', 'Alumínio com persiana', 'Madeira', 'Pele de vidro', 'PVC',
-      'Vidro temperado', 'Sem janela', 'Não vistoriado'],
-    /* sugestões para o nome do ambiente (o campo continua livre) */
-    ambientes: ['Área de serviço', 'Banheiro', 'Circulação', 'Closet', 'Copa', 'Cozinha', 'Depósito',
-      'Despensa', 'Dormitório', 'Escritório', 'Estar íntimo', 'Gabinete', 'Hall', 'Home theater',
-      'Lavabo', 'Lavanderia', 'Quarto de empregada', 'Sala de estar', 'Sala de jantar', 'Suíte',
-      'Varanda', 'Varanda gourmet']
+      'Vidro temperado', 'Sem janela', 'Não vistoriado']
   };
   /* As listas suspensas saem sem o "-" e em ordem alfabética (pedido do
      avaliador), comparando como se lê em português: sem distinguir maiúscula

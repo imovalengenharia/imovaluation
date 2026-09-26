@@ -188,7 +188,9 @@ test('linhas de ambiente: 5 de saída, e as acrescentadas voltam ao reabrir', as
   const linhas = () => fr.locator('table.ambientes tr').count().then(n => n - 2);
   await fr.locator('table.ambientes').waitFor();
   assert.equal(await linhas(), 5);
-  for (let i = 0; i < 2; i++) await fr.locator('button', { hasText: '+ Linha de ambiente' }).click();
+  assert.equal(await fr.locator('button', { hasText: 'Remover' }).count(), 0);
+  assert.equal(await fr.locator('table.ambientes select[aria-label$=".ambiente"]').count(), 0, 'ambiente é digitado');
+  for (let i = 0; i < 2; i++) await fr.locator('button', { hasText: '+ Adicionar linha' }).click();
   await fr.locator('[aria-label="imovel.ambientes.6.ambiente"]').fill('Escritório');
   await salvo(pg);
   assert.equal((await premissas(id)).premissas.imovel.ambientes.length, 7);

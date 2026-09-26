@@ -360,15 +360,6 @@
             'aria-label': o.rot || caminho, spellcheck: 'false' })
         : e('input', { cls: 'c ' + (o.cls || ''), type: 'text', value: semValor(v) ? '' : String(v),
             placeholder: o.ph !== undefined ? o.ph : TRACO, 'aria-label': o.rot || caminho, spellcheck: 'false' });
-      /* sugestões: lista do navegador ao digitar, sem prender o valor */
-      if (o.sugestoes) {
-        var idLista = 'sug-' + caminho.replace(/\.\d+\./g, '.').replace(/\W/g, '-');
-        if (!document.getElementById(idLista)) {
-          document.body.appendChild(e('datalist', { id: idLista },
-            o.sugestoes.map(function (x) { return e('option', { value: x }); })));
-        }
-        el.setAttribute('list', idLista);
-      }
       if (o.quebra) {
         el.value = semValor(v) ? '' : String(v);
         el.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') ev.preventDefault(); });
@@ -837,30 +828,21 @@
           return e('tr', {}, COLS_AMBIENTE.map(function (cc) {
             var campo = cc[0] === 'quantidade' ? ctx.num(base + cc[0], { casas: 0, vazio: '', ph: '' })
               : cc[3] ? ctx.sel(base + cc[0], LS[cc[3]], { vazio: '' })
-              : ctx.txt(base + cc[0], { vazio: '', ph: '', sugestoes: LS.ambientes });
+              : ctx.txt(base + cc[0], { vazio: '', ph: '' });
             return e('td', {}, [campo]);
           }));
         })));
     }
     function botoesAmb() {
       if (ctx.papel) return e('div');
-      var mais = e('button', { type: 'button', cls: 'botao-linha', txt: '+ Linha de ambiente' });
+      var mais = e('button', { type: 'button', cls: 'botao-linha', txt: '+ Adicionar linha' });
       if (nAmb >= AMB_MAX) { mais.disabled = true; mais.title = 'A página está cheia'; }
       mais.addEventListener('click', function () {
         while (amb.length < nAmb) amb.push(ambienteVazio());
         if (amb.length >= AMB_MAX) return;
         amb.push(ambienteVazio()); mudou(); remontar();
       });
-      var filhos = [mais];
-      var ult = amb[nAmb - 1];
-      if (nAmb > N_AMBIENTES) {
-        var menos = e('button', { type: 'button', cls: 'botao-linha', txt: '− Remover última linha' });
-        var cheia = ult && COLS_AMBIENTE.some(function (cc) { return !semValor(ult[cc[0]]) && ult[cc[0]] !== ''; });
-        if (cheia) { menos.disabled = true; menos.title = 'A última linha tem dados: apague-os antes'; }
-        menos.addEventListener('click', function () { amb.length = nAmb - 1; mudou(); remontar(); });
-        filhos.push(menos);
-      }
-      return e('div', { cls: 'linha-botoes' }, filhos);
+      return e('div', { cls: 'linha-botoes' }, [mais]);
     }
     var paginas = [pagina(ctx, [
       tit('Dados da Região'),
