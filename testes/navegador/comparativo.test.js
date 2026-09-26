@@ -179,3 +179,22 @@ test('a opção mais longa de cada lista cabe no campo', async () => {
   assert.deepEqual([...new Set(cortados)], []);
   assert.deepEqual(erros, []);
 });
+
+/* A divisão interna abre com 5 linhas (pedido do avaliador); as linhas que o
+   avaliador acrescenta vão para o banco e voltam ao reabrir o estudo. */
+test('linhas de ambiente: 5 de saída, e as acrescentadas voltam ao reabrir', async () => {
+  const { pg, erros, id, fr } = await abrirEstudoNovo('ambientes@exemplo.com');
+  await fr.locator('#abas button', { hasText: 'Região + Imóvel' }).click();
+  const linhas = () => fr.locator('table.ambientes tr').count().then(n => n - 2);
+  await fr.locator('table.ambientes').waitFor();
+  assert.equal(await linhas(), 5);
+  for (let i = 0; i < 2; i++) await fr.locator('button', { hasText: '+ Linha de ambiente' }).click();
+  await fr.locator('[aria-label="imovel.ambientes.6.ambiente"]').fill('Escritório');
+  await salvo(pg);
+  assert.equal((await premissas(id)).premissas.imovel.ambientes.length, 7);
+  await pg.goto(base + '/estudos/' + id);
+  await fr.locator('table.ambientes').waitFor();
+  assert.equal(await linhas(), 7);
+  assert.equal(await fr.locator('[aria-label="imovel.ambientes.6.ambiente"]').inputValue(), 'Escritório');
+  assert.deepEqual(erros, []);
+});

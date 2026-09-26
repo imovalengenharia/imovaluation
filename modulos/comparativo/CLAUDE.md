@@ -109,7 +109,7 @@ pergunta e o que é resposta").
 **Página da Região + Imóvel** (pedido do avaliador): as observações da região
 têm altura fixa de 78 mm (2/3 do que ocupavam esticadas); a faixa é
 "Infraestrutura do empreendimento"; as duas perguntas de divergência de área
-abrem a página de Restrições. Ambientes: 13 linhas no mínimo (não precisam
+abrem a página de Restrições. Ambientes: 5 linhas no mínimo — padrão pedido pelo avaliador; a migração 4 → 5 tira as linhas vazias do fim de estudos antigos (não precisam
 acabar no fim da página); o botão "+ Linha de ambiente" (e "Remover última
 linha", só vazia) acrescenta até `AMB_MAX` (17), o que cabe na página — sem
 página de continuação, pedido do avaliador. Mudou a altura das observações ou
@@ -135,6 +135,12 @@ Qtd., e acabamentos em listas com cabeçalho em dois níveis: REVESTIMENTOS
 (portas `portas`, janelas `janelas`). Chaves das premissas mantidas (piso,
 parede, teto, porta, esquadrias): texto antigo fora da lista continua
 aparecendo (a lista o acrescenta). "Não vistoriado" serve à vistoria remota.
+
+**Listas que crescem sobrevivem ao reabrir**: `mesclar()` junta o salvo ao
+estado inicial; lista salva mais longa que a do molde (linhas de ambiente
+acrescentadas) entra inteira, sobre o molde da primeira linha. Antes, era
+cortada no tamanho padrão e a linha acrescentada sumia ao reabrir. Travado
+no teste "linhas de ambiente: 5 de saída, e as acrescentadas voltam".
 
 **Um formato de campo em todo o laudo** (pedido do avaliador: "input de capa
 igual input de restrição"). Todo par rótulo → valor está no formato da ficha

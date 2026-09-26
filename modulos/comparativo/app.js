@@ -87,9 +87,9 @@
   var COLS_AMBIENTE = [['ambiente', 'AMBIENTE', 16], ['quantidade', 'QTD.', 6],
     ['piso', 'PISO', 15.6, 'revPiso'], ['parede', 'PAREDE', 15.6, 'revParede'], ['teto', 'TETO / FORRO', 15.6, 'revTeto'],
     ['porta', 'PORTAS', 15.6, 'portas'], ['esquadrias', 'JANELAS', 15.6, 'janelas']];
-  /* 13 linhas de ambiente no mínimo; o botão acrescenta até AMB_MAX, o que
+  /* 5 linhas de ambiente no mínimo (pedido do avaliador); o botão acrescenta até AMB_MAX, o que
      cabe na página da Região (sem página de continuação) */
-  var N_AMBIENTES = 13, AMB_MAX = 17, FOTOS_POR_PAGINA = 8;
+  var N_AMBIENTES = 5, AMB_MAX = 17, FOTOS_POR_PAGINA = 8;
   function ambienteVazio() {
     return { ambiente: '', quantidade: null, parede: '', piso: '', teto: '', porta: '', esquadrias: '',
              bancadas: '', metais: '' };
@@ -157,7 +157,7 @@
   function premissasVazias() {
     var area = function () { return { matricula: null, iptu: null, estimada: null, doc: null }; };
     return {
-      versao: 4,
+      versao: 5,
       logos: { cliente: null, empresa: null },
       capa: { proponente: '', tipoLaudo: '', proposta: '', matricula: '', logradouro: '', numero: '',
         complemento: '', empreendimento: '', bairro: '', cidade: '', uf: '', cep: '',
@@ -821,7 +821,7 @@
         [ctx.num(im + 'idade', { casas: 0 }), e('span', { cls: 'pre', txt: ' ano(s)' })])],
       ['Estado de conservação', ctx.sel(im + 'conservacao', LS.conservacao)]], [1.3, .75, .35, 1.2]);
 
-    /* ambientes: 13 linhas no mínimo, mais pelo botão até encher a página */
+    /* ambientes: 5 linhas no mínimo, mais pelo botão até encher a página */
     var amb = P.imovel.ambientes;
     var nAmb = Math.max(N_AMBIENTES, amb.length);
     function tabelaAmb(de, ate) {
@@ -1673,7 +1673,11 @@
     if (Array.isArray(base)) {
       if (!Array.isArray(salvo)) return base;
       if (!base.length) return salvo;                       // listas livres: fotos, anexos
-      return base.map(function (b, i) { return i < salvo.length ? mesclar(b, salvo[i]) : b; });
+      /* lista que cresce (linhas de ambiente): o que foi salvo além do
+         tamanho padrão entra também, sobre o molde da primeira linha */
+      var n = Math.max(base.length, salvo.length), out = [];
+      for (var i = 0; i < n; i++) out.push(i < salvo.length ? mesclar(base[i] !== undefined ? base[i] : base[0], salvo[i]) : base[i]);
+      return out;
     }
     if (base && typeof base === 'object') {
       if (typeof salvo !== 'object' || Array.isArray(salvo)) return base;
@@ -1689,7 +1693,7 @@
   /* Estudos da versão 1: comum estimada era cópia da matrícula; doc.
      complementar era texto ("-"); o registro era uma linha só. */
   function migrar(p) {
-    if (!p || typeof p !== 'object' || (p.versao || 1) >= 4) return p;
+    if (!p || typeof p !== 'object' || (p.versao || 1) >= 5) return p;
     var v0 = p.versao || 1;
     if ((p.versao || 1) < 2) {
     var ar = p.capa && p.capa.areas;
@@ -1725,13 +1729,22 @@
     }
     /* versão 3 → 4: o texto corrido deixa as marcas ("# ", **) e passa a HTML
        de formatação, escrito pela barra de ferramentas */
+    if (v0 < 4) {
     CAMPOS_TEXTO.forEach(function (c) {
       var v = pegar(c, p);
       if (typeof v === 'string') {
         var ks = c.split('.'); p[ks[0]][ks[1]] = marcasParaHtml(v);
       }
     });
-    p.versao = 4;
+    }
+    /* versão 4 → 5: a divisão interna abre com 5 linhas (eram 13); as linhas
+       vazias do fim saem, até sobrarem 5 */
+    var amb = p.imovel && p.imovel.ambientes;
+    if (Array.isArray(amb)) {
+      var vazia = function (a) { return !a || Object.keys(a).every(function (k) { return semValor(a[k]); }); };
+      while (amb.length > N_AMBIENTES && vazia(amb[amb.length - 1])) amb.pop();
+    }
+    p.versao = 5;
     return p;
   }
 
