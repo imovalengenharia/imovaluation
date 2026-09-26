@@ -147,7 +147,10 @@ no teste "linhas de ambiente: 5 de saída, e as acrescentadas voltam".
 **Ponto de extensão da barra de texto** (`window.ComparativoExtensoes.barraTexto`,
 em `ctx.area`): inerte por padrão; quem hospeda a página pode acrescentar
 botões à barra de um quadro de texto, recebendo `{caminho, barra, area,
-editor, pegar, paraHtml, gravar}`. Na plataforma, a IA virá pela casca
+editor, pegar, paraHtml, gravar}`; e `abrirLink(url, texto)`, se existir,
+abre links externos no lugar de `window.open` (o claude.ai roda a página
+numa moldura de onde o Google Maps se recusa a abrir — ERR_BLOCKED_BY_RESPONSE —
+e a versão de revisão mostra o endereço para copiar). Na plataforma, a IA virá pela casca
 (servidor, com a chave da API e busca na web), nunca de `fetch` do módulo.
 
 **Pesquisa da região por IA — PADRÃO de toda pesquisa desse campo**

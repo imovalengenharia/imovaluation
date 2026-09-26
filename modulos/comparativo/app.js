@@ -575,7 +575,12 @@
           mapa.addEventListener('click', function () {
             var q = o.mapa();
             if (!q) { avisar('Endereço vazio', 'Preencha logradouro, número, bairro e cidade na Capa.'); return; }
-            window.open('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q), '_blank', 'noopener');
+            var url = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
+            /* quem hospeda a página pode abrir o link do seu jeito (a versão de
+               revisão roda numa moldura de onde o Google não abre) */
+            var ext = window.ComparativoExtensoes;
+            if (ext && typeof ext.abrirLink === 'function') ext.abrirLink(url, q);
+            else window.open(url, '_blank', 'noopener');
           });
           acoes.push(mapa);
         }
