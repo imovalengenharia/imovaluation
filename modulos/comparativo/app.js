@@ -157,9 +157,9 @@
   function premissasVazias() {
     var area = function () { return { matricula: null, iptu: null, estimada: null, doc: null }; };
     return {
-      versao: 5,
+      versao: 6,
       logos: { cliente: null, empresa: null },
-      capa: { proponente: '', tipoLaudo: '', proposta: '', matricula: '', logradouro: '', numero: '',
+      capa: { proponente: '', tipoLaudo: '', proposta: '', matricula: '', dataVistoria: '', logradouro: '', numero: '',
         complemento: '', empreendimento: '', bairro: '', cidade: '', uf: '', cep: '',
         fotoFachada: null, fotoLogradouro: null, tipologia: '', uso: '', ocupacao: '', vaga: '', vagasTotal: null,
         areas: { terreno: area(), privativa: area(), comum: area() },
@@ -173,7 +173,7 @@
         padrao: '', idade: null, intervalo: '', conservacao: '',
         ambientes: repetir(N_AMBIENTES, ambienteVazio),
         divTerreno: { resposta: '', justificativa: '' }, divConstruida: { resposta: '', justificativa: '' } },
-      restricoes: { garantia: '', dataVistoria: '', justificativa: '',
+      restricoes: { garantia: '', justificativa: '',
         itens: repetir(PERGUNTAS.length, function () { return { resposta: '', obs: '' }; }), observacoes: '' },
       paradigma: { testada: null, dormitorios: null, suites: null, banheiros: null, indiceLocal: null, andar: null },
       amostra: repetir(N, amostraVazia),
@@ -682,11 +682,12 @@
   /* =============================================================== CAPA */
   function folhaCapa(ctx) {
     var c = 'capa.';
-    var topo = g('auto 1.5fr auto 1.25fr auto .55fr auto .7fr', [
+    var topo = g('auto 1.1fr auto 1.05fr auto .5fr auto .5fr auto .62fr', [
       rot('PROPONENTE', 'marinho'), celula(ctx, ctx.txt(c + 'proponente')),
       rot('TIPO LAUDO', 'marinho'), celula(ctx, ctx.sel(c + 'tipoLaudo', LS.tipoLaudo)),
       rot('PROPOSTA Nº', 'marinho'), celula(ctx, ctx.txt(c + 'proposta')),
-      rot('MATRÍCULA DO IMÓVEL', 'marinho'), celula(ctx, ctx.txt(c + 'matricula'))], { gap: '2.2mm' });
+      rot('MATRÍCULA DO IMÓVEL', 'marinho'), celula(ctx, ctx.txt(c + 'matricula')),
+      rot('DATA DA VISTORIA', 'marinho'), celula(ctx, ctx.data(c + 'dataVistoria'))], { gap: '1mm' });
 
     var dados = e('div', { cls: 'pilha larga' }, [
       g('auto 1.4fr auto .35fr auto .7fr auto 1.4fr', [
@@ -948,21 +949,24 @@
   /* ============================================================ RESTRIÇÕES */
   function folhaRestricoes(ctx) {
     var r = 'restricoes.';
+    /* verificações como na planilha: a pergunta numa linha, resposta e
+       observação logo abaixo — mais leve que a tabela (pedido do avaliador) */
     var itens = PERGUNTAS.map(function (q, i) {
       var b = r + 'itens.' + i + '.';
-      return [q, ctx.sel(b + 'resposta', LS.validacao), { el: ctx.txt(b + 'obs', { quebra: true }), cls: 'esq' }];
+      return e('div', { cls: 'verif' }, [rot(q),
+        g('15mm 20mm 8mm 1fr', [rot('Resposta:', 'claro'), val(ctx.sel(b + 'resposta', LS.validacao)),
+          rot('Obs:', 'claro dir'), val(ctx.txt(b + 'obs', { quebra: true }))])]);
     });
     return [pagina(ctx, divergencias(ctx).concat([
       tit('RESTRIÇÕES DO IMÓVEL'),
+      faixa('VERIFICAÇÕES', 'esq')]).concat(itens).concat([
+      espaco('g2'),
       faixa('RECOMENDAÇÃO COMO GARANTIA', 'esq'),
-      tabelaPerguntas([['Pergunta', 64], ['Resposta', 12], ['Data da vistoria', 24]], [
+      tabelaPerguntas([['Pergunta', 88], ['Resposta', 12]], [
         ['Considerando as diligências e aspectos técnicos analisados neste laudo, o imóvel é recomendado como garantia?',
-          ctx.sel(r + 'garantia', LS.validacao), ctx.txt(r + 'dataVistoria', { cls: 'centro' })]]),
+          ctx.sel(r + 'garantia', LS.validacao)]]),
       tit('JUSTIFICATIVA (EM CASO NEGATIVO)', 'menor'),
       ctx.area(r + 'justificativa', { alt: '20mm' }),
-      espaco('g2'),
-      faixa('VERIFICAÇÕES', 'esq'),
-      tabelaPerguntas([['Pergunta', 50], ['Resposta', 10], ['Observação', 40]], itens),
       tit('OBSERVAÇÕES GERAIS', 'menor'),
       ctx.area(r + 'observacoes', { alt: '32mm' })]), { parte: 'restricoes' })];
   }
@@ -1743,7 +1747,7 @@
   /* Estudos da versão 1: comum estimada era cópia da matrícula; doc.
      complementar era texto ("-"); o registro era uma linha só. */
   function migrar(p) {
-    if (!p || typeof p !== 'object' || (p.versao || 1) >= 5) return p;
+    if (!p || typeof p !== 'object' || (p.versao || 1) >= 6) return p;
     var v0 = p.versao || 1;
     if ((p.versao || 1) < 2) {
     var ar = p.capa && p.capa.areas;
@@ -1790,11 +1794,21 @@
     /* versão 4 → 5: a divisão interna abre com 5 linhas (eram 13); as linhas
        vazias do fim saem, até sobrarem 5 */
     var amb = p.imovel && p.imovel.ambientes;
-    if (Array.isArray(amb)) {
+    if (v0 < 5 && Array.isArray(amb)) {
       var vazia = function (a) { return !a || Object.keys(a).every(function (k) { return semValor(a[k]); }); };
       while (amb.length > N_AMBIENTES && vazia(amb[amb.length - 1])) amb.pop();
     }
-    p.versao = 5;
+    /* versão 5 → 6: a data da vistoria sai das Restrições e vai para o topo
+       da Capa, como data (era texto livre, dd/mm/aaaa) */
+    if (v0 < 6 && p.restricoes && p.restricoes.dataVistoria !== undefined) {
+      var dv = String(p.restricoes.dataVistoria || '').trim();
+      var md = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(dv);
+      if (md) dv = md[3] + '-' + ('0' + md[2]).slice(-2) + '-' + ('0' + md[1]).slice(-2);
+      else if (!/^\d{4}-\d{2}-\d{2}$/.test(dv)) dv = '';
+      if (p.capa && !p.capa.dataVistoria) p.capa.dataVistoria = dv;
+      delete p.restricoes.dataVistoria;
+    }
+    p.versao = 6;
     return p;
   }
 

@@ -117,6 +117,14 @@ acabar no fim da página); um só botão, "+ Adicionar linha" (sem botão de rem
 página de continuação, pedido do avaliador. Mudou a altura das observações ou
 de algo acima da tabela, remeça `AMB_MAX`.
 
+**Restrições do imóvel** (pedido do avaliador): as 13 verificações voltaram
+à lista da planilha — pergunta numa linha, "Resposta" e "Obs" abaixo, 2 mm
+entre itens (a tabela foi achada "aglomerada"); depois delas, a recomendação
+como garantia (só pergunta e resposta), a justificativa e as observações.
+A **data da vistoria** mora no topo da Capa, ao lado da matrícula, como campo
+de data (`capa.dataVistoria`); a migração 5 → 6 a traz de
+`restricoes.dataVistoria` (texto dd/mm/aaaa vira data; outro texto se perde).
+
 **Capa**: fachada e logradouro com 80 mm de altura (pedido do avaliador); as
 observações gerais da avaliação esticam até o fim da página e ficam com o
 que sobra (~94 mm). Crescer algo na Capa encolhe as observações.
@@ -174,8 +182,8 @@ será a casca, com busca na web (`comBusca: true`).
 
 **Um formato de campo em todo o laudo** (pedido do avaliador: "input de capa
 igual input de restrição"). Todo par rótulo → valor está no formato da ficha
-técnica: `ficha()` (grade) ou `table.t.ficha-t` (tabela). Restrições
-(`tabelaPerguntas`: pergunta sombreada, resposta e observação brancas),
+técnica: `ficha()` (grade) ou `table.t.ficha-t` (tabela). Divergências e
+recomendação como garantia (`tabelaPerguntas`: pergunta sombreada, resposta branca),
 premissas e deduções da liquidação, níveis de mercado e o deságio seguem
 esse formato. **Exceção: as fichas de pesquisa** ficam no desenho da aba
 Fichas Pesquisa da planilha (rótulo e valor em linha, foto do comparativo à
