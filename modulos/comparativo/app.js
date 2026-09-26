@@ -855,7 +855,7 @@
       faixa('EDIFICAÇÃO (QUANDO EMPREENDIMENTO VERTICALIZADO)', 'esq'), edif, espaco(),
       faixa('INFRAESTRUTURA DO EMPREENDIMENTO', 'esq'), infra, espaco(),
       faixa('PADRÃO CONSTRUTIVO', 'esq'), unidade, espaco(),
-      faixa(e('span', {}, ['DIVISÃO INTERNA POR AMBIENTE', e('span', { cls: 'info', txt: 'ⓘ' })]), 'esq'),
+      faixa('DIVISÃO INTERNA POR AMBIENTE', 'esq'),
       e('div', { cls: 'com-botoes' }, [tabelaAmb(0, nAmb), botoesAmb()])], { parte: 'regiao' })];
     return paginas;
   }

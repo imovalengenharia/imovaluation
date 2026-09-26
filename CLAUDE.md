@@ -219,6 +219,8 @@ delas gerou retrabalho:
 6. **A nota corre até o fim** do quadro; só texto corrido tem largura própria.
 7. **Sem negrito decorativo.** Nenhum número é negrito.
 8. **Casa única.** Cada campo mora em um lugar só.
+9. **Sem ícone de informação** ("ⓘ", "i" com bolinha) em título, faixa ou
+   campo — o dono do produto mandou tirar de toda a plataforma.
 
 E duas armadilhas que valem para qualquer tela:
 
