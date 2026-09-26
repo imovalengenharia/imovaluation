@@ -960,7 +960,7 @@
     return [faixa('DIVERGÊNCIA ENTRE DOCUMENTAÇÕES E ÁREA ESTIMADA EM VISTORIA', 'esq'),
       tabelaPerguntas([['Área', 11], ['Resposta', 7], ['Divergência', 7], ['Diferenças constatadas', 33], ['Justificativa', 42]], [
         linha('divTerreno', 'Terreno', function (rr) { return rr.capa.divTerreno; }),
-        linha('divConstruida', 'Privativa/útil', function (rr) { return rr.capa.divConstruida; })])];
+        linha('divConstruida', 'Construída/Privativa', function (rr) { return rr.capa.divConstruida; })])];
   }
 
   /* ============================================================ RESTRIÇÕES */

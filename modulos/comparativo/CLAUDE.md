@@ -401,7 +401,7 @@ neutro.
   automática, lida do quadro de áreas da Capa: cada fonte (matrícula, IPTU,
   doc. complementar) contra a estimada; resposta "Sim" se alguma difere,
   divergência = a maior em módulo, com sinal; a coluna "Diferenças
-  constatadas" descreve cada fonte em m² e %. Terreno e privativa/útil (a
+  constatadas" descreve cada fonte em m² e %. Linhas "Terreno" e "Construída/Privativa" — nome que serve a casa e a apartamento, pedido do avaliador (a
   planilha compara a privativa). O avaliador só escreve a justificativa,
   que fica com a coluna mais larga. `imovel.div*.resposta` ficou sem uso.
 
