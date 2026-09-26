@@ -176,9 +176,13 @@ será a casca, com busca na web (`comBusca: true`).
 igual input de restrição"). Todo par rótulo → valor está no formato da ficha
 técnica: `ficha()` (grade) ou `table.t.ficha-t` (tabela). Restrições
 (`tabelaPerguntas`: pergunta sombreada, resposta e observação brancas),
-fichas de pesquisa (paradigma 4 pares por linha; amostras 3 pares, listas
-longas na primeira coluna, foto ao lado), premissas e deduções da liquidação,
-níveis de mercado e o deságio seguem esse formato. Rótulo curto em
+premissas e deduções da liquidação, níveis de mercado e o deságio seguem
+esse formato. **Exceção: as fichas de pesquisa** ficam no desenho da aba
+Fichas Pesquisa da planilha (rótulo e valor em linha, foto do comparativo à
+esquerda) — o formato de ficha técnica foi recusado ali pelo avaliador
+("deixe como estava, no padrão do Excel"). Os 5 comparativos cabem na
+primeira página das fichas, com 2 mm entre eles; o croqui de situação vai
+para a segunda (pedido do avaliador; travado no teste do Google Maps). Rótulo curto em
 maiúsculas; pergunta ou fórmula longa em letra de frase (`table.perguntas`).
 Títulos: de seção com `tit()` (10,5 pt, letra de título); de quadro de texto
 com `tit(…, 'menor')` em maiúsculas ("OBSERVAÇÕES GERAIS"). Rótulos marinho
@@ -285,8 +289,9 @@ copiada — captura de tela do Street View, por exemplo. Fachada e logradouro
 abre o endereço da Capa — ou o do comparativo — em outra aba
 para achar a foto no Street View — na plataforma (iframe sem sandbox;
 travado no teste "Google Maps: a fachada abre o endereço da Capa, e cada comparativo o dele"). No claude.ai o
-Google se recusa a abrir da moldura (ERR_BLOCKED_BY_RESPONSE): a versão de
-revisão esconde o botão (`.btn-mapa`). Captura automática pela API do Street View
+Google se recusa a abrir da moldura (ERR_BLOCKED_BY_RESPONSE): o botão
+aparece na versão de revisão também (o avaliador quer vê-lo), mas só abre de
+fato na plataforma. Captura automática pela API do Street View
 não foi feita: exige chave paga do Google, e os termos do Google Maps
 restringem guardar as imagens — decisão do dono pendente.
 

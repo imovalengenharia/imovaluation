@@ -968,72 +968,80 @@
   }
 
   /* ======================================================== FICHAS */
-  /* Fichas de pesquisa no formato da ficha técnica, como a Capa e a Região:
-     pergunta sombreada, resposta branca. As listas de texto longo
-     (topografia, padrão, conservação) ficam na primeira coluna, a mais larga. */
+  /* Fichas de pesquisa no desenho da planilha (aba Fichas Pesquisa): rótulo
+     e valor em linha, foto do comparativo à esquerda. */
   function fichaParadigma(ctx) {
     var p = 'paradigma.';
     var calc = function (f) { return ctx.calc(function (r) { var v = f(r); return semValor(v) ? TRACO : String(v); }); };
     var n0 = function (cam) { return ctx.num(cam, { casas: 0 }); };
-    var f = ficha(4, [
-      ['Endereço', calc(function (r) { return r.paradigma.endereco; }), null, 6],
-      ['Área terreno', calc(function (r) { return fn(r.paradigma.areaTerreno); })],
-      ['Área privativa', calc(function (r) { return fn(r.paradigma.areaPrivativa); })],
-      ['Idade aparente', calc(function (r) { return r.paradigma.idade; })],
-      ['Vagas de garagem', calc(function (r) { return r.paradigma.vagas; })],
-      ['Padrão', calc(function (r) { return r.paradigma.padrao; })],
-      ['Intervalo de valor', calc(function (r) { return r.paradigma.intervalo; })],
-      ['Conservação', calc(function (r) { return r.paradigma.conservacao; })],
-      ['Testada', ctx.num(p + 'testada')],
-      ['Topografia', calc(function (r) { return r.paradigma.topografia; })],
-      ['Frentes múltiplas', calc(function (r) { return r.paradigma.multFrentes; })],
-      ['Índ. local', ctx.num(p + 'indiceLocal')],
-      ['Andar', ctx.num(p + 'andar', { casas: 0, suf: ' º' })],
-      ['Dormitórios', n0(p + 'dormitorios')],
-      ['Suítes', n0(p + 'suites')],
-      ['Banheiros', n0(p + 'banheiros'), null, 2]], [1.7, 1, 1.1, .8]);
-    return e('div', {}, [faixa('PARADIGMA / AVALIANDO'), f]);
+    var cols = '12% 20% 12% 20% 11% 12% 8% 5%';
+    return e('div', {}, [faixa('PARADIGMA / AVALIANDO', 'fina'), e('div', { cls: 'caixa linhas' }, [
+      g('12% 88%', [rot('Endereço:', 'claro'), val(calc(function (r) { return r.paradigma.endereco; }))]),
+      g(cols, [rot('Área Terreno:', 'claro'), val(calc(function (r) { return fn(r.paradigma.areaTerreno); })),
+        rot('Área Privativa:', 'claro'), val(calc(function (r) { return fn(r.paradigma.areaPrivativa); })),
+        rot('Idade Aparente:', 'claro'), val(calc(function (r) { return r.paradigma.idade; })),
+        rot('Nº vagas de garagem:', 'claro dir'), val(calc(function (r) { return r.paradigma.vagas; }))]),
+      g(cols, [rot('Padrão:', 'claro'), val(calc(function (r) { return r.paradigma.padrao; })),
+        rot('Intervalo de Valor:', 'claro'), val(calc(function (r) { return r.paradigma.intervalo; })),
+        rot('Conservação:', 'claro'), val(calc(function (r) { return r.paradigma.conservacao; })), e('div'), e('div')]),
+      g(cols, [rot('Testada:', 'claro'), val(ctx.num(p + 'testada')),
+        rot('Topografia:', 'claro'), val(calc(function (r) { return r.paradigma.topografia; })),
+        rot('Frentes múltiplas:', 'claro'), val(calc(function (r) { return r.paradigma.multFrentes; })),
+        rot('Índ. Local:', 'claro dir'), val(ctx.num(p + 'indiceLocal'))]),
+      g(cols, [rot('Nº dormitórios:', 'claro'), val(n0(p + 'dormitorios')),
+        rot('Nº suítes:', 'claro'), val(n0(p + 'suites')),
+        rot('Nº banheiros:', 'claro'), val(n0(p + 'banheiros')),
+        rot('Andar:', 'claro dir'), val(ctx.num(p + 'andar', { casas: 0, suf: ' º' }))])])]);
   }
 
   function fichaComparativo(ctx, i) {
     var b = 'amostra.' + i + '.';
-    var t = function (cam, o) { o = o || {}; o.quebra = true; return ctx.txt(b + cam, o); };
-    var nn = function (cam, o) { return ctx.num(b + cam, o); };
-    var sel = function (cam, lista) { return ctx.sel(b + cam, lista); };
+    var t = function (cam, o) { o = o || {}; o.quebra = true; return val(ctx.txt(b + cam, o)); };
+    var nn = function (cam, o) { return val(ctx.num(b + cam, o)); };
+    var cols = '1.3fr 2.4fr 1.45fr 1.35fr 1.35fr .75fr 1.35fr 1.25fr';
+    var R_ = function (x) { return rot(x, 'claro dir'); };
     var link = ctx.papel
       ? (pegar(b + 'link') ? e('a', { href: pegar(b + 'link'), txt: pegar(b + 'link'),
           style: 'word-break:break-all' }) : e('span', { txt: TRACO }))
-      : ctx.txt(b + 'link', { ph: 'https://', quebra: true });
-    var campos = ficha(3, [
-      ['Endereço', t('endereco')], ['Nº', t('numero')], ['Complemento', t('complemento')],
-      ['Empreendimento', t('empreendimento')], ['Bairro', t('bairro')], ['CEP', t('cep', { mascara: 'cep' })],
-      ['Tipo de imóvel', sel('tipo', LS.tipologia)], ['Cidade', t('cidade')], ['UF', t('uf')],
-      ['Valor', nn('valor', { pre: 'R$' })], ['Transação', sel('transacao', LS.transacao)], ['Data', ctx.data(b + 'data')],
-      ['Topografia', sel('topografia', LS.topografia)], ['Área terreno', nn('areaTerreno', { casas: 1 })],
-      ['Área construída', nn('areaConstruida')],
-      ['Padrão', sel('padrao', LS.padrao)], ['Testada', nn('testada')], ['Idade aparente', nn('idade', { casas: 0 })],
-      ['Conservação', sel('conservacao', LS.conservacao)], ['Frentes múltiplas', sel('multFrentes', LS.multFrentes)],
-      ['Andar', nn('andar', { casas: 0, suf: ' º' })],
-      ['Intervalo de valor', sel('intervalo', LS.intervalo)], ['Índ. local', nn('indiceLocal')],
-      ['Dormitórios', nn('dormitorios', { casas: 0 })],
-      ['Fonte', t('fonte')], ['Suítes', nn('suites', { casas: 0 })], ['Banheiros', nn('banheiros', { casas: 0 })],
-      ['Contato', t('contato')], ['Telefone', t('telefone')], ['Vagas de garagem', nn('vagas', { casas: 0 })],
-      ['Link da oferta', link, null, 4]], [1.5, .75, .75]);
+      : ctx.txt(b + 'link', { ph: 'https://' });
+    var campos = e('div', { style: 'border-left:.25mm solid var(--pg-borda)' }, [
+      g(cols, [R_('Endereço:'), val(ctx.txt(b + 'endereco', { cls: 'forte' })), R_('nº'), t('numero'),
+        R_('Compl.:'), t('complemento', { vazio: TRACO }), R_('CEP:'), t('cep', { vazio: TRACO, mascara: 'cep' })]),
+      g(cols, [R_('Bairro:'), t('bairro'), R_('Empreend.'), t('empreendimento'),
+        R_('Cidade:'), t('cidade'), R_('Estado:'), t('uf')], { cls: 'sep' }),
+      g(cols, [R_('Tipo Imóvel:'), val(ctx.sel(b + 'tipo', LS.tipologia)), R_('Valor:'),
+        nn('valor', { pre: 'R$' }), R_('Tipo Transação:'), val(ctx.sel(b + 'transacao', LS.transacao)),
+        R_('Data:'), val(ctx.data(b + 'data'))]),
+      g(cols, [R_('Área Terreno:'), nn('areaTerreno', { casas: 1 }), R_('Área Construída:'), nn('areaConstruida'),
+        R_('Idade Aparente:'), nn('idade', { casas: 0 }), R_('Andar:'), nn('andar', { casas: 0, suf: ' º' })]),
+      /* linhas com listas de texto longo têm colunas próprias: a opção mais
+         longa cabe inteira no campo (topografia, frentes, conservação) */
+      g('1.3fr .75fr 1.45fr 2.95fr 1.5fr 1.35fr 1.05fr .85fr', [R_('Testada:'), nn('testada'), R_('Topografia:'), val(ctx.sel(b + 'topografia', LS.topografia)),
+        R_('Frentes múltiplas:'), val(ctx.sel(b + 'multFrentes', LS.multFrentes)), R_('Índ. Local:'), nn('indiceLocal')]),
+      g(cols, [R_('Nº dormitórios:'), nn('dormitorios', { casas: 0 }), R_('Nº suítes:'), nn('suites', { casas: 0 }),
+        R_('Nº banheiros:'), nn('banheiros', { casas: 0 }), R_('Nº vagas de garagem:'), nn('vagas', { casas: 0 })],
+        { cls: 'sep' }),
+      g('1.3fr 5.2fr 1.35fr 2.6fr', [R_('Padrão:'), val(ctx.sel(b + 'padrao', LS.padrao)), R_('Intervalo de Valor:'),
+        val(ctx.sel(b + 'intervalo', LS.intervalo))]),
+      g('1.3fr 2.6fr 1.35fr 1.25fr 1.35fr .75fr 1.35fr 1.25fr', [R_('Conservação:'), val(ctx.sel(b + 'conservacao', LS.conservacao)), R_('Fonte:'), t('fonte'),
+        R_('Nome:'), t('contato'), R_('Telefone:'), t('telefone')]),
+      g('1.3fr 10.9fr', [R_('Link oferta:'), val(link)])]);
+    /* a última linha não leva fio: a borda do quadro já fecha embaixo */
+    campos.querySelectorAll(':scope > .g:not(:last-child)').forEach(function (x) { x.style.borderBottom = '.25mm solid var(--pg-fio)'; });
+    campos.querySelectorAll('.g.sep').forEach(function (x) { x.style.borderBottom = '.35mm solid var(--pg-tinta2)'; });
     var foto = ctx.img(b + 'foto', { nu: true, alt: 'auto', vazio: 'Foto do comparativo',
       mapa: function () { return enderecoEm(b, 'endereco'); } });
     foto.classList.add('encher');
     foto.style.minHeight = '40mm';
-    foto.style.height = 'auto';
-    foto.style.flex = '1 1 auto';
-    return e('div', { style: 'margin-bottom:5mm' }, [faixa('ELEMENTO COMPARATIVO ' + (i + 1)),
-      g('19.5% 1fr', [e('div', { cls: 'caixa', style: 'display:flex' }, [foto]), campos], { gap: '2mm' })]);
+    campos.classList.add('ficha');
+    return e('div', { style: i < 4 ? 'margin-bottom:2mm' : '' }, [faixa('ELEMENTO COMPARATIVO ' + (i + 1), 'fina'),
+      e('div', { cls: 'caixa' }, [g('19.5% 80.5%', [foto, campos])])]);
   }
 
   function folhaFichas(ctx) {
     var p1 = [fichaParadigma(ctx), tit('Amostra')];
-    for (var i = 0; i < 4; i++) p1.push(fichaComparativo(ctx, i));
-    var p2 = [fichaComparativo(ctx, 4),
-      tit('Croqui de Situação do Imóvel Avaliando e Elementos Comparativos'),
+    for (var i = 0; i < 5; i++) p1.push(fichaComparativo(ctx, i));
+    var p2 = [tit('Croqui de Situação do Imóvel Avaliando e Elementos Comparativos'),
       ctx.img('croquiSituacao', { nu: true, alt: '78mm', max: 2000, vazio: 'Clique para inserir o croqui de situação' })];
     return [pagina(ctx, p1, { parte: 'fichas' }), pagina(ctx, p2, { parte: 'fichas' })];
   }

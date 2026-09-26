@@ -229,6 +229,9 @@ test('Google Maps: a fachada abre o endereço da Capa, e cada comparativo o dele
   await fr.locator('[aria-label="amostra.2.cidade"]').fill('Fortaleza');
   await fr.locator('[aria-label="amostra.2.uf"]').fill('CE');
   assert.equal(await fr.locator('.acoes-img button', { hasText: 'Google Maps' }).count(), 5, 'um botão por comparativo');
+  /* os 5 comparativos na mesma página, como pediu o avaliador */
+  assert.equal(await fr.locator('.folha:not([hidden]) .pagina').first().locator('.faixa', { hasText: 'ELEMENTO COMPARATIVO' }).count(), 5,
+    'os 5 comparativos na primeira página das fichas');
   const [aba3] = await Promise.all([
     pg.context().waitForEvent('page'),
     fr.locator('.acoes-img button', { hasText: 'Google Maps' }).nth(2).click()
