@@ -494,7 +494,7 @@
       if (ext && typeof ext.barraTexto === 'function') {
         try {
           ext.barraTexto({ caminho: caminho, barra: barra, area: area, editor: ed, pegar: pegar,
-            escrever: function (texto) { ed.innerHTML = limparHtml(marcasParaHtml(texto)); gravar(); } });
+            paraHtml: function (texto) { return limparHtml(marcasParaHtml(texto)); }, gravar: gravar });
         } catch (erro) { if (window.console) console.error(erro); }
       }
       return area;

@@ -288,6 +288,19 @@ var PDv = REF(); PDv.imovel.divConstruida = { resposta: 'Sim' };
 PDv.capa.areas.privativa.iptu = 900;
 conferir('divergência de área construída (AL71)', Motor.calcular(PDv).capa.divConstruida, 900 / 883.32 - 1);
 
+B('4 · PESQUISA DA REGIÃO POR IA (o padrão do pedido)');
+var PesquisaRegiao = require('../pesquisa-regiao.js');
+var PQ = REF(); PQ.capa.bairro = 'Meireles'; PQ.capa.cidade = 'Fortaleza'; PQ.capa.uf = 'CE';
+var pq = PesquisaRegiao.pedido(PQ, { jaEscrito: 'O bairro' });
+conferir('quatro seções, cada uma com subtítulo "# "', PesquisaRegiao.SECOES.every(function (sec) { return pq.indexOf('# ' + sec) >= 0; }), true);
+conferir('pede nomes próprios (vias, metrô, shoppings…)',
+  ['avenidas', 'metrô', 'shoppings', 'supermercados', 'escolas', 'hospitais', 'praças'].every(function (w) { return pq.indexOf(w) >= 0; }), true);
+conferir('proíbe inventar nomes', /nunca invente/.test(pq), true);
+conferir('leva os dados do laudo (bairro, cidade)', /Bairro: Meireles/.test(pq) && /Fortaleza \/ CE/.test(pq), true);
+conferir('leva o que estava no campo como pista', /O bairro$/.test(pq.trim()), true);
+conferir('com busca na web, manda pesquisar', /Pesquise na web/.test(PesquisaRegiao.pedido(PQ, { comBusca: true })), true);
+conferir('sem busca, não promete pesquisa', /Pesquise na web/.test(pq), false);
+
 console.log('\n' + '─'.repeat(78));
 console.log(falhas.length === 0
   ? '\x1b[32m' + ok + ' conferências, nenhuma falha\x1b[0m'

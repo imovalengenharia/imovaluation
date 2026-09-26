@@ -17,7 +17,8 @@ python3 -m http.server 8777     # e abrir http://localhost:8777/ — sozinho, se
 ```
 
 Como no involutivo: sem build, sem dependências; o publicado são exatamente
-`index.html`, `motor.js` e `app.js`.
+`index.html`, `motor.js` e `app.js` (mais `pesquisa-regiao.js`, o pedido da
+pesquisa por IA, lido por quem hospeda o módulo).
 
 ## A planilha e o módulo
 
@@ -145,10 +146,25 @@ no teste "linhas de ambiente: 5 de saída, e as acrescentadas voltam".
 **Ponto de extensão da barra de texto** (`window.ComparativoExtensoes.barraTexto`,
 em `ctx.area`): inerte por padrão; quem hospeda a página pode acrescentar
 botões à barra de um quadro de texto, recebendo `{caminho, barra, area,
-editor, pegar, escrever}`. A versão de revisão (claude.ai) usa para testar
-a redação por IA das observações da região. Na plataforma, a IA virá pela
-casca (servidor, com a chave da API e busca na web), nunca de `fetch` do
-módulo.
+editor, pegar, paraHtml, gravar}`. Na plataforma, a IA virá pela casca
+(servidor, com a chave da API e busca na web), nunca de `fetch` do módulo.
+
+**Pesquisa da região por IA — PADRÃO de toda pesquisa desse campo**
+(decisão do dono do produto): o pedido mora em `pesquisa-regiao.js` (puro,
+sem DOM nem rede; navegador e Node), e todo hospedeiro usa ele. O texto é
+técnico, nunca genérico, com **nomes próprios** — vias, estações de metrô/
+VLT/BRT, shoppings, supermercados, escolas, hospitais, praças, parques — em
+quatro seções fixas com subtítulo: Localização e caracterização; Sistema
+viário e mobilidade; Equipamentos e pontos de interesse; Síntese
+mercadológica (250–400 palavras). Só nomes que existam de fato; distância só
+quando segura; nunca contradiz o que o avaliador preencheu; o que não souber
+vira "[Confirmar em vistoria: …]". O resultado **vai direto para o campo**,
+escrito enquanto é gerado, **sem etapa de aprovar/substituir/descartar**
+(pedido do dono: cobrança por crédito, por clique, sem devolução); Ctrl+Z
+devolve o texto anterior. O que estava no campo entra no pedido como pista.
+Na versão de revisão (claude.ai), quem responde é o Claude do visualizador
+(capacidade `sample`, sem busca na web, `modelTier: complex`); na plataforma
+será a casca, com busca na web (`comBusca: true`).
 
 **Um formato de campo em todo o laudo** (pedido do avaliador: "input de capa
 igual input de restrição"). Todo par rótulo → valor está no formato da ficha

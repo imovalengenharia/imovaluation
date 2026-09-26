@@ -230,6 +230,16 @@ E duas armadilhas que valem para qualquer tela:
 - **Campo que sai do documento perde o foco.** Onde uma área se redesenha
   inteira a cada recálculo, campo digitável tem de viver fora do redesenho.
 
+## Serviços de IA — decisão do dono do produto
+
+Pesquisas por IA (a primeira: observações da região, no comparativo) são
+cobradas **por crédito, por clique**. O resultado vai direto para o campo,
+sem etapa de aprovar ou descartar, e não há devolução. A chamada à IA é da
+casca (servidor, chave da API no ambiente, busca na web), nunca do módulo;
+o pedido de cada pesquisa é padrão do módulo (ex.:
+`modulos/comparativo/pesquisa-regiao.js`). Créditos ainda não existem: vêm
+com a cobrança.
+
 ## Postura pedida pelo dono do produto
 
 Todo pedido é o ponto de partida, não o limite: antes de executar à letra,
