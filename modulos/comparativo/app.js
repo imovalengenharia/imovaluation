@@ -574,7 +574,7 @@
           var mapa = e('button', { type: 'button', cls: 'btn-mapa', txt: 'Google Maps', title: 'Abrir o endereço no Google Maps (Street View) em outra aba' });
           mapa.addEventListener('click', function () {
             var q = o.mapa();
-            if (!q) { avisar('Endereço vazio', 'Preencha logradouro, número, bairro e cidade na Capa.'); return; }
+            if (!q) { avisar('Endereço vazio', 'Preencha o endereço, o bairro e a cidade antes de abrir o mapa.'); return; }
             window.open('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q), '_blank', 'noopener');
           });
           acoes.push(mapa);
@@ -668,14 +668,16 @@
       cabecalho(ctx, o.logos).concat([e('div', { cls: 'corpo' + (o.estica ? ' estica' : '') }, filhos)]));
   }
 
-  /* o endereço do imóvel em uma linha, para o Google Maps */
-  function enderecoImovel() {
-    var c = function (k) { return String(pegar('capa.' + k) || '').trim(); };
-    var rua = [c('logradouro'), c('numero')].filter(Boolean).join(', ');
+  /* um endereço em uma linha, para o Google Maps: o do imóvel (Capa) ou o de
+     um comparativo (fichas: `endereco` em vez de `logradouro`) */
+  function enderecoEm(base, ruaChave) {
+    var c = function (k) { return String(pegar(base + k) || '').trim(); };
+    var rua = [c(ruaChave), c('numero')].filter(Boolean).join(', ');
     if (!rua && !c('bairro')) return '';
     return [rua, c('bairro'), [c('cidade'), c('uf')].filter(Boolean).join(' - '), c('cep').replace(/\s/g, '')]
       .filter(Boolean).join(', ');
   }
+  function enderecoImovel() { return enderecoEm('capa.', 'logradouro'); }
 
   /* =============================================================== CAPA */
   function folhaCapa(ctx) {
@@ -1017,7 +1019,8 @@
       ['Fonte', t('fonte')], ['Suítes', nn('suites', { casas: 0 })], ['Banheiros', nn('banheiros', { casas: 0 })],
       ['Contato', t('contato')], ['Telefone', t('telefone')], ['Vagas de garagem', nn('vagas', { casas: 0 })],
       ['Link da oferta', link, null, 4]], [1.5, .75, .75]);
-    var foto = ctx.img(b + 'foto', { nu: true, alt: 'auto', vazio: 'Foto do comparativo' });
+    var foto = ctx.img(b + 'foto', { nu: true, alt: 'auto', vazio: 'Foto do comparativo',
+      mapa: function () { return enderecoEm(b, 'endereco'); } });
     foto.classList.add('encher');
     foto.style.minHeight = '40mm';
     foto.style.height = 'auto';

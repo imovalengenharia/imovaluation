@@ -281,9 +281,10 @@ uma muito larga e medir o quadro antes e depois.
 
 **Colar imagem** (Ctrl+V): o campo de imagem sob o mouse recebe a imagem
 copiada — captura de tela do Street View, por exemplo. Fachada e logradouro
-(Capa) têm o botão **Google Maps**, que abre o endereço da Capa em outra aba
+(Capa) e a foto de cada comparativo (fichas) têm o botão **Google Maps**, que
+abre o endereço da Capa — ou o do comparativo — em outra aba
 para achar a foto no Street View — na plataforma (iframe sem sandbox;
-travado no teste "Google Maps: a fachada abre o endereço"). No claude.ai o
+travado no teste "Google Maps: a fachada abre o endereço da Capa, e cada comparativo o dele"). No claude.ai o
 Google se recusa a abrir da moldura (ERR_BLOCKED_BY_RESPONSE): a versão de
 revisão esconde o botão (`.btn-mapa`). Captura automática pela API do Street View
 não foi feita: exige chave paga do Google, e os termos do Google Maps

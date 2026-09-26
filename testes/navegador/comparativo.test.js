@@ -203,7 +203,7 @@ test('linhas de ambiente: 5 de saída, e as acrescentadas voltam ao reabrir', as
 
 /* Na plataforma, o botão Google Maps da foto de fachada abre o endereço da
    Capa numa aba nova (o iframe do módulo não tem sandbox). */
-test('Google Maps: a fachada abre o endereço da Capa numa aba nova', async () => {
+test('Google Maps: a fachada abre o endereço da Capa, e cada comparativo o dele', async () => {
   const { pg, erros, fr } = await abrirEstudoNovo('mapa@exemplo.com');
   await pg.context().route(/https:\/\/www\.google\.com\/maps.*/, r => r.fulfill({ status: 200, contentType: 'text/html', body: 'mapa' }));
   await fr.locator('[aria-label="capa.logradouro"]').fill('Rua Tibúrcio Cavalcante');
@@ -220,5 +220,21 @@ test('Google Maps: a fachada abre o endereço da Capa numa aba nova', async () =
   await aba.waitForLoadState();
   assert.equal(decodeURIComponent(aba.url()),
     'https://www.google.com/maps/search/?api=1&query=Rua Tibúrcio Cavalcante, 500, Meireles, Fortaleza - CE, 60125-100');
+
+  /* e cada comparativo das fichas de pesquisa abre o endereço dele */
+  await fr.locator('#abas button', { hasText: 'Fichas de pesquisa' }).click();
+  await fr.locator('[aria-label="amostra.2.endereco"]').fill('Avenida Monsenhor Tabosa');
+  await fr.locator('[aria-label="amostra.2.numero"]').fill('1521');
+  await fr.locator('[aria-label="amostra.2.bairro"]').fill('Meireles');
+  await fr.locator('[aria-label="amostra.2.cidade"]').fill('Fortaleza');
+  await fr.locator('[aria-label="amostra.2.uf"]').fill('CE');
+  assert.equal(await fr.locator('.acoes-img button', { hasText: 'Google Maps' }).count(), 5, 'um botão por comparativo');
+  const [aba3] = await Promise.all([
+    pg.context().waitForEvent('page'),
+    fr.locator('.acoes-img button', { hasText: 'Google Maps' }).nth(2).click()
+  ]);
+  await aba3.waitForLoadState();
+  assert.equal(decodeURIComponent(aba3.url()),
+    'https://www.google.com/maps/search/?api=1&query=Avenida Monsenhor Tabosa, 1521, Meireles, Fortaleza - CE');
   assert.deepEqual(erros, []);
 });
