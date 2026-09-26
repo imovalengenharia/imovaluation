@@ -184,7 +184,7 @@ esquerda) — o formato de ficha técnica foi recusado ali pelo avaliador
 primeira página das fichas, com 2 mm entre eles; o croqui de situação vai
 para a segunda (pedido do avaliador; travado no teste do Google Maps). Rótulo curto em
 maiúsculas; pergunta ou fórmula longa em letra de frase (`table.perguntas`).
-Títulos: de seção com `tit()` (10,5 pt, letra de título); de quadro de texto
+Títulos: de seção com `tit()` (10,5 pt, em maiúsculas como a Capa — "DADOS DA REGIÃO", pedido do avaliador); de quadro de texto
 com `tit(…, 'menor')` em maiúsculas ("OBSERVAÇÕES GERAIS"). Rótulos marinho
 (capa e topo do Cálculo) sempre em negrito. Nenhuma página começa com
 `espaco()`: o conteúdo começa à mesma distância do cabeçalho.

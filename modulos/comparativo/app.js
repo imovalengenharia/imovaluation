@@ -904,12 +904,12 @@
       return e('div', { cls: 'linha-botoes' }, [mais]);
     }
     var paginas = [pagina(ctx, [
-      tit('Dados da Região'),
+      tit('DADOS DA REGIÃO'),
       g('1fr 1fr 1fr', [serv, melh, pec], { gap: '6mm', cls: 'colunas' }), espaco('g2'),
       g('1fr 1fr 1fr', regiaoLinha2, { gap: '6mm', cls: 'colunas' }),
       tit('OBSERVAÇÕES GERAIS SOBRE A REGIÃO', 'menor'),
       ctx.area(r + 'observacoes', { alt: '58mm' }),
-      tit('Dados do Imóvel'),
+      tit('DADOS DO IMÓVEL'),
       faixa('TERRENO', 'esq'), terreno, espaco(),
       faixa('EDIFICAÇÃO (QUANDO EMPREENDIMENTO VERTICALIZADO)', 'esq'), edif, espaco(),
       faixa('INFRAESTRUTURA DO EMPREENDIMENTO', 'esq'), infra, espaco(),
@@ -953,7 +953,7 @@
       return [q, ctx.sel(b + 'resposta', LS.validacao), { el: ctx.txt(b + 'obs', { quebra: true }), cls: 'esq' }];
     });
     return [pagina(ctx, divergencias(ctx).concat([
-      tit('Restrições do Imóvel'),
+      tit('RESTRIÇÕES DO IMÓVEL'),
       faixa('RECOMENDAÇÃO COMO GARANTIA', 'esq'),
       tabelaPerguntas([['Pergunta', 64], ['Resposta', 12], ['Data da vistoria', 24]], [
         ['Considerando as diligências e aspectos técnicos analisados neste laudo, o imóvel é recomendado como garantia?',
@@ -1039,9 +1039,9 @@
   }
 
   function folhaFichas(ctx) {
-    var p1 = [fichaParadigma(ctx), tit('Amostra')];
+    var p1 = [fichaParadigma(ctx), tit('AMOSTRA')];
     for (var i = 0; i < 5; i++) p1.push(fichaComparativo(ctx, i));
-    var p2 = [tit('Croqui de Situação do Imóvel Avaliando e Elementos Comparativos'),
+    var p2 = [tit('CROQUI DE SITUAÇÃO DO IMÓVEL AVALIANDO E ELEMENTOS COMPARATIVOS'),
       ctx.img('croquiSituacao', { nu: true, alt: '78mm', max: 2000, vazio: 'Clique para inserir o croqui de situação' })];
     return [pagina(ctx, p1, { parte: 'fichas' }), pagina(ctx, p2, { parte: 'fichas' })];
   }
@@ -1162,7 +1162,7 @@
         ['Médio', function (r) { return fn(r.est.medio); }],
         ['Máximo', function (r) { return fn(r.est.maximo); }]])], { gap: '7mm' });
 
-    var filhos = [topo, tit('Tabela de Homogeneização'), tabela, avaliando, estatistica,
+    var filhos = [topo, tit('TABELA DE HOMOGENEIZAÇÃO'), tabela, avaliando, estatistica,
       espaco('g2'), blocos,
       tit('OBSERVAÇÕES GERAIS', 'menor'), ctx.area(cal + 'observacoes', { alt: '90mm' }), espaco(),
       faixa('VALOR DE MERCADO'),
@@ -1227,8 +1227,8 @@
           e('td', {}, [ctx.calc(function (r) { return fn(r.tabela.linhas[i].unit); })]),
           e('td', {}, [ctx.calc(function (r) { return fn(r.tabela.linhas[i].homog); })])]);
       })));
-    return [pagina(ctx, [tit('Poder de Predição do Modelo'), caixa, leg,
-      tit('Croqui de Localização'),
+    return [pagina(ctx, [tit('PODER DE PREDIÇÃO DO MODELO'), caixa, leg,
+      tit('CROQUI DE LOCALIZAÇÃO'),
       ctx.img('grafico.croqui', { nu: true, alt: '105mm', max: 2000, vazio: 'Clique para inserir o croqui de localização' })],
       { parte: 'grafico' })];
   }
@@ -1337,7 +1337,7 @@
     };
 
     return [pagina(ctx, [
-      tit('Cálculo de Liquidação Forçada - Venda Compulsória'),
+      tit('CÁLCULO DE LIQUIDAÇÃO FORÇADA - VENDA COMPULSÓRIA'),
       ctx.area(l + 'texto', { alt: '40mm' }), espaco('g2'),
       g('40% 1fr', [premissas, ponte], { gap: '8mm' }), espaco('g2'),
       faixa('VALOR DE LIQUIDAÇÃO FORÇADA'),
@@ -1368,7 +1368,7 @@
       }
       var grade = g('1fr 1fr', celulas, { gap: '6mm', estilo: 'row-gap:4mm' });
       var ultima = pg === nPag - 1 && !ctx.papel;
-      return pagina(ctx, [tit('Relatório Fotográfico'),
+      return pagina(ctx, [tit('RELATÓRIO FOTOGRÁFICO'),
         ultima ? e('div', { cls: 'com-botoes' }, [grade, e('div', { cls: 'linha-botoes', style: 'margin-top:4mm' },
           [botaoAdicionar('Adicionar fotos', 'fotos', { alt: 'auto', cls: 'botao-linha' })])]) : grade], { parte: 'fotos' });
     });
