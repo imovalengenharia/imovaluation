@@ -266,7 +266,9 @@ table.t.homog td{font-size:var(--t-denso)}
 /* texto corrido dentro de caixa */
 .texto{border:.25mm solid var(--pg-borda);background:var(--pg-cel);padding:1.8mm 1.4mm;white-space:pre-wrap;
   text-align:justify;tab-size:8;min-height:12mm;font-size:var(--t-campo);line-height:1.35}
-.texto .sub,.texto h4{color:var(--pg-rot);font-weight:700;font-size:var(--t-faixa);margin:0}
+/* subtítulo do texto corrido: só o negrito o distingue (mesma letra e cor do
+   texto), com um pequeno respiro antes do parágrafo */
+.texto .sub,.texto h4{color:inherit;font-weight:700;font-size:inherit;margin:0 0 1mm}
 .texto b{font-weight:700}
 .texto ul,.texto ol{margin:0;padding-left:5mm;white-space:normal}
 .texto li{white-space:pre-wrap}

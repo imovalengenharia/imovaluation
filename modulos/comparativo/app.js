@@ -89,7 +89,7 @@
     ['porta', 'PORTAS', 15.6, 'portas'], ['esquadrias', 'JANELAS', 15.6, 'janelas']];
   /* 5 linhas de ambiente no mínimo (pedido do avaliador); o botão acrescenta até AMB_MAX, o que
      cabe na página da Região (sem página de continuação) */
-  var N_AMBIENTES = 5, AMB_MAX = 17, FOTOS_POR_PAGINA = 8;
+  var N_AMBIENTES = 5, AMB_MAX = 21, FOTOS_POR_PAGINA = 8;
   function ambienteVazio() {
     return { ambiente: '', quantidade: null, parede: '', piso: '', teto: '', porta: '', esquadrias: '',
              bancadas: '', metais: '' };
@@ -860,7 +860,7 @@
       g('1fr 1fr 1fr', [serv, melh, pec], { gap: '6mm', cls: 'colunas' }), espaco('g2'),
       g('1fr 1fr 1fr', regiaoLinha2, { gap: '6mm', cls: 'colunas' }),
       tit('OBSERVAÇÕES GERAIS SOBRE A REGIÃO', 'menor'),
-      ctx.area(r + 'observacoes', { alt: '78mm' }),
+      ctx.area(r + 'observacoes', { alt: '58mm' }),
       tit('Dados do Imóvel'),
       faixa('TERRENO', 'esq'), terreno, espaco(),
       faixa('EDIFICAÇÃO (QUANDO EMPREENDIMENTO VERTICALIZADO)', 'esq'), edif, espaco(),

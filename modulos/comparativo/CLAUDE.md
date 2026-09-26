@@ -108,11 +108,12 @@ largas ("muito espaço para pouco preenchimento; não dá para saber o que é
 pergunta e o que é resposta").
 
 **Página da Região + Imóvel** (pedido do avaliador): as observações da região
-têm altura fixa de 78 mm (2/3 do que ocupavam esticadas); a faixa é
+têm altura mínima de 58 mm (o texto máximo da pesquisa por IA, 350 palavras
+com três subtítulos, ocupa ~49 mm; texto maior faz o quadro crescer); a faixa é
 "Infraestrutura do empreendimento"; as duas perguntas de divergência de área
 abrem a página de Restrições. Ambientes: 5 linhas no mínimo — padrão pedido pelo avaliador; a migração 4 → 5 tira as linhas vazias do fim de estudos antigos (não precisam
 acabar no fim da página); um só botão, "+ Adicionar linha" (sem botão de remover
-— recusado), acrescenta até `AMB_MAX` (17), o que cabe na página — sem
+— recusado), acrescenta até `AMB_MAX` (21), o que cabe na página — sem
 página de continuação, pedido do avaliador. Mudou a altura das observações ou
 de algo acima da tabela, remeça `AMB_MAX`.
 
@@ -159,7 +160,7 @@ estações de metrô/VLT/BRT, shoppings, supermercados, escolas, hospitais,
 praças, parques — em três seções fixas com subtítulo: Localização e
 caracterização; Sistema viário e mobilidade; Equipamentos, serviços e pontos
 de interesse. Do tamanho do quadro: 250–350 palavras (`PALAVRAS_MAX`; medido:
-~400 cabem nos 78 mm sem o quadro crescer). Só nomes que existam de fato;
+350 palavras reais ocupam ~49 mm do quadro de 58 mm). Só nomes que existam de fato;
 distância só quando segura; nunca contradiz o que o avaliador preencheu; o
 que não souber vira "[Confirmar em vistoria: …]". O resultado **vai direto para o campo**,
 escrito enquanto é gerado, **sem etapa de aprovar/substituir/descartar**
@@ -256,7 +257,9 @@ distância de cada `.faixa` ao elemento seguinte: tem de dar um valor só.
 Texto corrido (observações, justificativa, texto da liquidação) é editado com
 uma **barra de ferramentas** — negrito, itálico, sublinhado, subtítulo e listas — e guardado como HTML de formatação. `limparHtml()` passa tudo por uma
 lista de marcas permitidas (b, i, u, br, div, ul, ol, li, h4) antes de gravar e
-antes de mostrar: atributos, estilos e scripts somem, inclusive do que vem
+antes de mostrar. O subtítulo (h4) se distingue só pelo negrito — mesma
+letra e cor do texto — com 1 mm de respiro antes do parágrafo (pedido do
+avaliador). Na limpeza, atributos, estilos e scripts somem, inclusive do que vem
 colado do Word. Tab insere tabulação (para alinhar colunas no texto). Estudos
 da versão 3, com as marcas antigas ("# " subtítulo, `**negrito**`), migram em
 `migrar()` (`P.versao = 4`). Na Capa, o quadro de observações desce até o fim
