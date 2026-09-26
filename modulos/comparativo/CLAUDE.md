@@ -94,7 +94,7 @@ em linha dentro de um quadro na largura toda; a pergunta numa célula
 sombreada (`--pg-pergunta`), em maiúsculas na cor do laudo, e a resposta
 numa célula branca ao lado. É o formato que o avaliador aprovou para Terreno
 (3 pares), Edificação (4 pares × 2 linhas, fachada e conservação no fim da
-linha) e Unidade privativa; na Capa, Imóvel (dois quadros com a mesma coluna
+linha) e Padrão construtivo (antes "Unidade privativa"); na Capa, Imóvel (dois quadros com a mesma coluna
 de pergunta), Dimensões (`table.t.ficha-t`: cabeçalho e primeira coluna
 sombreados; duas tabelas de colunas fixas, alinhadas com os quadros do
 Imóvel) e Resultado (seis colunas fixas; vaga autônoma e valor total em

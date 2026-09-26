@@ -664,7 +664,7 @@
         return celArea(a + chave + '.' + k); })));
     }
     var cabDim = function () {
-      return e('tr', {}, ['Área', 'Matrícula', 'IPTU', 'Estimada', 'Doc. complementar'].map(function (t) {
+      return e('tr', {}, ['Tipo de área', 'Matrícula', 'IPTU', 'Estimada', 'Doc. complementar'].map(function (t) {
         return e('th', { txt: t }); }));
     };
     /* dois quadros, alinhados com os dois do Imóvel ao lado */
@@ -853,7 +853,7 @@
       faixa('TERRENO', 'esq'), terreno, espaco(),
       faixa('EDIFICAÇÃO (QUANDO EMPREENDIMENTO VERTICALIZADO)', 'esq'), edif, espaco(),
       faixa('INFRAESTRUTURA DO EMPREENDIMENTO', 'esq'), infra, espaco(),
-      faixa('UNIDADE PRIVATIVA', 'esq'), unidade, espaco(),
+      faixa('PADRÃO CONSTRUTIVO', 'esq'), unidade, espaco(),
       faixa(e('span', {}, ['DIVISÃO INTERNA POR AMBIENTE', e('span', { cls: 'info', txt: 'ⓘ' })]), 'esq'),
       e('div', { cls: 'com-botoes' }, [tabelaAmb(0, nAmb), botoesAmb()])], { parte: 'regiao' })];
     return paginas;
