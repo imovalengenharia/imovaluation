@@ -151,14 +151,17 @@ editor, pegar, paraHtml, gravar}`. Na plataforma, a IA virá pela casca
 
 **Pesquisa da região por IA — PADRÃO de toda pesquisa desse campo**
 (decisão do dono do produto): o pedido mora em `pesquisa-regiao.js` (puro,
-sem DOM nem rede; navegador e Node), e todo hospedeiro usa ele. O texto é
-técnico, nunca genérico, com **nomes próprios** — vias, estações de metrô/
-VLT/BRT, shoppings, supermercados, escolas, hospitais, praças, parques — em
-quatro seções fixas com subtítulo: Localização e caracterização; Sistema
-viário e mobilidade; Equipamentos e pontos de interesse; Síntese
-mercadológica (250–400 palavras). Só nomes que existam de fato; distância só
-quando segura; nunca contradiz o que o avaliador preencheu; o que não souber
-vira "[Confirmar em vistoria: …]". O resultado **vai direto para o campo**,
+sem DOM nem rede; navegador e Node), e todo hospedeiro usa ele. **Só as
+características do bairro e da região** — nada de diagnóstico de mercado
+(liquidez, valorização, demanda, preço: recusado pelo dono). Texto técnico e
+contextualizado ao endereço, nunca genérico, com **nomes próprios** — vias,
+estações de metrô/VLT/BRT, shoppings, supermercados, escolas, hospitais,
+praças, parques — em três seções fixas com subtítulo: Localização e
+caracterização; Sistema viário e mobilidade; Equipamentos, serviços e pontos
+de interesse. Do tamanho do quadro: 250–350 palavras (`PALAVRAS_MAX`; medido:
+~400 cabem nos 78 mm sem o quadro crescer). Só nomes que existam de fato;
+distância só quando segura; nunca contradiz o que o avaliador preencheu; o
+que não souber vira "[Confirmar em vistoria: …]". O resultado **vai direto para o campo**,
 escrito enquanto é gerado, **sem etapa de aprovar/substituir/descartar**
 (pedido do dono: cobrança por crédito, por clique, sem devolução); Ctrl+Z
 devolve o texto anterior. O que estava no campo entra no pedido como pista.

@@ -292,7 +292,9 @@ B('4 · PESQUISA DA REGIÃO POR IA (o padrão do pedido)');
 var PesquisaRegiao = require('../pesquisa-regiao.js');
 var PQ = REF(); PQ.capa.bairro = 'Meireles'; PQ.capa.cidade = 'Fortaleza'; PQ.capa.uf = 'CE';
 var pq = PesquisaRegiao.pedido(PQ, { jaEscrito: 'O bairro' });
-conferir('quatro seções, cada uma com subtítulo "# "', PesquisaRegiao.SECOES.every(function (sec) { return pq.indexOf('# ' + sec) >= 0; }), true);
+conferir('três seções, cada uma com subtítulo "# "', PesquisaRegiao.SECOES.length === 3 && PesquisaRegiao.SECOES.every(function (sec) { return pq.indexOf('# ' + sec) >= 0; }), true);
+conferir('sem diagnóstico de mercado (fora do escopo)', /Fora do escopo[^\n]*liquidez, valorização/.test(pq) && !/Síntese mercadológica/.test(pq), true);
+conferir('limite de palavras do quadro no pedido', pq.indexOf('nunca passe de ' + PesquisaRegiao.PALAVRAS_MAX) >= 0, true);
 conferir('pede nomes próprios (vias, metrô, shoppings…)',
   ['avenidas', 'metrô', 'shoppings', 'supermercados', 'escolas', 'hospitais', 'praças'].every(function (w) { return pq.indexOf(w) >= 0; }), true);
 conferir('proíbe inventar nomes', /nunca invente/.test(pq), true);
