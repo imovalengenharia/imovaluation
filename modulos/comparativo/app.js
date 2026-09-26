@@ -81,11 +81,15 @@
     ['academia', 'Academia'], ['antena', 'Antena Coletiva'], ['brinquedoteca', 'Brinquedoteca'], ['deposito', 'Depósito Individual'], ['cooper', 'Pista de Cooper'],
     ['vigilancia', 'Vigilância Eletrônica'], ['lavanderia', 'Lavanderia Coletiva'], ['telefonia', 'Sistema de Telefonia'], ['conveniencia', 'Loja de Conveniência'], ['heliponto', 'Heliponto']];
   /* larguras fixas: a tabela e a sua continuação alinham coluna por coluna */
-  var COLS_AMBIENTE = [['ambiente', 'AMBIENTE', 24], ['quantidade', 'QUANTIDADE', 12], ['parede', 'PAREDE', 12.8],
-    ['piso', 'PISO', 12.8], ['teto', 'TETO', 12.8], ['porta', 'PORTA', 12.8], ['esquadrias', 'ESQUADRIAS', 12.8]];
+  /* Divisão interna por ambiente: nome (livre, com sugestões), quantidade
+     e acabamentos em listas — revestimentos (piso, parede, teto/forro) e
+     esquadrias (portas, janelas). Larguras fixas, em %. */
+  var COLS_AMBIENTE = [['ambiente', 'AMBIENTE', 16], ['quantidade', 'QTD.', 6],
+    ['piso', 'PISO', 15.6, 'revPiso'], ['parede', 'PAREDE', 15.6, 'revParede'], ['teto', 'TETO / FORRO', 15.6, 'revTeto'],
+    ['porta', 'PORTAS', 15.6, 'portas'], ['esquadrias', 'JANELAS', 15.6, 'janelas']];
   /* 13 linhas de ambiente no mínimo; o botão acrescenta até AMB_MAX, o que
      cabe na página da Região (sem página de continuação) */
-  var N_AMBIENTES = 13, AMB_MAX = 18, FOTOS_POR_PAGINA = 8;
+  var N_AMBIENTES = 13, AMB_MAX = 17, FOTOS_POR_PAGINA = 8;
   function ambienteVazio() {
     return { ambiente: '', quantidade: null, parede: '', piso: '', teto: '', porta: '', esquadrias: '',
              bancadas: '', metais: '' };
@@ -356,6 +360,15 @@
             'aria-label': o.rot || caminho, spellcheck: 'false' })
         : e('input', { cls: 'c ' + (o.cls || ''), type: 'text', value: semValor(v) ? '' : String(v),
             placeholder: o.ph !== undefined ? o.ph : TRACO, 'aria-label': o.rot || caminho, spellcheck: 'false' });
+      /* sugestões: lista do navegador ao digitar, sem prender o valor */
+      if (o.sugestoes) {
+        var idLista = 'sug-' + caminho.replace(/\.\d+\./g, '.').replace(/\W/g, '-');
+        if (!document.getElementById(idLista)) {
+          document.body.appendChild(e('datalist', { id: idLista },
+            o.sugestoes.map(function (x) { return e('option', { value: x }); })));
+        }
+        el.setAttribute('list', idLista);
+      }
       if (o.quebra) {
         el.value = semValor(v) ? '' : String(v);
         el.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') ev.preventDefault(); });
@@ -812,14 +825,20 @@
     var amb = P.imovel.ambientes;
     var nAmb = Math.max(N_AMBIENTES, amb.length);
     function tabelaAmb(de, ate) {
-      return e('table', { cls: 't pontos', style: 'table-layout:fixed' }, [e('tr', {}, COLS_AMBIENTE.map(function (cc) {
-        return e('th', { txt: cc[1], style: 'width:' + cc[2] + '%' }); }))]
+      var th = function (t, o) { return e('th', Object.assign({ txt: t }, o || {})); };
+      return e('table', { cls: 't pontos ambientes', style: 'table-layout:fixed' }, [
+        e('colgroup', {}, COLS_AMBIENTE.map(function (cc) { return e('col', { style: 'width:' + cc[2] + '%' }); })),
+        e('tr', {}, [th('AMBIENTE', { rowspan: '2' }), th('QTD.', { rowspan: '2' }),
+          th('REVESTIMENTOS', { colspan: '3' }), th('ESQUADRIAS', { colspan: '2' })]),
+        e('tr', {}, COLS_AMBIENTE.slice(2).map(function (cc) { return th(cc[1]); }))]
         .concat(repetir(ate - de, function (k) {
           var base = im + 'ambientes.' + (de + k) + '.';
+          /* linha de ambiente vazia fica em branco, sem traço */
           return e('tr', {}, COLS_AMBIENTE.map(function (cc) {
-            /* linha de ambiente vazia fica em branco, sem traço */
-            return e('td', {}, [cc[0] === 'quantidade'
-              ? ctx.num(base + cc[0], { casas: 0, vazio: '', ph: '' }) : ctx.txt(base + cc[0], { vazio: '', ph: '' })]);
+            var campo = cc[0] === 'quantidade' ? ctx.num(base + cc[0], { casas: 0, vazio: '', ph: '' })
+              : cc[3] ? ctx.sel(base + cc[0], LS[cc[3]], { vazio: '' })
+              : ctx.txt(base + cc[0], { vazio: '', ph: '', sugestoes: LS.ambientes });
+            return e('td', {}, [campo]);
           }));
         })));
     }

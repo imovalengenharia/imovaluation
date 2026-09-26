@@ -111,7 +111,7 @@ têm altura fixa de 78 mm (2/3 do que ocupavam esticadas); a faixa é
 "Infraestrutura do empreendimento"; as duas perguntas de divergência de área
 abrem a página de Restrições. Ambientes: 13 linhas no mínimo (não precisam
 acabar no fim da página); o botão "+ Linha de ambiente" (e "Remover última
-linha", só vazia) acrescenta até `AMB_MAX` (18), o que cabe na página — sem
+linha", só vazia) acrescenta até `AMB_MAX` (17), o que cabe na página — sem
 página de continuação, pedido do avaliador. Mudou a altura das observações ou
 de algo acima da tabela, remeça `AMB_MAX`.
 
@@ -127,6 +127,14 @@ borda de fora do quadro fica. Pedido do avaliador: "parecem grudadas".
 das fichas das amostras com listas longas têm colunas próprias; "Idade
 estimada" virou "Idade". Travado no teste "a opção mais longa de cada lista
 cabe no campo".
+
+**Divisão interna por ambiente** (pedido do avaliador, com a proposta
+técnica): Ambiente (16%, livre, com sugestões em `datalist` — `LISTAS.ambientes`),
+Qtd., e acabamentos em listas com cabeçalho em dois níveis: REVESTIMENTOS
+(piso `revPiso`, parede `revParede`, teto/forro `revTeto`) e ESQUADRIAS
+(portas `portas`, janelas `janelas`). Chaves das premissas mantidas (piso,
+parede, teto, porta, esquadrias): texto antigo fora da lista continua
+aparecendo (a lista o acrescenta). "Não vistoriado" serve à vistoria remota.
 
 **Um formato de campo em todo o laudo** (pedido do avaliador: "input de capa
 igual input de restrição"). Todo par rótulo → valor está no formato da ficha

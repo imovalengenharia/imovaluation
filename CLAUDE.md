@@ -228,6 +228,16 @@ E duas armadilhas que valem para qualquer tela:
 - **Campo que sai do documento perde o foco.** Onde uma área se redesenha
   inteira a cada recálculo, campo digitável tem de viver fora do redesenho.
 
+## Postura pedida pelo dono do produto
+
+Todo pedido é o ponto de partida, não o limite: antes de executar à letra,
+pense no que o profissional da área faria (norma, prática de laudo, o que
+os bons modelos do mercado trazem), proponha a versão mais técnica e útil,
+e diga em uma linha o que foi além do pedido e por quê. Ex.: pediram
+"listas de revestimento" na divisão interna → saiu o cabeçalho técnico
+Revestimentos (piso, parede, teto/forro) × Esquadrias (portas, janelas),
+com "Não vistoriado" para vistoria remota.
+
 ## Memória entre conversas
 
 Cada frente — a casca, e cada modelagem — tem a sua conversa. O que for

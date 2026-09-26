@@ -115,7 +115,28 @@
     oferta: ['alto', 'médio/alto', 'médio', 'médio/baixo', 'baixo'],
     demanda: ['alto', 'médio/alto', 'médio', 'médio/baixo', 'baixo'],
     absorcao: ['rápida', 'normal/rápida', 'normal', 'normal/difícil', 'difícil'],
-    desempenho: ['aquecido', 'normal/aquecido', 'normal', 'normal/recessivo', 'recessivo']
+    desempenho: ['aquecido', 'normal/aquecido', 'normal', 'normal/recessivo', 'recessivo'],
+    /* Divisão interna por ambiente: acabamentos usuais de vistoria (piso,
+       parede, teto/forro; esquadrias: portas e janelas). "Não vistoriado"
+       serve à vistoria remota; "Sem revestimento", ao imóvel em obra. */
+    revPiso: ['Carpete', 'Cerâmica', 'Cimentado', 'Cimento queimado', 'Epóxi / resina', 'Granito',
+      'Ladrilho hidráulico', 'Laminado', 'Madeira (assoalho / taco)', 'Mármore', 'Pedra natural',
+      'Porcelanato', 'Vinílico', 'Sem revestimento', 'Não vistoriado'],
+    revParede: ['Azulejo', 'Cerâmica', 'Gesso liso', 'Granito', 'Lambri de madeira', 'Mármore',
+      'Papel de parede', 'Pastilha', 'Pedra decorativa', 'Pintura acrílica', 'Pintura látex (PVA)',
+      'Porcelanato', 'Textura', 'Tijolo aparente', 'Sem revestimento (reboco)', 'Não vistoriado'],
+    revTeto: ['Concreto aparente', 'Forro de gesso', 'Forro de gesso com sanca', 'Forro de madeira',
+      'Forro de PVC', 'Forro drywall', 'Forro mineral', 'Laje com pintura', 'Laje com textura',
+      'Sem revestimento', 'Não vistoriado'],
+    portas: ['Aço', 'Alumínio', 'Madeira maciça', 'Madeira semioca', 'Madeira com vidro', 'PVC',
+      'Vidro temperado', 'Sem porta', 'Não vistoriado'],
+    janelas: ['Aço', 'Alumínio', 'Alumínio com persiana', 'Madeira', 'Pele de vidro', 'PVC',
+      'Vidro temperado', 'Sem janela', 'Não vistoriado'],
+    /* sugestões para o nome do ambiente (o campo continua livre) */
+    ambientes: ['Área de serviço', 'Banheiro', 'Circulação', 'Closet', 'Copa', 'Cozinha', 'Depósito',
+      'Despensa', 'Dormitório', 'Escritório', 'Estar íntimo', 'Gabinete', 'Hall', 'Home theater',
+      'Lavabo', 'Lavanderia', 'Quarto de empregada', 'Sala de estar', 'Sala de jantar', 'Suíte',
+      'Varanda', 'Varanda gourmet']
   };
   /* As listas suspensas saem sem o "-" e em ordem alfabética (pedido do
      avaliador), comparando como se lê em português: sem distinguir maiúscula
