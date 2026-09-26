@@ -571,16 +571,11 @@
         var acoes = [];
         /* o endereço do imóvel no Google Maps, para achar a foto no Street View */
         if (o.mapa) {
-          var mapa = e('button', { type: 'button', txt: 'Google Maps', title: 'Abrir o endereço no Google Maps (Street View) em outra aba' });
+          var mapa = e('button', { type: 'button', cls: 'btn-mapa', txt: 'Google Maps', title: 'Abrir o endereço no Google Maps (Street View) em outra aba' });
           mapa.addEventListener('click', function () {
             var q = o.mapa();
             if (!q) { avisar('Endereço vazio', 'Preencha logradouro, número, bairro e cidade na Capa.'); return; }
-            var url = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
-            /* quem hospeda a página pode abrir o link do seu jeito (a versão de
-               revisão roda numa moldura de onde o Google não abre) */
-            var ext = window.ComparativoExtensoes;
-            if (ext && typeof ext.abrirLink === 'function') ext.abrirLink(url, q);
-            else window.open(url, '_blank', 'noopener');
+            window.open('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q), '_blank', 'noopener');
           });
           acoes.push(mapa);
         }

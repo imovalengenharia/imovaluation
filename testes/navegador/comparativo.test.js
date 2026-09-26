@@ -200,3 +200,25 @@ test('linhas de ambiente: 5 de saída, e as acrescentadas voltam ao reabrir', as
   assert.equal(await fr.locator('[aria-label="imovel.ambientes.6.ambiente"]').inputValue(), 'Escritório');
   assert.deepEqual(erros, []);
 });
+
+/* Na plataforma, o botão Google Maps da foto de fachada abre o endereço da
+   Capa numa aba nova (o iframe do módulo não tem sandbox). */
+test('Google Maps: a fachada abre o endereço da Capa numa aba nova', async () => {
+  const { pg, erros, fr } = await abrirEstudoNovo('mapa@exemplo.com');
+  await pg.context().route(/https:\/\/www\.google\.com\/maps.*/, r => r.fulfill({ status: 200, contentType: 'text/html', body: 'mapa' }));
+  await fr.locator('[aria-label="capa.logradouro"]').fill('Rua Tibúrcio Cavalcante');
+  await fr.locator('[aria-label="capa.numero"]').fill('500');
+  await fr.locator('[aria-label="capa.bairro"]').fill('Meireles');
+  await fr.locator('[aria-label="capa.cidade"]').fill('Fortaleza');
+  await fr.locator('[aria-label="capa.uf"]').fill('CE');
+  await fr.locator('[aria-label="capa.cep"]').fill('60125100');
+  assert.equal(await fr.locator('[aria-label="capa.cep"]').inputValue(), '60125 - 100', 'CEP com máscara');
+  const [aba] = await Promise.all([
+    pg.context().waitForEvent('page'),
+    fr.locator('.acoes-img button', { hasText: 'Google Maps' }).first().click()
+  ]);
+  await aba.waitForLoadState();
+  assert.equal(decodeURIComponent(aba.url()),
+    'https://www.google.com/maps/search/?api=1&query=Rua Tibúrcio Cavalcante, 500, Meireles, Fortaleza - CE, 60125-100');
+  assert.deepEqual(erros, []);
+});
