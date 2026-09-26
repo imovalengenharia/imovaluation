@@ -486,7 +486,18 @@
           });
           return bt;
         }));
-      return e('div', { cls: 'area-texto' + (o.estica ? ' estica' : '') }, [barra, ed]);
+      var area = e('div', { cls: 'area-texto' + (o.estica ? ' estica' : '') }, [barra, ed]);
+      /* ponto de extensão, inerte por padrão: quem hospeda a página pode
+         acrescentar botões à barra (a versão de revisão testa a redação
+         por IA das observações). O módulo não chama nada de fora. */
+      var ext = window.ComparativoExtensoes;
+      if (ext && typeof ext.barraTexto === 'function') {
+        try {
+          ext.barraTexto({ caminho: caminho, barra: barra, area: area, editor: ed, pegar: pegar,
+            escrever: function (texto) { ed.innerHTML = limparHtml(marcasParaHtml(texto)); gravar(); } });
+        } catch (erro) { if (window.console) console.error(erro); }
+      }
+      return area;
     };
 
     ctx.chk = function (caminho) {

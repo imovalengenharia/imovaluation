@@ -142,6 +142,14 @@ acrescentadas) entra inteira, sobre o molde da primeira linha. Antes, era
 cortada no tamanho padrão e a linha acrescentada sumia ao reabrir. Travado
 no teste "linhas de ambiente: 5 de saída, e as acrescentadas voltam".
 
+**Ponto de extensão da barra de texto** (`window.ComparativoExtensoes.barraTexto`,
+em `ctx.area`): inerte por padrão; quem hospeda a página pode acrescentar
+botões à barra de um quadro de texto, recebendo `{caminho, barra, area,
+editor, pegar, escrever}`. A versão de revisão (claude.ai) usa para testar
+a redação por IA das observações da região. Na plataforma, a IA virá pela
+casca (servidor, com a chave da API e busca na web), nunca de `fetch` do
+módulo.
+
 **Um formato de campo em todo o laudo** (pedido do avaliador: "input de capa
 igual input de restrição"). Todo par rótulo → valor está no formato da ficha
 técnica: `ficha()` (grade) ou `table.t.ficha-t` (tabela). Restrições
