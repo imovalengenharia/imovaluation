@@ -817,7 +817,7 @@
     var nAmb = Math.max(N_AMBIENTES, amb.length);
     function tabelaAmb(de, ate) {
       var th = function (t, o) { return e('th', Object.assign({ txt: t }, o || {})); };
-      return e('table', { cls: 't pontos ambientes', style: 'table-layout:fixed' }, [
+      return e('table', { cls: 't pontos ficha-t ambientes', style: 'table-layout:fixed' }, [
         e('colgroup', {}, COLS_AMBIENTE.map(function (cc) { return e('col', { style: 'width:' + cc[2] + '%' }); })),
         e('tr', {}, [th('AMBIENTE', { rowspan: '2' }), th('QTD.', { rowspan: '2' }),
           th('REVESTIMENTOS', { colspan: '3' }), th('ESQUADRIAS', { colspan: '2' })]),
