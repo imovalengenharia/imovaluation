@@ -846,7 +846,7 @@
     }
     var paginas = [pagina(ctx, [
       tit('Dados da Região'),
-      g('1fr 1fr 1fr', [melh, serv, pec], { gap: '6mm', cls: 'colunas' }), espaco('g2'),
+      g('1fr 1fr 1fr', [serv, melh, pec], { gap: '6mm', cls: 'colunas' }), espaco('g2'),
       g('1fr 1fr 1fr', regiaoLinha2, { gap: '6mm', cls: 'colunas' }),
       tit('OBSERVAÇÕES GERAIS SOBRE A REGIÃO', 'menor'),
       ctx.area(r + 'observacoes', { alt: '78mm' }),
