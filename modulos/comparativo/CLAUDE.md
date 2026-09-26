@@ -164,8 +164,10 @@ de interesse. Do tamanho do quadro: 250–350 palavras (`PALAVRAS_MAX`; medido:
 distância só quando segura; nunca contradiz o que o avaliador preencheu; o
 que não souber vira "[Confirmar em vistoria: …]". O resultado **vai direto para o campo**,
 escrito enquanto é gerado, **sem etapa de aprovar/substituir/descartar**
-(pedido do dono: cobrança por crédito, por clique, sem devolução); Ctrl+Z
-devolve o texto anterior. O que estava no campo entra no pedido como pista.
+(pedido do dono: cobrança por crédito, por clique, sem devolução). O texto
+entra por `innerHTML`, não por `execCommand('insertHTML')`: este copiava o
+negrito do subtítulo para os parágrafos (recusado: "só o título em
+negrito"). O que estava no campo entra no pedido como pista.
 Na versão de revisão (claude.ai), quem responde é o Claude do visualizador
 (capacidade `sample`, sem busca na web, `modelTier: complex`); na plataforma
 será a casca, com busca na web (`comBusca: true`).
@@ -276,6 +278,16 @@ Em CSS: `.quadro-img` com altura própria e `flex: none`, e a `<img>` em
 posição absoluta preenchendo o quadro. Um `flex: 1` no quadro já fez o campo
 da Capa crescer com a foto; a conferência é inserir uma imagem muito alta e
 uma muito larga e medir o quadro antes e depois.
+
+**Colar imagem** (Ctrl+V): o campo de imagem sob o mouse recebe a imagem
+copiada — captura de tela do Street View, por exemplo. Fachada e logradouro
+(Capa) têm o botão **Google Maps**, que abre o endereço da Capa em outra aba
+para achar a foto no Street View. Captura automática pela API do Street View
+não foi feita: exige chave paga do Google, e os termos do Google Maps
+restringem guardar as imagens — decisão do dono pendente.
+
+**CEP** com máscara (`ctx.txt(…, { mascara: 'cep' })`): só algarismos, no
+formato do laudo "00000 - 000", na Capa e nas fichas das amostras.
 
 Logos, fotos, croquis, assinatura e anexos entram **dentro de `P`**, como data
 URL, reduzidos no navegador (`lerImagem`: fotos em JPEG até 1600 px, logos em

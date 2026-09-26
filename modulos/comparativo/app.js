@@ -332,6 +332,16 @@
       leitor.readAsDataURL(arquivo);
     });
   }
+  /* colar imagem: o campo de imagem sob o mouse recebe o que foi colado */
+  var colarEm = null;
+  document.addEventListener('paste', function (ev) {
+    if (!colarEm || !ev.clipboardData) return;
+    var itens = Array.prototype.slice.call(ev.clipboardData.items || []);
+    var img = itens.filter(function (i) { return i.kind === 'file' && /^image\//.test(i.type); })[0];
+    if (!img) return;
+    ev.preventDefault();
+    colarEm(img.getAsFile());
+  });
   function escolherArquivos(multiplo, aoEscolher) {
     var inp = e('input', { type: 'file', accept: 'image/*', multiple: multiplo ? 'multiple' : null });
     inp.addEventListener('change', function () { aoEscolher(Array.prototype.slice.call(inp.files || [])); });
@@ -366,6 +376,11 @@
       }
       el.addEventListener('input', function () {
         if (o.quebra) { el.value = el.value.replace(/\n/g, ' '); crescer(el); }
+        /* CEP: só algarismos, no formato do laudo "00000 - 000" */
+        if (o.mascara === 'cep') {
+          var d = el.value.replace(/\D/g, '').slice(0, 8);
+          el.value = d.length > 5 ? d.slice(0, 5) + ' - ' + d.slice(5) : d;
+        }
         guardar(caminho, el.value); mudou();
       });
       return el;
@@ -531,10 +546,20 @@
       var src = pegar(caminho);
       var quadro = e('div', { cls: 'quadro-img', style: 'height:' + (o.alt || '50mm') });
       if (src) quadro.appendChild(e('img', { src: src, alt: o.legenda || '' }));
-      else quadro.appendChild(e('div', { cls: 'vazia', txt: papel ? '' : (o.vazio || 'Clique para inserir a imagem') }));
+      else quadro.appendChild(e('div', { cls: 'vazia', txt: papel ? '' : (o.vazio || 'Clique para inserir a imagem') + ' · ou cole (Ctrl+V)' }));
       if (!papel) {
         quadro.classList.add('escolher');
-        quadro.title = src ? 'Clique para trocar a imagem' : 'Clique para inserir a imagem';
+        quadro.title = (src ? 'Clique para trocar a imagem' : 'Clique para inserir a imagem') +
+          ', ou passe o mouse aqui e cole uma imagem copiada (Ctrl+V)';
+        /* colar: a imagem copiada (captura de tela, Street View) vai para o
+           campo que está sob o mouse */
+        quadro.addEventListener('mouseenter', function () {
+          colarEm = function (arq) {
+            lerImagem(arq, o).then(function (url) { guardar(caminho, url); mudou(); remontar(); })
+              .catch(function () { avisar('Imagem não lida', 'O que foi colado não é uma imagem que o navegador abra.'); });
+          };
+        });
+        quadro.addEventListener('mouseleave', function () { colarEm = null; });
         quadro.addEventListener('click', function (ev) {
           if (ev.target.closest('.acoes-img')) return;
           escolherArquivos(false, function (arqs) {
@@ -543,11 +568,23 @@
               .catch(function () { avisar('Imagem não lida', 'O arquivo escolhido não é uma imagem que o navegador abra.'); });
           });
         });
+        var acoes = [];
+        /* o endereço do imóvel no Google Maps, para achar a foto no Street View */
+        if (o.mapa) {
+          var mapa = e('button', { type: 'button', txt: 'Google Maps', title: 'Abrir o endereço no Google Maps (Street View) em outra aba' });
+          mapa.addEventListener('click', function () {
+            var q = o.mapa();
+            if (!q) { avisar('Endereço vazio', 'Preencha logradouro, número, bairro e cidade na Capa.'); return; }
+            window.open('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q), '_blank', 'noopener');
+          });
+          acoes.push(mapa);
+        }
         if (src) {
           var tirar = e('button', { type: 'button', txt: 'Remover' });
           tirar.addEventListener('click', function () { guardar(caminho, null); mudou(); remontar(); });
-          quadro.appendChild(e('div', { cls: 'acoes-img' }, [tirar]));
+          acoes.push(tirar);
         }
+        if (acoes.length) quadro.appendChild(e('div', { cls: 'acoes-img' }, acoes));
       }
       if (o.nu) return quadro;
       var fig = e('div', { cls: 'foto' + (o.conter ? ' conter' : '') }, [quadro]);
@@ -631,6 +668,15 @@
       cabecalho(ctx, o.logos).concat([e('div', { cls: 'corpo' + (o.estica ? ' estica' : '') }, filhos)]));
   }
 
+  /* o endereço do imóvel em uma linha, para o Google Maps */
+  function enderecoImovel() {
+    var c = function (k) { return String(pegar('capa.' + k) || '').trim(); };
+    var rua = [c('logradouro'), c('numero')].filter(Boolean).join(', ');
+    if (!rua && !c('bairro')) return '';
+    return [rua, c('bairro'), [c('cidade'), c('uf')].filter(Boolean).join(' - '), c('cep').replace(/\s/g, '')]
+      .filter(Boolean).join(', ');
+  }
+
   /* =============================================================== CAPA */
   function folhaCapa(ctx) {
     var c = 'capa.';
@@ -650,11 +696,11 @@
         rot('BAIRRO', 'tinta'), celula(ctx, ctx.txt(c + 'bairro')),
         rot('CIDADE', 'tinta'), celula(ctx, ctx.txt(c + 'cidade')),
         rot('UF', 'tinta'), celula(ctx, ctx.txt(c + 'uf')),
-        rot('CEP', 'tinta'), celula(ctx, ctx.txt(c + 'cep')), e('div')], { gap: '1mm' })]);
+        rot('CEP', 'tinta'), celula(ctx, ctx.txt(c + 'cep', { mascara: 'cep' })), e('div')], { gap: '1mm' })]);
 
     var fotos = g('1fr 1fr', [
-      ctx.img(c + 'fotoFachada', { alt: '80mm', legenda: 'Fachada', forte: true }),
-      ctx.img(c + 'fotoLogradouro', { alt: '80mm', legenda: 'Logradouro', forte: true })], { gap: '5mm' });
+      ctx.img(c + 'fotoFachada', { alt: '80mm', legenda: 'Fachada', forte: true, mapa: enderecoImovel }),
+      ctx.img(c + 'fotoLogradouro', { alt: '80mm', legenda: 'Logradouro', forte: true, mapa: enderecoImovel })], { gap: '5mm' });
 
     /* Imóvel, Dimensões e Resultado no formato da ficha técnica: pergunta
        sombreada, resposta branca (pedido do avaliador) */
@@ -958,7 +1004,7 @@
       : ctx.txt(b + 'link', { ph: 'https://', quebra: true });
     var campos = ficha(3, [
       ['Endereço', t('endereco')], ['Nº', t('numero')], ['Complemento', t('complemento')],
-      ['Empreendimento', t('empreendimento')], ['Bairro', t('bairro')], ['CEP', t('cep')],
+      ['Empreendimento', t('empreendimento')], ['Bairro', t('bairro')], ['CEP', t('cep', { mascara: 'cep' })],
       ['Tipo de imóvel', sel('tipo', LS.tipologia)], ['Cidade', t('cidade')], ['UF', t('uf')],
       ['Valor', nn('valor', { pre: 'R$' })], ['Transação', sel('transacao', LS.transacao)], ['Data', ctx.data(b + 'data')],
       ['Topografia', sel('topografia', LS.topografia)], ['Área terreno', nn('areaTerreno', { casas: 1 })],
