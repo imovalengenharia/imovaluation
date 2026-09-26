@@ -317,12 +317,27 @@
     var construcao = {};
     ['matricula', 'iptu', 'estimada', 'doc'].forEach(function (k) { construcao[k] = soma(num(aP[k]), num(aC[k])); });
     /* 'Região + Imóvel'!AL68 e AL71: só com resposta "Sim" */
-    function divergencia(resp, mat, iptu, est) {
-      if (resp !== 'Sim' || est === null || !est) return null;
-      return iptu !== null && mat !== null && iptu > mat ? iptu / est - 1 : (mat !== null ? mat / est - 1 : null);
+    /* Divergência entre a documentação e a área estimada em vistoria, lida do
+       quadro de áreas da Capa (automática, pedido do avaliador — na planilha
+       dependia de um "Sim" digitado, AL68/AL71). Cada fonte documental
+       (matrícula, IPTU, doc. complementar) é comparada com a estimada; a
+       divergência é a maior delas em módulo, com sinal (fonte / estimada − 1).
+       Sem estimada ou sem nenhuma fonte, não há resposta. */
+    function divergencia(a) {
+      var est = num(a.estimada);
+      var fontes = [['Matrícula', num(a.matricula)], ['IPTU', num(a.iptu)], ['Doc. complementar', num(a.doc)]]
+        .filter(function (f) { return f[1] !== null; })
+        .map(function (f) {
+          var dif = est ? Math.round((f[1] - est) * 100) / 100 : null;
+          return { fonte: f[0], area: f[1], dif: dif, pct: est && dif ? f[1] / est - 1 : 0 };
+        });
+      if (!est || !fontes.length) return { resposta: null, pct: null, estimada: est || null, fontes: fontes };
+      var maior = fontes.reduce(function (m, f) { return Math.abs(f.pct) > Math.abs(m.pct) ? f : m; }, fontes[0]);
+      var ha = fontes.some(function (f) { return f.dif !== 0; });
+      return { resposta: ha ? 'Sim' : 'Não', pct: ha ? maior.pct : 0, estimada: est, fontes: fontes };
     }
-    var divTerreno = divergencia((im.divTerreno || {}).resposta, num(aT.matricula), num(aT.iptu), num(aT.estimada));
-    var divConstruida = divergencia((im.divConstruida || {}).resposta, num(aP.matricula), num(aP.iptu), num(aP.estimada));
+    var divTerreno = divergencia(aT);
+    var divConstruida = divergencia(aP);                           // privativa, como a planilha (AL71)
 
     /* ------------------------------------------ o paradigma (Fichas F11:AN16) */
     var paradigma = {

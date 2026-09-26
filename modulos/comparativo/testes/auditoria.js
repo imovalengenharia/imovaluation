@@ -138,7 +138,8 @@ conferir('construção total — estimada = privativa + comum', R.capa.construca
 conferir('construção total — doc. complementar vazia fica vazia', R.capa.construcao.doc, null);
 var PDoc = REF(); PDoc.capa.areas.privativa.doc = 880; PDoc.capa.areas.comum.doc = 410;
 conferir('construção total — doc. complementar soma', Motor.calcular(PDoc).capa.construcao.doc, 1290);
-conferir('divergência de terreno sem "Sim" (AL68)', R.capa.divTerreno, null);
+conferir('divergência de terreno: áreas iguais → Não', R.capa.divTerreno.resposta, 'Não');
+conferir('divergência de terreno: áreas iguais → 0%', R.capa.divTerreno.pct, 0);
 
 B('1e · LIQUIDAÇÃO FORÇADA');
 var L = R.liquidacao;
@@ -284,9 +285,14 @@ var PL = REF(); PL.liquidacao.prazo = 5;
 conferir('IR 22,5% até 180 dias', Motor.calcular(PL).liquidacao.ir, 0.225);
 PL.liquidacao.prazo = 12;
 conferir('IR 17,5% até 720 dias', Motor.calcular(PL).liquidacao.ir, 0.175);
-var PDv = REF(); PDv.imovel.divConstruida = { resposta: 'Sim' };
-PDv.capa.areas.privativa.iptu = 900;
-conferir('divergência de área construída (AL71)', Motor.calcular(PDv).capa.divConstruida, 900 / 883.32 - 1);
+var PDv = REF(); PDv.capa.areas.privativa.iptu = 900; PDv.capa.areas.privativa.doc = 880;
+var DV = Motor.calcular(PDv).capa.divConstruida;
+conferir('divergência automática da área construída: Sim', DV.resposta, 'Sim');
+conferir('divergência = a maior fonte em módulo (IPTU)', DV.pct, 900 / 883.32 - 1);
+conferir('diferença do IPTU em m²', DV.fontes[1].dif, 16.68);
+conferir('diferença da doc. complementar em m²', DV.fontes[2].dif, -3.32);
+var PDs = REF(); PDs.capa.areas.terreno.estimada = null;
+conferir('sem estimada, sem resposta', Motor.calcular(PDs).capa.divTerreno.resposta, null);
 
 B('4 · PESQUISA DA REGIÃO POR IA (o padrão do pedido)');
 var PesquisaRegiao = require('../pesquisa-regiao.js');

@@ -117,7 +117,8 @@ acabar no fim da página); um só botão, "+ Adicionar linha" (sem botão de rem
 página de continuação, pedido do avaliador. Mudou a altura das observações ou
 de algo acima da tabela, remeça `AMB_MAX`.
 
-**Restrições do imóvel** (pedido do avaliador): as 13 verificações voltaram
+**Restrições do imóvel** (pedido do avaliador): o título abre a página, antes da
+divergência de áreas; as 13 verificações voltaram
 à lista da planilha — pergunta numa linha, "Resposta" e "Obs" abaixo, 2 mm
 entre itens (a tabela foi achada "aglomerada"); depois delas, a recomendação
 como garantia (só pergunta e resposta), a justificativa e as observações.
@@ -394,6 +395,15 @@ neutro.
   migram o antigo `creaEmpresa` para o número, com conselho e UF do responsável. A imagem de assinatura é
   opcional e, vazia, não deixa texto no papel — o laudo pode ser assinado
   com certificado digital.
+
+- **Divergência entre documentação e área estimada** (Restrições, AL68/AL71):
+  na planilha, o percentual só saía com um "Sim" digitado. Agora é
+  automática, lida do quadro de áreas da Capa: cada fonte (matrícula, IPTU,
+  doc. complementar) contra a estimada; resposta "Sim" se alguma difere,
+  divergência = a maior em módulo, com sinal; a coluna "Diferenças
+  constatadas" descreve cada fonte em m² e %. Terreno e privativa/útil (a
+  planilha compara a privativa). O avaliador só escreve a justificativa,
+  que fica com a coluna mais larga. `imovel.div*.resposta` ficou sem uso.
 
 - **Sensibilidade por variação do VM** (Liquidação forçada, J61:M67): a
   planilha tirava a perda inflacionária do VM cheio, e não do VM já

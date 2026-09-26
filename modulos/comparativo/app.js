@@ -932,18 +932,35 @@
       })));
   }
 
-  /* as duas perguntas de divergência de área abrem a página seguinte */
+  /* Divergência entre documentação e área estimada: resposta, percentual e
+     diferenças lidos do quadro de áreas da Capa (motor); só a justificativa
+     é do avaliador, e fica com o espaço. */
+  var sinal = function (v, t) { return (v > 0 ? '+' : '') + t; };
+  function diferencas(d) {
+    if (!d || !d.estimada || !d.fontes.length) return TRACO;
+    if (d.fontes.every(function (f) { return f.dif === 0; })) {
+      var nomes = d.fontes.map(function (f) { return f.fonte; });
+      var lista = nomes.length > 1 ? nomes.slice(0, -1).join(', ') + ' e ' + nomes[nomes.length - 1] : nomes[0];
+      return lista + (nomes.length > 1 ? ' iguais' : ' igual') + ' à estimada (' + fn(d.estimada) + ' m²)';
+    }
+    return 'Estimada ' + fn(d.estimada) + ' m² · ' + d.fontes.map(function (f) {
+      return f.fonte + (f.dif === 0 ? ' igual'
+        : ' ' + fn(f.area) + ' m² (' + sinal(f.dif, fn(f.dif)) + ' m²; ' + sinal(f.pct, pc(f.pct)) + ')');
+    }).join(' · ');
+  }
   function divergencias(ctx) {
     var im = 'imovel.';
     function linha(chave, rotulo, f) {
-      return [rotulo, ctx.sel(im + chave + '.resposta', LS.validacao),
-        ctx.calc(function (rr) { var v = f(rr); return v === null ? TRACO : pc(v); }),
+      return [rotulo,
+        ctx.calc(function (rr) { var d = f(rr); return d && d.resposta; }),
+        ctx.calc(function (rr) { var d = f(rr); return d && d.pct !== null ? sinal(d.pct, pc(d.pct)) : null; }),
+        { el: ctx.calc(function (rr) { return diferencas(f(rr)); }), cls: 'esq' },
         { el: ctx.txt(im + chave + '.justificativa', { quebra: true }), cls: 'esq' }];
     }
     return [faixa('DIVERGÊNCIA ENTRE DOCUMENTAÇÕES E ÁREA ESTIMADA EM VISTORIA', 'esq'),
-      tabelaPerguntas([['Área', 24], ['Resposta', 12], ['Divergência', 12], ['Justificativa', 52]], [
-        linha('divTerreno', 'Área de terreno', function (rr) { return rr.capa.divTerreno; }),
-        linha('divConstruida', 'Área construída', function (rr) { return rr.capa.divConstruida; })])];
+      tabelaPerguntas([['Área', 11], ['Resposta', 7], ['Divergência', 7], ['Diferenças constatadas', 33], ['Justificativa', 42]], [
+        linha('divTerreno', 'Terreno', function (rr) { return rr.capa.divTerreno; }),
+        linha('divConstruida', 'Privativa/útil', function (rr) { return rr.capa.divConstruida; })])];
   }
 
   /* ============================================================ RESTRIÇÕES */
@@ -957,12 +974,12 @@
         g('15mm 20mm 8mm 1fr', [rot('Resposta:', 'claro'), val(ctx.sel(b + 'resposta', LS.validacao)),
           rot('Obs:', 'claro dir'), val(ctx.txt(b + 'obs', { quebra: true }))])]);
     });
-    return [pagina(ctx, divergencias(ctx).concat([
-      tit('RESTRIÇÕES DO IMÓVEL'),
+    return [pagina(ctx, [tit('RESTRIÇÕES DO IMÓVEL')].concat(divergencias(ctx)).concat([
+      espaco('g2'),
       faixa('VERIFICAÇÕES', 'esq')]).concat(itens).concat([
       espaco('g2'),
       faixa('RECOMENDAÇÃO COMO GARANTIA', 'esq'),
-      tabelaPerguntas([['Pergunta', 88], ['Resposta', 12]], [
+      tabelaPerguntas([['Pergunta', 93], ['Resposta', 7]], [
         ['Considerando as diligências e aspectos técnicos analisados neste laudo, o imóvel é recomendado como garantia?',
           ctx.sel(r + 'garantia', LS.validacao)]]),
       tit('JUSTIFICATIVA (EM CASO NEGATIVO)', 'menor'),
